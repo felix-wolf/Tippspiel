@@ -1,0 +1,35 @@
+:root {
+    --grid-xs: 5px;
+    --grid-s: 10px;
+    --grid-m: 20px;
+    --grid-l: 30px;
+
+    --corner-s: 8px;
+    --corner-m: 16px;
+    --corner-l: 24px;
+
+    --border-m: 2px solid white;
+
+    --height-s: 30px;
+    --height-m: 60px;
+    --height-l: 120px;
+
+
+    --width-s: 120px;
+    --width-m: 320px;
+
+    --font-size-s: 20px;
+    --font-size-m: 30px;
+    --font-size-l: 60px;
+}
+
+
+.body {
+    margin: 0 !important;
+    padding: var(--grid-l) !important;
+    font-family: "Inter var";
+    background: cornflowerblue;
+    background-size: 100% 100%;
+    zoom: 100%;
+    display: flex;
+}
