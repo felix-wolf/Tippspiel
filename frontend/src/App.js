@@ -7,30 +7,29 @@ function App() {
 
 
   useEffect(() =>  {
-    fetch("/time").then((res) => {
-      console.log(res)
-      console.log(res.Time)
-      setTime(res.time)
-    })
+    fetch("/time").then((res) => res.json().then((data) => {
+          setTime(data["Time"])
+        })
+    )
   })
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload. This is a test.
-        </p>
-        <p>CurrentTime: {time}</p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <div className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <p>
+            Edit <code>src/App.js</code> and save to reload. This is a test.
+          </p>
+          <p>CurrentTime: {time}</p>
+          <a
+              className="App-link"
+              href="https://reactjs.org"
+              target="_blank"
+              rel="noopener noreferrer"
+          >
+            Learn React
+          </a>
+        </header>
+      </div>
   );
 }
 
