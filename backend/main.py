@@ -9,7 +9,7 @@ login_manager.init_app(app)
 
 @app.route('/time')
 def get_time():
-    return {'Time': "Hello"}
+    return {'Time': datetime.now()}
 
 
 @login_manager.user_loader
