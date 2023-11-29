@@ -1,10 +1,9 @@
-import logo from './logo.svg';
 import './App.css';
 import {useEffect, useState} from "react";
+import logo from "../src/assets/images/logo.svg"
 
-function App() {
+export default function App() {
   const [time, setTime] = useState(0)
-
 
   useEffect(() =>  {
     fetch("/time").then((res) => res.json().then((data) => {
@@ -32,5 +31,3 @@ function App() {
       </div>
   );
 }
-
-export default App;
