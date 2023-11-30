@@ -7,7 +7,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-@app.route('/time')
+@app.route('/api/time')
 def get_time():
     return {'Time': datetime.now()}
 
