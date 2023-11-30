@@ -1,0 +1,35 @@
+.container {
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: start;
+  gap: calc(2 * var(--grid-l));
+}
+
+.logo_container {
+  margin-top: 100px;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+}
+
+.login_container {
+  width: 80%;
+  height: 200px;
+  background: wheat;
+  border-radius: var(--corner-l);
+  padding: var(--grid-l);
+  display: flex;
+  flex-direction: column;
+  grid-gap: 10px;
+}
+
+.greeting {
+  color: coral;
+}
+
+.logo {
+  max-width: 540px;
+}

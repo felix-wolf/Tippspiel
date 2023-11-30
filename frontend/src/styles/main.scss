@@ -1,0 +1,122 @@
+:root {
+  --grid-xs: 5px;
+  --grid-s: 10px;
+  --grid-m: 20px;
+  --grid-l: 30px;
+
+  --corner-s: 8px;
+  --corner-m: 16px;
+  --corner-l: 24px;
+
+  --border-m: 2px solid white;
+
+  --height-s: 30px;
+  --height-m: 60px;
+  --height-l: 120px;
+
+
+  --width-s: 120px;
+  --width-m: 320px;
+
+  --font-size-s: 20px;
+  --font-size-m: 30px;
+  --font-size-l: 60px;
+
+  --inline-inset-s: 12px;
+  --inline-inset-m: 16px;
+
+  --icon-size-m: 52px;
+
+  --blue-primary: #67C1E6;
+  --blue-secondary: #5DBDBB;
+
+  --bg-backdrop-gradient: linear-gradient(30deg, var(--blue-primary), var(--blue-secondary));
+
+  --bg-primary: rgba(255, 255, 255, 0.95);
+  --bg-secondary: rgba(255, 255, 255, 0.7);
+
+  --gray-gradiant-primary: rgb(239, 239, 239);
+  --gray-primary-filter: invert(100%) sepia(2%) saturate(1222%) hue-rotate(177deg) brightness(114%) contrast(87%);
+
+  --gray-gradiant-secondary: rgb(171, 171, 171);
+  --gray-secondary-filter: invert(79%) sepia(0%) saturate(3%) hue-rotate(210deg) brightness(87%) contrast(92%);
+
+  --gray-gradient: linear-gradient(45deg, var(--gray-gradiant-secondary), var(--gray-gradiant-primary));
+  --green-primary: #00B23D;
+  --green-primary-filter: invert(45%) sepia(36%) saturate(6913%) hue-rotate(122deg) brightness(102%) contrast(101%);
+
+  --yellow-primary: #D0C02B;
+  --yellow-primary-filter: invert(84%) sepia(78%) saturate(505%) hue-rotate(343deg) brightness(83%) contrast(94%);
+
+  --red-primary: #D94649;
+  --red-primary-filter: invert(30%) sepia(73%) saturate(1362%) hue-rotate(327deg) brightness(100%) contrast(87%);
+
+  --orange-primary: #FFA800;
+  --grey-primary: #404040;
+
+  --bg-fx-blur: blur(30px) saturate(2);
+
+  --shadow-none: drop-shadow(0 0 0px transparent);
+  --shadow-xs: drop-shadow(0 0 3px #00000040);
+  --shadow-s: drop-shadow(0 0 8px #00000030);
+  --shadow-m: drop-shadow(0 0 15px #00000040);
+  --shadow-l: drop-shadow(0 0 28px #00000040);
+
+  --page-button-border: 2px solid white;
+}
+
+body:has(.theme-test) {
+  --border-m: 2px solid black;
+
+  --bg-backdrop-gradient: white;
+  --bg-primary: rgb(239, 239, 239);
+  --bg-secondary: white;
+
+  --gray-gradiant-primary: rgb(239, 239, 239);
+  --gray-gradiant-secondary: rgb(171, 171, 171);
+  --gray-gradient: linear-gradient(45deg, var(--gray-gradiant-secondary), var(--gray-gradiant-primary));
+
+  --bg-fx-blur: none;
+
+  --shadow-none: none;
+  --shadow-xs: none;
+  --shadow-s: none;
+  //--shadow-m: none;
+  --shadow-l: none;
+
+  --page-button-border: 2px solid black;
+}
+
+* {
+  box-sizing: border-box !important;
+  user-select: none;
+}
+
+@font-face {
+  font-family: "Inter var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/Inter.var.woff2");
+}
+
+body {
+  height: 100vh;
+  width: 100vw;
+
+  margin: 0 !important;
+  padding: var(--grid-l) !important;
+
+  font-family: "Inter var";
+
+  background: #242424;
+  background-size: 100% 100%;
+}
+
+#root {
+  display: contents;
+}
+
+h1, h2, a, button, input {
+  all: unset;
+}
