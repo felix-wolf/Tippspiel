@@ -17,17 +17,20 @@
 
 .login_container {
   width: 80%;
+  min-width: 380px;
   height: 200px;
-  background: wheat;
+  background: purple;
   border-radius: var(--corner-l);
   padding: var(--grid-l);
   display: flex;
   flex-direction: column;
+  align-items: center;
   grid-gap: 10px;
 }
 
 .greeting {
   color: coral;
+  font-size: 40px;
 }
 
 .logo {

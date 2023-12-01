@@ -1,0 +1,34 @@
+.positive {
+  background: rgb(0,128,22);
+  background: linear-gradient(90deg, rgba(0,128,22,1) 0%, rgba(103,187,0,1) 100%);
+  color: white;
+  border: 2px solid darkblue;
+}
+
+.negative {
+  background: red;
+}
+
+.neutral {
+  background: gray;
+  border: var(--border-m);
+}
+
+.button {
+  width: var(--width-m);
+  height: var(--height-s);
+  border-radius: var(--corner-s);
+  text-align: center;
+}
+
+.enabled {
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.15);
+  }
+}
+
+.disabled {
+  filter: saturate(0.1);
+}
