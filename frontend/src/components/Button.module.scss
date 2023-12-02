@@ -1,6 +1,5 @@
 .positive {
-  background: rgb(0,128,22);
-  background: linear-gradient(90deg, rgba(0,128,22,1) 0%, rgba(103,187,0,1) 100%);
+  background: var(--fg-primary);
   color: white;
   border: 2px solid darkblue;
 }
@@ -30,5 +29,5 @@
 }
 
 .disabled {
-  filter: saturate(0.1);
+  filter: opacity(0.2) saturate(0.1);
 }

@@ -21,22 +21,34 @@
   --width-m: 220px;
   --width-l: 320px;
 
-  --font-size-s: 20px;
-  --font-size-m: 30px;
-  --font-size-l: 60px;
+  --font-size-s: 12px;
+  --font-size-m: 16px;
+  --font-size-l: 20px;
 
   --inline-inset-s: 12px;
   --inline-inset-m: 16px;
 
   --icon-size-m: 52px;
 
+  --bg-primary: #A8DADC;
+  --bg-secondary: #F1FAEE;
+
+  --fg-primary: #1D3557;
+  --fg-primary_light: #457B9D;
+  //--fg-secondary: #E63946;
+  --fg-secondary: #FF4500;
+
+
+
+
+
   --blue-primary: #67C1E6;
   --blue-secondary: #5DBDBB;
 
   --bg-backdrop-gradient: linear-gradient(30deg, var(--blue-primary), var(--blue-secondary));
 
-  --bg-primary: rgba(255, 255, 255, 0.95);
-  --bg-secondary: rgba(255, 255, 255, 0.7);
+  //--bg-primary: rgba(255, 255, 255, 0.95);
+  //--bg-secondary: white;
 
   --gray-gradiant-primary: rgb(239, 239, 239);
   --gray-primary-filter: invert(100%) sepia(2%) saturate(1222%) hue-rotate(177deg) brightness(114%) contrast(87%);
@@ -72,8 +84,8 @@ body:has(.theme-test) {
   --border-m: 2px solid black;
 
   --bg-backdrop-gradient: white;
-  --bg-primary: rgb(239, 239, 239);
-  --bg-secondary: white;
+  //--bg-primary: rgb(239, 239, 239);
+  //--bg-secondary: white;
 
   --gray-gradiant-primary: rgb(239, 239, 239);
   --gray-gradiant-secondary: rgb(171, 171, 171);
@@ -112,7 +124,7 @@ body {
 
   font-family: "Inter var";
 
-  background: #242424;
+  background: var(--bg-primary);
   background-size: 100% 100%;
 }
 

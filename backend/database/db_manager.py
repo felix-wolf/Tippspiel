@@ -44,7 +44,11 @@ def query_one(sql, params=None):
         else:
             cur.execute(sql, params)
         columns = [descript[0] for descript in cur.description]
-        return dict(zip(columns, cur.fetchone()))
+        res = cur.fetchone()
+        if res:
+            return dict(zip(columns, res))
+        else:
+            return None
     except Exception as e:
         print(e)
     finally:

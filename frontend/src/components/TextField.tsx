@@ -1,13 +1,11 @@
 import styles from "./TextField.module.scss";
 import { useCallback, useRef } from "react";
-import { cls } from "../styles/cls";
 
 type TextFieldProps = {
   type?: "text" | "password";
   placeholder: string;
   onInput: (input: string) => void;
   initial?: string;
-  shaking?: boolean;
 };
 
 export function TextField({
@@ -15,7 +13,6 @@ export function TextField({
   placeholder,
   onInput: _onInput,
   initial,
-  shaking = false,
 }: TextFieldProps) {
   const input = useRef<HTMLInputElement>(null);
   const onInput = useCallback(() => {
@@ -25,7 +22,7 @@ export function TextField({
 
   return (
     <input
-      className={cls(styles.textfield, shaking && styles.shake)}
+      className={styles.textfield}
       ref={input}
       title={initial}
       onInput={onInput}

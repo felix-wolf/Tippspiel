@@ -1,39 +1,21 @@
 .textfield {
   padding: 0 var(--grid-m);
   width: 100%;
+  color: var(--fg-primary);
   height: var(--height-s);
   border-radius: var(--corner-s);
-  border: 2px solid #404040;
+  border: 2px solid var(--fg-primary);
   background-color: var(--bg-secondary);
   backdrop-filter: var(--bg-fx-blur);
+
+  &::placeholder {
+    color: var(--fg-primary_light);
+  }
 
 
   transition: filter 0.2s ease, background-color 0.2s ease;
 
   &:focus-within {
-    background-color: var(--bg-primary);
     filter: var(--shadow-l);
-  }
-}
-
-.shake {
-  animation: hover-shaking 0.15s ease;
-}
-
-@keyframes hover-shaking {
-  0% {
-    transform: translateX(0)
-  }
-  25% {
-    transform: translateX(5px)
-  }
-  50% {
-    transform: translateX(-5px)
-  }
-  75% {
-    transform: translateX(5px)
-  }
-  100% {
-    transform: translateX(0)
   }
 }

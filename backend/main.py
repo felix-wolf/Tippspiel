@@ -29,14 +29,16 @@ def get_time():
 @app.route('/api/login', methods=['GET', 'POST'])
 def login():
     name = request.args.get("name")
-    pw_hash = request.args.get("pw_hash")
-    if not name or not pw_hash:
-        return {"Error": "Name and/or pw_hash param not given"}, 400
+    pw = request.args.get("pw")
+    print(name, pw)
+    if not name or not pw:
+        return "Name und/oder Passwort fehlt", 400
+    pw_hash = hashlib.sha256(pw.encode('utf-8')).hexdigest()
     user_object = User.get_by_credentials(name, pw_hash)
     if not user_object:
-        return {"Error": "User not found"}, 404
+        return "Name oder Password falsch", 404
     login_user(user_object, remember=True)
-    return {"Login": "Successful"}
+    return "Success"
 
 
 @app.route('/api/logout')
@@ -53,12 +55,14 @@ def current_user():
 @app.route('/api/register')
 def register_user():
     name = request.args.get("name")
-    pw_hash = request.args.get("pw_hash")
+    pw = request.args.get("pw")
+    print(name, pw)
+    pw_hash = hashlib.sha256(pw.encode('utf-8')).hexdigest()
     success = User.create(name, pw_hash)
     if success:
         return "Success"
     else:
-        return "Registering user went wrong", 400
+        return "Name schon vergeben!", 400
 
 
 @app.route('/api/athletes')
