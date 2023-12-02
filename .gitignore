@@ -1,6 +1,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/flask,react,python,webstorm,intellij+all
 # Edit at https://www.toptal.com/developers/gitignore?templates=flask,react,python,webstorm,intellij+all
 
+*.db
+backend/database/tippspiel.db
+backend/database/*.db
+
 ### Flask ###
 instance/*
 !instance/.gitignore
