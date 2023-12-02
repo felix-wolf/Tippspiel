@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime
 
 from flask import Flask, request
@@ -46,23 +47,30 @@ def logout():
 
 @app.route('/api/current_user')
 def current_user():
-    print(current_user)
     return current_user
+
+
+@app.route('/api/register')
+def register_user():
+    name = request.args.get("name")
+    pw_hash = request.args.get("pw_hash")
+    success = User.create(name, pw_hash)
+    if success:
+        return "Success"
+    else:
+        return "Registering user went wrong", 400
 
 
 @app.route('/api/athletes')
 @login_required
 def get_athletes():
-    return Athlete.get_all()
+    return [a.to_dict() for a in Athlete.get_all()]
 
 
 @app.route('/api/countries')
 @login_required
 def get_countries():
-    print("lol")
-    countries = [country.to_dict() for country in Country.get_all()]
-    print(countries)
-    return countries
+    return [country.to_dict() for country in Country.get_all()]
 
 
 if __name__ == '__main__':

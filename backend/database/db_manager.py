@@ -60,14 +60,15 @@ def execute(sql, params=None, commit=True):
         if params is None:
             cursor.execute(sql)
         else:
-            cursor.execute(sql, [params])
+            cursor.execute(sql, params)
         if commit:
             conn.commit()
+        conn.close()
+        return True
     except Exception as e:
+        conn.close()
         print(e)
-    finally:
-        if conn is not None:
-            conn.close()
+        return False
 
 
 def execute_many(sql, params=None, commit=True):

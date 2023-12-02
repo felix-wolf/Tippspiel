@@ -17,6 +17,6 @@ CREATE TABLE if not EXISTS Athletes (
 
 CREATE TABLE if not EXISTS Users (
     id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
+    name TEXT UNIQUE NOT NULL,
     pw_hash TEXT NOT NULL
 );

@@ -1,3 +1,5 @@
+import hashlib
+
 from backend.database import db_manager
 
 
@@ -30,6 +32,12 @@ class User:
                 return None
         else:
             return None
+
+    @staticmethod
+    def create(name, pw_hash):
+        user_id = hashlib.md5("".join([name, pw_hash]).encode('utf-8')).hexdigest()
+        sql = f"INSERT INTO {db_manager.TABLE_NAME_USERS} (id, name, pw_hash) VALUES (?,?,?)"
+        return db_manager.execute(sql, [user_id, name, pw_hash])
 
     @staticmethod
     def get_by_id(user_id):

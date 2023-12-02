@@ -3,18 +3,19 @@ from backend.database import db_manager
 
 class Country:
 
-    def __init__(self, name, flag):
-        self.name = name,
+    def __init__(self, code, name, flag):
+        self.code = code
+        self.name = name
         self.flag = flag
 
     def to_dict(self):
-        return {"name": self.name, "flag": self.flag}
+        return {"code": self.code, "name": self.name, "flag": self.flag}
 
     @staticmethod
     def from_dict(c_dict):
         if c_dict:
             try:
-                return Country(c_dict['country'], c_dict['flag'])
+                return Country(c_dict['code'], c_dict['name'], c_dict['flag'])
             except KeyError as e:
                 print("Could not instantiate country with given values:", c_dict)
                 return None
