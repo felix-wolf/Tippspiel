@@ -33,7 +33,7 @@ def login():
     print(name, pw)
     if not name or not pw:
         return "Name und/oder Passwort fehlt", 400
-    pw_hash = hashlib.sha256(pw.encode('utf-8')).hexdigest()
+    pw_hash = hash_password(pw)
     user_object = User.get_by_credentials(name, pw_hash)
     if not user_object:
         return "Name oder Password falsch", 404
@@ -48,16 +48,18 @@ def logout():
 
 
 @app.route('/api/current_user')
-def current_user():
-    return current_user
+def get_cur_user():
+    user_id = current_user.get_id()
+    if user_id:
+        return User.get_by_id(user_id).to_dict()
+    return "Not user logged in", 400
 
 
 @app.route('/api/register')
 def register_user():
     name = request.args.get("name")
     pw = request.args.get("pw")
-    print(name, pw)
-    pw_hash = hashlib.sha256(pw.encode('utf-8')).hexdigest()
+    pw_hash = hash_password(pw)
     success = User.create(name, pw_hash)
     if success:
         return "Success"
@@ -76,6 +78,20 @@ def get_athletes():
 def get_countries():
     return [country.to_dict() for country in Country.get_all()]
 
+
+@app.route('/api/game/create')
+@login_required
+def create_game():
+    name = request.args.get("name")
+    pw = request.args.get("pw")
+    if pw:
+        pw_hash = hash_password(pw)
+    return "not defined", 404
+
+
+
+def hash_password(pw):
+    return hashlib.sha256(pw.encode('utf-8')).hexdigest()
 
 if __name__ == '__main__':
     db_manager.start()

@@ -22,6 +22,12 @@ class User:
     def is_active(self):
         return True
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+        }
+
     @staticmethod
     def from_dict(user_dict):
         if user_dict:

@@ -8,7 +8,9 @@ TABLE_NAME_USERS = "Users"
 
 
 def open_connection():
-    return sqlite3.connect("database/tippspiel.db")
+    conn = sqlite3.connect("database/tippspiel.db")
+    conn.execute("PRAGMA foreign_keys = 1")
+    return conn
 
 
 def start():
@@ -96,11 +98,16 @@ def execute_many(sql, params=None, commit=True):
 def execute_script(script_name):
     with open(f'database/{script_name}', 'r') as sql_file:
         sql_script = sql_file.read()
-    conn = open_connection()
-    cursor = conn.cursor()
-    cursor.executescript(sql_script)
-    conn.commit()
-    conn.close()
+    try:
+        conn = open_connection()
+        cursor = conn.cursor()
+        cursor.executescript(sql_script)
+        conn.commit()
+        conn.close()
+    except sqlite3.IntegrityError as err:
+        print(err)
+    except Exception as err:
+        print(err)
 
 
 def populate_db():
@@ -109,16 +116,22 @@ def populate_db():
 
     countries = load_csv("countries.csv")
     countries = [(c["Code"], c["Name"], c["Flagge"]) for c in countries]
-    execute_many(
-        f"Insert into {TABLE_NAME_COUNTRIES} (code, name, flag) VALUES (?,?,?)",
-        params=countries)
+    try:
+        execute_many(
+            f"Insert OR IGNORE into {TABLE_NAME_COUNTRIES} (code, name, flag) VALUES (?,?,?)",
+            params=countries)
+    except Exception as err:
+        print(err)
 
     # insert athletes
     athletes = load_csv("athletes.csv", generate_id=True)
     athletes = [(a["Id"], a["Vorname"], a["Nachname"], a["Land_Code"], a["Geschlecht"]) for a in athletes]
-    execute_many(
-        f"Insert into {TABLE_NAME_ATHLETES} (id, first_name, last_name, country_code, gender) VALUES (?,?,?,?,?)",
-        params=athletes)
+    try:
+        execute_many(
+            f"Insert OR IGNORE into {TABLE_NAME_ATHLETES} (id, first_name, last_name, country_code, gender) VALUES (?,?,?,?,?)",
+            params=athletes)
+    except Exception as err:
+        print(err)
 
 
 def load_csv(file_name, generate_id=False):
