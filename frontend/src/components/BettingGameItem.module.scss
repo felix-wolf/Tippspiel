@@ -1,0 +1,44 @@
+.container {
+  width: 100px;
+  height: 100px;
+
+  display: flex;
+  flex-direction: column;
+  grid-gap: var(--grid-s);
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--corner-s);
+
+}
+
+.visible {
+  border: 2px solid var(--fg-secondary);
+  cursor: pointer;
+  background: #A8DADC;
+  filter: var(--shadow-s);
+}
+
+.creating {
+  width: 100%;
+}
+
+.creatorContainer {
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 5fr;
+  margin: 10px;
+}
+
+.closeContainer {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+}
+
+.text {
+  text-align: center;
+}

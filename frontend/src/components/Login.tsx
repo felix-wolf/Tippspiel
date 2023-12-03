@@ -8,12 +8,12 @@ import { cls } from "../styles/cls";
 import ReactConfetti from "react-confetti";
 import { useNavigateParams } from "../../SiteRoutes";
 
-type Modus = "login" | "register";
+type Mode = "login" | "register";
 
 export function Login() {
   const error_timeout = 3000;
   const navigate = useNavigateParams();
-  const [modus, setModus] = useState<Modus>("login");
+  const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
   const [nameShake, setNameShake] = useState(false);
   const [password, setPassword] = useState("");
@@ -33,8 +33,7 @@ export function Login() {
   }, [name, password]);
 
   const onLoginClick = useCallback(() => {
-    const req = new Request(`/api/login?name=${name}&pw=${password}`);
-    fetch(req).then((res) => {
+    fetch(`/api/login?name=${name}&pw=${password}`).then((res) => {
       try {
         if (res.status == 200) {
           navigate("/home", {});
@@ -51,11 +50,10 @@ export function Login() {
         console.log(e);
       }
     });
-  }, [name, password, modus]);
+  }, [name, password, mode]);
 
   const onRegisterClick = useCallback(() => {
-    const req = new Request(`/api/register?name=${name}&pw=${password}`);
-    fetch(req).then((res) => {
+    fetch(`/api/register?name=${name}&pw=${password}`).then((res) => {
       try {
         if (res.status == 200) {
           setConfetti(true);
@@ -78,10 +76,10 @@ export function Login() {
   const onModeSwitch = useCallback(() => {
     if (!confetti) {
       setError(null);
-      const mod = modus == "login" ? "register" : "login";
-      setModus(mod);
+      const mod = mode == "login" ? "register" : "login";
+      setMode(mod);
     }
-  }, [confetti, modus]);
+  }, [confetti, mode]);
 
   return (
     <>
@@ -94,7 +92,7 @@ export function Login() {
       )}
       <div className={styles.container}>
         <div className={styles.logo_container}>
-          <img className={styles.logo} src={logo} />
+          <img alt={"the logo"} className={styles.logo} src={logo} />
         </div>
         <h1 className={styles.greeting}>Willkommen</h1>
         <div className={styles.login_container}>
@@ -104,7 +102,7 @@ export function Login() {
             <p>
               {error
                 ? error
-                : modus == "login"
+                : mode == "login"
                   ? "Einloggen..."
                   : "Registrieren..."}
             </p>
@@ -125,14 +123,14 @@ export function Login() {
           </Shakable>
           <Button
             type={"positive"}
-            title={modus == "login" ? "Login" : "Register"}
+            title={mode == "login" ? "Login" : "Register"}
             isEnabled={name != "" && password != "" && !confetti}
             onDisabledClick={onDisabledClick}
-            onClick={modus == "login" ? onLoginClick : onRegisterClick}
+            onClick={mode == "login" ? onLoginClick : onRegisterClick}
           />
           <div className={styles.register} onClick={onModeSwitch}>
-            {modus == "login" && "Noch nicht angemeldet? Hier registrieren..."}
-            {modus == "register" && "Schon angemeldet? Hier einloggen..."}
+            {mode == "login" && "Noch nicht angemeldet? Hier registrieren..."}
+            {mode == "register" && "Schon angemeldet? Hier einloggen..."}
           </div>
         </div>
       </div>

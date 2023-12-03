@@ -5,7 +5,8 @@
 }
 
 .negative {
-  background: red;
+  background: var(--fg-secondary);
+  color: var(--bg-secondary)
 }
 
 .neutral {
@@ -18,6 +19,14 @@
   height: var(--height-s);
   border-radius: var(--corner-s);
   text-align: center;
+}
+
+.flexible_width {
+  width: 100%;
+}
+
+.flexible_height {
+  height: 100%;
 }
 
 .enabled {

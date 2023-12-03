@@ -1,7 +1,8 @@
 import { LoginPage } from "./pages/LoginPage";
 import "./styles/main.scss";
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { SiteRoutes } from "../SiteRoutes";
+import { HomePage } from "./pages/HomePage";
 
 /**
  * All available routes.
@@ -12,6 +13,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path={SiteRoutes.Login} element={<LoginPage />} />
+      <Route path={SiteRoutes.Home} element={<HomePage />} />
     </Routes>
   );
 }
