@@ -1,8 +1,8 @@
 Code;Name;Flagge
-DEU;Deutschland;🇩🇪
+GER;Deutschland;🇩🇪
 NOR;Norwegen;🇳🇴
-LVA;Lettland;🇱🇻
-CHE;Schweiz;🇨🇭
+LAT;Lettland;🇱🇻
+SUI;Schweiz;🇨🇭
 SWE;Schweden;🇸🇪
 ITA;Italien;🇮🇹
 FRA;Frankreich;🇫🇷
@@ -16,4 +16,8 @@ BEL;Belgien;🇧🇪
 FIN;Finnland;🇫🇮
 EST;Estland;🇪🇪
 UKR;Ukraine;🇺🇦
-LIT;Litauen;🇱🇹
+LTU;Litauen;🇱🇹
+POL;Polen;🇵🇱
+CAN;Kanada;🇨🇦
+USA;Vereinigte Staaten v. Amerika;🇺🇸
+BUL;Bulgarien;🇧🇬
