@@ -1,41 +1,111 @@
 Nachname;Vorname;Land_Code;Geschlecht
-Rees;Roman;DEU;m
-Strelow;Justus;DEU;m
-Boe;Johannes Thingnes;NOR;m
-Rastorgujevs;Andrejs;LVA;m
-Stalder;Sebastian;CHE;m
-Stroemsheim;Endre;NOR;m
+Nawrath;Philipp;GER;m
 Samuelsson;Sebastian;SWE;m
-Giacomel;Tommaso;ITA;m
-Doll;Benedikt;DEU;m
-Claude;Emilien;FRA;m
-Leitner;Felix;AUT;m
-Laegreid;Sturla Holm;NOR;m
-Christiansen;Vetle Sjaastad;NOR;m
-Krcmar;Michal;CZE;m
-Claude;Fabien;FRA;m
-Coltea;George;ROU;m
-Kuehn;Johannes;DEU;m
-Magazeev;Pavel;MDA;m
-Nelin;Jesper;SWE;m
-Dale-Skjevdal;Johannes;NOR;m
-Eder;Simon;AUT;m
-Hofer;Lukas;ITA;m
-Fak;Jakov;SLO;m
-Soerum;Vebjoern;NOR;m
-Perrot;Eric;FRA;m
 Boe;Tarjei;NOR;m
-Jacquelin;Emilien;FRA;m
-Marecek;Jonas;CZE;m
-Nawrath;Philipp;DEU;m
-Mukhin;Alexandr;KAZ;m
-Planko;Lovro;SLO;m
+Strelow;Justus;GER;m
+Stroemsheim;Endre;NOR;m
+Christiansen;Vetle Sjaastad;NOR;m
+Soerum;Vebjoern;NOR;m
+Boe;Johannes Thingnes;NOR;m
+Stalder;Sebastian;SUI;m
+Dale-Skjevdal;Johannes;NOR;m
+Rees;Roman;GER;m
+Claude;Fabien;FRA;m
+Giacomel;Tommaso;ITA;m
+Kuehn;Johannes;GER;m
+Doll;Benedikt;GER;m
+Rastorgujevs;Andrejs;LAT;m
+Ponsiluoma;Martin;SWE;m
+Laegreid;Sturla Holm;NOR;m
 Bionaz;Didier;ITA;m
-Dovzan;Miha;SLO;m
+Leitner;Felix;AUT;m
+Hofer;Lukas;ITA;m
+Fillon Maillet;Quentin;FRA;m
+Perrot;Eric;FRA;m
+Magazeev;Pavel;MDA;m
+Jacquelin;Emilien;FRA;m
+Krcmar;Michal;CZE;m
+Guigonnat;Antonin;FRA;m
+Eder;Simon;AUT;m
+Vidmar;Anton;SLO;m
+Zobel;David;GER;m
+Mukhin;Alexandr;KAZ;m
+Claude;Emilien;FRA;m
+Langer;Thierry;BEL;m
+Coltea;George;ROU;m
 Claude;Florent;BEL;m
-Hiidensalo;Olli;FIN;m
-Zahkna;Rene;EST;m
-Seppala;Tero;FIN;m
-Tyshchenko;Artem;UKR;m
-Strolia;Vytautas;LIT;m
+Nelin;Jesper;SWE;m
+Strolia;Vytautas;LTU;m
+Planko;Lovro;SLO;m
+Fak;Jakov;SLO;m
+Marecek;Jonas;CZE;m
 Makarov;Maksim;MDA;m
+Hartweg;Niklas;SUI;m
+Oberhauser;Magnus;AUT;m
+Dovzan;Miha;SLO;m
+Komatz;David;AUT;m
+Vaclavik;Adam;CZE;m
+Finello;Jeremy;SUI;m
+Hiidensalo;Olli;FIN;m
+Karlik;Mikulas;CZE;m
+Zahkna;Rene;EST;m
+Gunka;Jan;POL;m
+Seppala;Tero;FIN;m
+Dudchenko;Anton;UKR;m
+Gow;Christian;CAN;m
+Tyshchenko;Artem;UKR;m
+Preuss;Franziska;GER;f
+Jeanmonnot;Lou;FRA;f
+Voigt;Vanessa;GER;f
+Knotten;Karoline Offigstad;NOR;f
+Vittozzi;Lisa;ITA;f
+Arnekleiv;Juni;NOR;f
+Tandrevold;Ingrid Landmark;NOR;f
+Johansen;Marthe Krakstad;NOR;f
+Oeberg;Hanna;SWE;f
+Haecki-Gross;Lena;SUI;f
+Persson;Linn;SWE;f
+Hauser;Lisa Theresa;AUT;f
+Wierer;Dorothea;ITA;f
+Simon;Julia;FRA;f
+Hettich-Walz;Janina;GER;f
+Oeberg;Elvira;SWE;f
+Braisaz-Bouchet;Justine;FRA;f
+Chauveau;Sophie;FRA;f
+Passler;Rebecca;ITA;f
+Brorsson;Mona;SWE;f
+Schneider;Sophia;GER;f
+Maka;Anna;POL;f
+Gasparin;Elisa;SUI;f
+Tomingas;Tuuli;EST;f
+Skogan;Marit Ishol;NOR;f
+Grotian;Selina;GER;f
+Baserga;Amy;SUI;f
+Steiner;Tamara;AUT;f
+Stremous;Alina;MDA;f
+Guigonnat;Gilonne;FRA;f
+Lie;Lotte;BEL;f
+Jakiela;Joanna;POL;f
+Chevalier;Chloe;FRA;f
+Kuelm;Susan;EST;f
+Lampic;Anamarija;SLO;f
+Davidova;Marketa;CZE;f
+Dimitrova;Valentina;BUL;f
+Comola;Samuela;ITA;f
+Petrenko;Iryna;UKR;f
+Bulina;Sanita;LAT;f
+Gasparin;Aita;SUI;f
+Jislova;Jessica;CZE;f
+Gandler;Anna;AUT;f
+Kebinger;Hanna;GER;f
+Vobornikova;Tereza;CZE;f
+Irwin;Deedra;USA;f
+Minkkinen;Suvi;FIN;f
+Repinc;Lena;SLO;f
+Auchentaller;Hannah;ITA;f
+Dickinson;Kelsey Joan;USA;f
+Bendika;Baiba;LAT;f
+Peiffer;Benita;CAN;f
+Oberthaler;Kristina;AUT;f
+Johansson;Tilda;SWE;f
+Kryvonos;Anna;UKR;f
