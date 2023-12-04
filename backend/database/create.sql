@@ -31,6 +31,15 @@ CREATE TABLE if not EXISTS GamePlayers (
     PRIMARY KEY (player_id, game_id)
 );
 
+CREATE TABLE if not EXISTS Events (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    game_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    datetime DATETIME NOT NULL,
+    FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
+);
+
 CREATE TABLE if not EXISTS Users (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT UNIQUE NOT NULL,

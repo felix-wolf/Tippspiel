@@ -1,16 +1,16 @@
-import styles from "./BettingGames.module.scss";
+import styles from "./BettingGameList.module.scss";
 import { useCallback, useEffect, useState } from "react";
 import { BettingGameItem, BettingGameItemGame } from "./BettingGameItem";
-import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
-import { User } from "../models/user/User";
-import { Game } from "../models/Game";
+import { SiteRoutes, useNavigateParams } from "../../../SiteRoutes";
+import { User } from "../../models/user/User";
+import { Game } from "../../models/Game";
 
 type BettingGamesProps = {
   user?: User;
   show_games: "user" | "other";
 };
 
-export function BettingGames({
+export function BettingGameList({
   user = undefined,
   show_games,
 }: BettingGamesProps) {

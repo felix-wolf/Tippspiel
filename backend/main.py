@@ -9,6 +9,7 @@ from models.user import User
 from models.athlete import Athlete
 from models.country import Country
 from models.game import Game
+from models.event import Event
 
 app = Flask(__name__)
 app.secret_key = "1b98d3e890b6bd7213300e0a98e66856"
@@ -126,6 +127,16 @@ def fetch_games():
         return "Game not found", 404
     else:
         return [game.to_dict() for game in Game.get_all()]
+
+
+@app.route("/api/event/get")
+@login_required
+def fetch_events():
+    game_id = request.args.get("game_id")
+    if game_id:
+        return [event.to_dict() for event in Event.get_all_by_game_id(game_id)]
+    else:
+        return "No game_id specified", 404
 
 
 def hash_password(pw):

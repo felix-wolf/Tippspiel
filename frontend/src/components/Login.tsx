@@ -6,7 +6,6 @@ import { Button } from "./Button";
 import { Shakable } from "./Shakable";
 import { cls } from "../styles/cls";
 import ReactConfetti from "react-confetti";
-import { useNavigateParams } from "../../SiteRoutes";
 import { useLogin } from "../models/user/UserContext";
 
 type Mode = "login" | "register";

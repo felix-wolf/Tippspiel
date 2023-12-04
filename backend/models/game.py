@@ -6,8 +6,13 @@ from backend.models.user import User
 
 class Game:
 
-    def __init__(self, game_id, name, pw_hash, creator: User, players: [User] = []):
-        self.id = game_id
+    def __init__(self, name, pw_hash, creator: User, game_id=None, players=None):
+        if players is None:
+            players = []
+        if game_id:
+            self.id = game_id
+        else:
+            self.id = hashlib.md5("".join([name, creator.id, str(pw_hash)]).encode('utf-8')).hexdigest()
         self.name = name
         self.pw_hash = pw_hash
         self.players = players
@@ -32,11 +37,24 @@ class Game:
             "creator": self.creator.to_dict()
         }
 
+    def save_to_db(self):
+        sql = f"INSERT INTO {db_manager.TABLE_NAME_GAMES} (id, name, pw_hash, owner_id) VALUES (?,?,?,?)"
+        first = db_manager.execute(sql, [self.id, self.name, self.pw_hash, self.creator.id])
+        for player in self.players:
+            sql = f"INSERT INTO {db_manager.TABLE_NAME_GAME_PLAYERS} (player_id, game_id) VALUES (?,?)"
+            success = db_manager.execute(sql, [player.id, self.id])
+            if not success:
+                return False
+        return first, self.id
+
     @staticmethod
-    def from_dict(g_dict, creator, players=[]):
+    def from_dict(g_dict, creator, players=None):
         if g_dict:
             try:
-                return Game(g_dict['id'], g_dict['name'], g_dict['pw_hash'], creator, players)
+                return Game(
+                    game_id=g_dict['id'], name=g_dict['name'],
+                    pw_hash=g_dict['pw_hash'], creator=creator, players=players
+                )
             except KeyError as e:
                 print("Could not instantiate game with given values:", g_dict)
                 return None
@@ -64,10 +82,7 @@ class Game:
     @staticmethod
     def create(user_id, name, pw_hash):
         # insert game
-        game_id = hashlib.md5("".join([user_id, name, str(pw_hash)]).encode('utf-8')).hexdigest()
-        sql = f"INSERT INTO {db_manager.TABLE_NAME_GAMES} (id, name, pw_hash, owner_id) VALUES (?,?,?,?)"
-        first = db_manager.execute(sql, [game_id, name, pw_hash, user_id])
-        # insert player into game
-        sql = f"INSERT INTO {db_manager.TABLE_NAME_GAME_PLAYERS} (player_id, game_id) VALUES (?,?)"
-        second = db_manager.execute(sql, [user_id, game_id])
-        return first and second, game_id
+        creator = User.get_by_id(user_id)
+        game = Game(name=name, pw_hash=pw_hash, creator=creator, players=[creator])
+        return game.save_to_db()
+
