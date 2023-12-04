@@ -96,6 +96,25 @@ def create_game():
         return "Fehler...", 500
 
 
+@app.route("/api/game/join")
+@login_required
+def join_game():
+    user_id = request.args.get("user_id")
+    game_id = request.args.get("game_id")
+    pw = request.args.get("pw")
+    game = Game.get_by_id(game_id)
+    if game.pw_hash and hash_password(pw) != game.pw_hash:
+        return "Passwort falsch", 400
+    user = User.get_by_id(user_id)
+    if game and user:
+        success = game.add_player(user)
+        if success:
+            return "Success"
+        else:
+            return "Beitreten nicht erfolgreich!", 400
+    return "Tippspiel oder spieler konnte nicht gefunden werden!", 400
+
+
 @app.route('/api/game/get')
 @login_required
 def fetch_games():

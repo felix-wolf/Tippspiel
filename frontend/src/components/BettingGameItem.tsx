@@ -14,6 +14,7 @@ export type BettingGameItemGame = {
 type BettingGameItemProps = {
   onGameSelect?: (id: string) => void;
   onCreate?: (name: string, password?: string) => void;
+  onJoin?: (game_id: string, password?: string) => void;
   item?: BettingGameItemGame;
   type: "real" | "add";
   joined?: boolean;
@@ -24,6 +25,7 @@ export function BettingGameItem({
   joined = true,
   onGameSelect: _onGameSelect,
   onCreate: _onCreate,
+  onJoin: _onJoin,
   type,
 }: BettingGameItemProps) {
   const [creating, setCreating] = useState(false);
@@ -46,12 +48,6 @@ export function BettingGameItem({
     }
   }, [type, item, creating, joined, joining]);
 
-  const onCreateClick = useCallback((name: string, password?: string) => {
-    if (_onCreate) {
-      _onCreate(name, password);
-    }
-  }, []);
-
   return (
     <>
       {type != "add" && (
@@ -70,6 +66,9 @@ export function BettingGameItem({
               game={item?.game}
               onClose={() => {
                 setJoining(false);
+              }}
+              onJoin={(password) => {
+                _onJoin && _onJoin(item?.game.id, password);
               }}
             />
           )}
@@ -92,7 +91,9 @@ export function BettingGameItem({
           )}
           {creating && (
             <GameCreator
-              onCreate={onCreateClick}
+              onCreate={(name, password) => {
+                _onCreate && _onCreate(name, password);
+              }}
               onClose={() => setCreating(false)}
             />
           )}

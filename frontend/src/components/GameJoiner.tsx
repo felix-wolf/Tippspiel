@@ -7,9 +7,15 @@ import { Game } from "../models/Game";
 type GameJoinerProps = {
   game: Game;
   onClose: () => void;
+
+  onJoin: (password?: string) => void;
 };
 
-export function GameJoiner({ game, onClose: _onClose }: GameJoinerProps) {
+export function GameJoiner({
+  game,
+  onClose: _onClose,
+  onJoin: _onJoin,
+}: GameJoinerProps) {
   const [password, setPassword] = useState("");
 
   console.log(game);
@@ -40,7 +46,9 @@ export function GameJoiner({ game, onClose: _onClose }: GameJoinerProps) {
           height={"flexible"}
         />
         <Button
-          onClick={_onClose}
+          onClick={() => {
+            _onJoin(password != "" ? password : undefined);
+          }}
           title={"Beitreten"}
           type={"positive"}
           width={"flexible"}

@@ -73,6 +73,26 @@ export function BettingGames({
     });
   }, []);
 
+  const onJoin = useCallback(
+    (game_id: string, password?: string) => {
+      console.log("join", game_id, password);
+      let pw = "";
+      if (password) pw = `&pw=${password}`;
+      fetch(`/api/game/join?user_id=${user?.id}&game_id=${game_id}${pw}`).then(
+        (res) => {
+          if (res.status == 200) {
+            useNavigate(SiteRoutes.Game, { game_id: game_id });
+          } else {
+            res.text().then((text) => {
+              console.log(text);
+            });
+          }
+        },
+      );
+    },
+    [user],
+  );
+
   return (
     <div className={styles.container}>
       <div className={styles.heading}>
@@ -88,6 +108,7 @@ export function BettingGames({
               useNavigate(SiteRoutes.Game, { game_id: id });
             }}
             onCreate={onCreate}
+            onJoin={onJoin}
             type={item.type}
           />
         ))}

@@ -13,6 +13,16 @@ class Game:
         self.players = players
         self.creator = creator
 
+    def add_player(self, player: User):
+        sql = f"""
+            INSERT INTO {db_manager.TABLE_NAME_GAME_PLAYERS} 
+            (player_id, game_id) VALUES (?,?)
+        """
+        success = db_manager.execute(sql, [player.id, self.id])
+        if success:
+            self.players.append(player)
+        return success
+
     def to_dict(self):
         return {
             "id": self.id,
