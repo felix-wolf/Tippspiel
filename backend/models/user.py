@@ -55,6 +55,18 @@ class User:
         return User.from_dict(res)
 
     @staticmethod
+    def get_by_game_id(game_id):
+        sql = f"""
+            SELECT u.* 
+            FROM {db_manager.TABLE_NAME_USERS} u, {db_manager.TABLE_NAME_GAME_PLAYERS} gp
+            WHERE u.id = gp.player_id AND
+            gp.game_id = ?
+            """
+        res = db_manager.query(sql, [game_id])
+        return [User.from_dict(u) for u in res]
+
+
+    @staticmethod
     def get_by_credentials(name, pw_hash):
         sql = f"""
                 SELECT * FROM {db_manager.TABLE_NAME_USERS} a

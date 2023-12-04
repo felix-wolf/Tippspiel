@@ -8,6 +8,7 @@ from database import db_manager
 from models.user import User
 from models.athlete import Athlete
 from models.country import Country
+from models.game import Game
 
 app = Flask(__name__)
 app.secret_key = "1b98d3e890b6bd7213300e0a98e66856"
@@ -17,7 +18,6 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    print("Requesting user for id", user_id)
     return User.get_by_id(user_id)
 
 
@@ -30,7 +30,6 @@ def get_time():
 def login():
     name = request.args.get("name")
     pw = request.args.get("pw")
-    print(name, pw)
     if not name or not pw:
         return "Name und/oder Passwort fehlt", 400
     pw_hash = hash_password(pw)
@@ -38,7 +37,7 @@ def login():
     if not user_object:
         return "Name oder Password falsch", 404
     login_user(user_object, remember=True)
-    return "Success"
+    return user_object.to_dict()
 
 
 @app.route('/api/logout')
@@ -84,14 +83,35 @@ def get_countries():
 def create_game():
     name = request.args.get("name")
     pw = request.args.get("pw")
+    pw_hash = None
     if pw:
         pw_hash = hash_password(pw)
-    return "not defined", 404
+    user_id = current_user.get_id()
+    if user_id:
+        user_id = User.get_by_id(user_id).id
+    success, game_id = Game.create(user_id, name, pw_hash)
+    if success:
+        return Game.get_by_id(game_id).to_dict(), 200
+    else:
+        return "Fehler...", 500
 
+
+@app.route('/api/game/get')
+@login_required
+def fetch_games():
+    game_id = request.args.get("id")
+    if game_id:
+        game = Game.get_by_id(game_id)
+        if game:
+            return game.to_dict()
+        return "Game not found", 404
+    else:
+        return [game.to_dict() for game in Game.get_all()]
 
 
 def hash_password(pw):
     return hashlib.sha256(pw.encode('utf-8')).hexdigest()
+
 
 if __name__ == '__main__':
     db_manager.start()

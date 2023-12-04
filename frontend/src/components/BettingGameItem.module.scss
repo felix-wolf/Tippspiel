@@ -11,6 +11,15 @@
 
 }
 
+.game {
+  text-align: center;
+  font-weight: var(--font_weight);
+}
+
+.joining {
+  width: 100%
+}
+
 .visible {
   border: 2px solid var(--fg-secondary);
   cursor: pointer;

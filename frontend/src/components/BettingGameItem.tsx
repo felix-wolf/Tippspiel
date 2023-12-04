@@ -3,40 +3,48 @@ import plus from "../assets/icons/plus.svg";
 import { cls } from "../styles/cls";
 import { useCallback, useState } from "react";
 import { GameCreator } from "./GameCreator";
+import { GameJoiner } from "./GameJoiner";
+import { Game } from "../models/Game";
 
-export type BettingGame = {
-  id: string;
-  name: string;
+export type BettingGameItemGame = {
+  game: Game;
+  type: "real" | "add";
 };
 
 type BettingGameItemProps = {
   onGameSelect?: (id: string) => void;
   onCreate?: (name: string, password?: string) => void;
-  game?: BettingGame;
-  is_placeholder?: boolean;
-  is_hidden?: boolean;
+  item?: BettingGameItemGame;
+  type: "real" | "add";
+  joined?: boolean;
 };
 
 export function BettingGameItem({
-  game,
+  item,
+  joined = true,
   onGameSelect: _onGameSelect,
   onCreate: _onCreate,
-  is_placeholder = false,
-  is_hidden = false,
+  type,
 }: BettingGameItemProps) {
   const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
+
+  const onPlaceholderClick = useCallback(() => {
+    if (!creating) setCreating(true);
+  }, [creating]);
 
   const onClick = useCallback(() => {
-    if (!is_hidden && !creating) {
-      if (is_placeholder) {
-      }
-      setCreating(true);
-      console.log("click");
-      if (_onGameSelect && game) {
-        _onGameSelect(game.id);
+    if (!creating) {
+      if (_onGameSelect && item) {
+        if (joined) {
+          _onGameSelect(item.game.id);
+        } else {
+          console.log("ask to join");
+          if (!joining) setJoining(true);
+        }
       }
     }
-  }, [is_hidden, game, creating]);
+  }, [type, item, creating, joined, joining]);
 
   const onCreateClick = useCallback((name: string, password?: string) => {
     if (_onCreate) {
@@ -45,28 +53,51 @@ export function BettingGameItem({
   }, []);
 
   return (
-    (is_placeholder || is_hidden) && (
-      <div
-        className={cls(
-          styles.container,
-          !is_hidden && styles.visible,
-          creating && styles.creating,
-        )}
-        onClick={onClick}
-      >
-        {!is_hidden && !creating && (
-          <>
-            <img className={styles.icon} src={plus} />
-            <div className={styles.text}>Neu</div>
-          </>
-        )}
-        {creating && (
-          <GameCreator
-            onCreate={onCreateClick}
-            onClose={() => setCreating(false)}
-          />
-        )}
-      </div>
-    )
+    <>
+      {type != "add" && (
+        <div
+          className={cls(
+            styles.container,
+            styles.visible,
+            styles.game,
+            joining && styles.joining,
+          )}
+          onClick={onClick}
+        >
+          {!joining && item?.game.name}
+          {joining && item?.game && (
+            <GameJoiner
+              game={item?.game}
+              onClose={() => {
+                setJoining(false);
+              }}
+            />
+          )}
+        </div>
+      )}
+      {type == "add" && (
+        <div
+          className={cls(
+            styles.container,
+            styles.visible,
+            creating && styles.creating,
+          )}
+          onClick={!creating ? onPlaceholderClick : undefined}
+        >
+          {!creating && (
+            <>
+              <img alt={"icon"} className={styles.icon} src={plus} />
+              <div className={styles.text}>Neu</div>
+            </>
+          )}
+          {creating && (
+            <GameCreator
+              onCreate={onCreateClick}
+              onClose={() => setCreating(false)}
+            />
+          )}
+        </div>
+      )}
+    </>
   );
 }

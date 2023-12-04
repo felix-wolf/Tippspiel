@@ -35,7 +35,7 @@ export function GameCreator({
       <div className={styles.buttonsContainer}>
         <Button
           onClick={_onClose}
-          title={"Close"}
+          title={"Schließen"}
           type={"negative"}
           width={"flexible"}
           height={"flexible"}
@@ -44,7 +44,7 @@ export function GameCreator({
           onClick={() => {
             _onCreate(name, password ? password : undefined);
           }}
-          title={"Create"}
+          title={"Erstellen"}
           type={"positive"}
           width={"flexible"}
           isEnabled={name != ""}

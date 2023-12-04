@@ -1,8 +1,9 @@
-import { LoginPage } from "./pages/LoginPage";
 import "./styles/main.scss";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { SiteRoutes } from "../SiteRoutes";
-import { HomePage } from "./pages/HomePage";
+import { GamePage } from "./pages/GamePage";
+import UserContextLayout from "./models/user/UserContext";
+import { Main } from "./pages/Main";
 
 /**
  * All available routes.
@@ -12,8 +13,10 @@ import { HomePage } from "./pages/HomePage";
 function AppRoutes() {
   return (
     <Routes>
-      <Route path={SiteRoutes.Login} element={<LoginPage />} />
-      <Route path={SiteRoutes.Home} element={<HomePage />} />
+      <Route element={<UserContextLayout />}>
+        <Route path={SiteRoutes.Main} element={<Main />} />
+        <Route path={SiteRoutes.Game} element={<GamePage />} />
+      </Route>
     </Routes>
   );
 }

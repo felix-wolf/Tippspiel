@@ -7,12 +7,13 @@ import { Shakable } from "./Shakable";
 import { cls } from "../styles/cls";
 import ReactConfetti from "react-confetti";
 import { useNavigateParams } from "../../SiteRoutes";
+import { useLogin } from "../models/user/UserContext";
 
 type Mode = "login" | "register";
 
 export function Login() {
   const error_timeout = 3000;
-  const navigate = useNavigateParams();
+  const login = useLogin();
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
   const [nameShake, setNameShake] = useState(false);
@@ -32,24 +33,13 @@ export function Login() {
     }
   }, [name, password]);
 
-  const onLoginClick = useCallback(() => {
-    fetch(`/api/login?name=${name}&pw=${password}`).then((res) => {
-      try {
-        if (res.status == 200) {
-          navigate("/home", {});
-        } else if (res.status == 404) {
-          res.text().then((text) => {
-            setError(text);
-            setTimeout(() => setError(null), error_timeout);
-          });
-        } else {
-          setError("Ein unbekannter Fehler ist aufgetreten!");
-          setTimeout(() => setError(null), error_timeout);
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    });
+  const onLoginClick = useCallback(async () => {
+    try {
+      await login(name, password);
+    } catch (e) {
+      setError(e.text);
+      setTimeout(() => setError(null), error_timeout);
+    }
   }, [name, password, mode]);
 
   const onRegisterClick = useCallback(() => {

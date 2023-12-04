@@ -14,8 +14,8 @@ type RouteParams<T> = T extends `${infer U}/${infer Rest}`
  * Defines all valid paths to sites.
  */
 export const SiteRoutes = {
-  Login: "/",
-  Home: "/home",
+  Main: "/",
+  Game: "/game/:game_id",
   Subject: "/:studyId/:subjectId",
   Export: "/:studyId/export",
   Debug: "/debug/*",
