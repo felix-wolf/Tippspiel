@@ -10,6 +10,13 @@ export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
   const user = useCurrentUser();
   const [game, setGame] = useState<Game | undefined>(undefined);
+  const [user, setUser] = useState<User | undefined>(undefined);
+
+  useEffect(() => {
+    User.get_current_from_backend().then((user) => {
+      setUser(user);
+    });
+  }, []);
 
   useEffect(() => {
     Game.fetchOne(game_id)
