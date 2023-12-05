@@ -2,7 +2,9 @@ import { SiteRoutes, usePathParams } from "../../SiteRoutes";
 import { useEffect, useState } from "react";
 import { Game } from "../models/Game";
 import styles from "./GamePage.module.scss";
-import { Events } from "../components/Events";
+import { EventCreator } from "../components/EventCreator";
+import { EventList } from "../components/lists/EventList";
+import { User } from "../models/user/User";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -10,13 +12,17 @@ export function GamePage() {
 
   useEffect(() => {
     Game.fetchOne(game_id)
-      .then((game) => setGame(game))
+      .then((game) => {
+        if (game) setGame(game);
+      })
       .catch((error) => console.log(error));
   }, [game_id]);
   return (
     <>
       <div className={styles.headline}>{game?.name}</div>
-      <Events game={game} />
+      {game?.creator?.id == user?.id && <EventCreator />}
+      <EventList type={"upcoming"} game={game} />
+      <EventList type={"past"} game={game} />
     </>
   );
 }

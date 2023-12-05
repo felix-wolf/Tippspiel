@@ -44,15 +44,17 @@ def login():
 @app.route('/api/logout')
 def logout():
     logout_user()
-    return {"Logout": "Successful"}
+    return "Successful"
 
 
 @app.route('/api/current_user')
 def get_cur_user():
     user_id = current_user.get_id()
+    print(user_id)
     if user_id:
+        print("Returning")
         return User.get_by_id(user_id).to_dict()
-    return "Not user logged in", 400
+    return "No user logged in", 400
 
 
 @app.route('/api/register')

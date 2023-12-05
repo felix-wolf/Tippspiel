@@ -32,6 +32,6 @@ export class Event {
         );
       });
     };
-    return NetworkHelper.fetchOne(`/api/event/get?game_id=${game_id}`, builder);
+    return NetworkHelper.fetchAll(`/api/event/get?game_id=${game_id}`, builder);
   }
 }
