@@ -60,9 +60,9 @@ def register_user():
     name = request.args.get("name")
     pw = request.args.get("pw")
     pw_hash = hash_password(pw)
-    success = User.create(name, pw_hash)
+    success, user_id = User.create(name, pw_hash)
     if success:
-        return "Success"
+        return User.get_by_id(user_id).to_dict()
     else:
         return "Name schon vergeben!", 400
 
@@ -92,7 +92,7 @@ def create_game():
         user_id = User.get_by_id(user_id).id
     success, game_id = Game.create(user_id, name, pw_hash)
     if success:
-        return Game.get_by_id(game_id).to_dict(), 200
+        return Game.get_by_id(game_id).to_dict()
     else:
         return "Fehler...", 500
 
@@ -110,7 +110,7 @@ def join_game():
     if game and user:
         success = game.add_player(user)
         if success:
-            return "Success"
+            return game.to_dict()
         else:
             return "Beitreten nicht erfolgreich!", 400
     return "Tippspiel oder spieler konnte nicht gefunden werden!", 400
