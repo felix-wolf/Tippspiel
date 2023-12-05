@@ -131,7 +131,11 @@ def populate_db():
     athletes = [(a["Id"], a["Vorname"], a["Nachname"], a["Land_Code"], a["Geschlecht"]) for a in athletes]
     try:
         execute_many(
-            f"Insert OR IGNORE into {TABLE_NAME_ATHLETES} (id, first_name, last_name, country_code, gender) VALUES (?,?,?,?,?)",
+            f"""
+            Insert OR IGNORE into {TABLE_NAME_ATHLETES} 
+            (id, first_name, last_name, country_code, gender)
+            VALUES (?,?,?,?,?)
+            """,
             params=athletes)
     except Exception as err:
         print(err)
