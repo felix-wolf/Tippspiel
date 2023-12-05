@@ -7,6 +7,7 @@ import { Shakable } from "./Shakable";
 import { cls } from "../styles/cls";
 import ReactConfetti from "react-confetti";
 import { useLogin } from "../models/user/UserContext";
+import { User } from "../models/user/User";
 
 type Mode = "login" | "register";
 
@@ -32,34 +33,27 @@ export function Login() {
     }
   }, [name, password]);
 
-  const onLoginClick = useCallback(async () => {
-    try {
-      await login(name, password);
-    } catch (e) {
-      setError(e.text);
+  const onLoginClick = useCallback(() => {
+    login(name, password).catch((error) => {
+      console.log(error);
+      setError(error);
       setTimeout(() => setError(null), error_timeout);
-    }
+    });
   }, [name, password, mode]);
 
   const onRegisterClick = useCallback(() => {
-    fetch(`/api/register?name=${name}&pw=${password}`).then((res) => {
-      try {
-        if (res.status == 200) {
-          setConfetti(true);
-          setTimeout(() => {
-            setConfetti(false);
-            onLoginClick();
-          }, 5000);
-        } else {
-          res.text().then((error_text) => {
-            setError(error_text);
-          });
-          setTimeout(() => setError(null), error_timeout);
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    });
+    User.create(name, password)
+      .then((_) => {
+        setConfetti(true);
+        setTimeout(() => {
+          setConfetti(false);
+          onLoginClick();
+        }, 5000);
+      })
+      .catch((error) => {
+        setError(error);
+        setTimeout(() => setError(null), error_timeout);
+      });
   }, [name, password]);
 
   const onModeSwitch = useCallback(() => {
@@ -96,31 +90,38 @@ export function Login() {
                   : "Registrieren..."}
             </p>
           </div>
-          <Shakable shaking={nameShake}>
-            <TextField
-              type={"text"}
-              placeholder={"Nutzername"}
-              onInput={(input) => setName(input)}
+          <form
+            className={styles.form}
+            onSubmit={(event) => {
+              event.preventDefault();
+            }}
+          >
+            <Shakable shaking={nameShake}>
+              <TextField
+                type={"text"}
+                placeholder={"Nutzername"}
+                onInput={(input) => setName(input)}
+              />
+            </Shakable>
+            <Shakable shaking={passwordShake}>
+              <TextField
+                type={"password"}
+                placeholder={"Passwort"}
+                onInput={(input) => setPassword(input)}
+              />
+            </Shakable>
+            <Button
+              type={"positive"}
+              title={mode == "login" ? "Login" : "Register"}
+              isEnabled={name != "" && password != "" && !confetti}
+              onDisabledClick={onDisabledClick}
+              onClick={mode == "login" ? onLoginClick : onRegisterClick}
             />
-          </Shakable>
-          <Shakable shaking={passwordShake}>
-            <TextField
-              type={"password"}
-              placeholder={"Passwort"}
-              onInput={(input) => setPassword(input)}
-            />
-          </Shakable>
-          <Button
-            type={"positive"}
-            title={mode == "login" ? "Login" : "Register"}
-            isEnabled={name != "" && password != "" && !confetti}
-            onDisabledClick={onDisabledClick}
-            onClick={mode == "login" ? onLoginClick : onRegisterClick}
-          />
-          <div className={styles.register} onClick={onModeSwitch}>
-            {mode == "login" && "Noch nicht angemeldet? Hier registrieren..."}
-            {mode == "register" && "Schon angemeldet? Hier einloggen..."}
-          </div>
+            <div className={styles.register} onClick={onModeSwitch}>
+              {mode == "login" && "Noch nicht angemeldet? Hier registrieren..."}
+              {mode == "register" && "Schon angemeldet? Hier einloggen..."}
+            </div>
+          </form>
         </div>
       </div>
     </>

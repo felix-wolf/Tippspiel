@@ -22,20 +22,28 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
   const [current, setCurrent] = useState<User | null>(null);
   const login = useCallback(
     async (name: string, password: string) => {
-      if (current !== null) console.log("USER CURRENTLY NOT NULL");
-      fetch(`/api/login?name=${name}&pw=${password}`).then((res) => {
-        if (res.status == 200) {
-          res.json().then((u) => {
-            const user = new User(u["id"], u["name"]);
+      return new Promise<void>((resolve, reject) => {
+        if (current !== null)
+          console.log("USER CURRENTLY NOT NULL, ALREADY LOGGED IN?");
+        User.login(name, password)
+          .then((user) => {
             setCurrent(user);
+            resolve();
+          })
+          .catch((error) => {
+            switch (error.status) {
+              case 403:
+                reject("Fehler. Backend kaputt?");
+                break;
+              case 404:
+                reject(error.text);
+                break;
+              default:
+                reject("Ein unbekannter Fehler ist aufgetreten!");
+            }
+            console.log(error);
+            error.status;
           });
-        } else if (res.status == 404) {
-          res.text().then((text) => {
-            throw Error(text);
-          });
-        } else {
-          throw Error("ein unbekannter Fehler ist aufgetreten!");
-        }
       });
     },
 

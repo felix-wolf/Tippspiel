@@ -9,21 +9,9 @@ export function GamePage() {
   const [game, setGame] = useState<Game | undefined>(undefined);
 
   useEffect(() => {
-    console.log(game_id);
-    fetch(`/api/game/get?id=${game_id}`).then((res) => {
-      if (res.status == 200) {
-        res.json().then((game) => {
-          setGame(
-            new Game(
-              game["id"],
-              game["name"],
-              game["players"],
-              game["creator"],
-            ),
-          );
-        });
-      }
-    });
+    Game.fetchOne(game_id)
+      .then((game) => setGame(game))
+      .catch((error) => console.log(error));
   }, [game_id]);
   return (
     <>

@@ -32,6 +32,10 @@
   cursor: pointer;
 }
 
+.form {
+  display: contents;
+}
+
 .error {
   filter: saturate(0.4);
   color: var(--fg-secondary);

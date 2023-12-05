@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Game } from "../../models/Game";
+import { Event } from "../../models/Event";
 
 type EventListProps = {
   type: "upcoming" | "past";
@@ -8,9 +9,10 @@ type EventListProps = {
 
 export function EventList({ type, game }: EventListProps) {
   useEffect(() => {
-    fetch(`/api/event/get?game_id=${game?.id}`).then((res) => {
-      console.log(res);
-    });
+    if (game?.id)
+      Event.fetchAll(game.id).then((events) => {
+        console.log(events);
+      });
   }, [type, game]);
 
   return <></>;

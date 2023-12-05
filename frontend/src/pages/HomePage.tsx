@@ -1,4 +1,3 @@
-import { MenuPage } from "./MenuPage";
 import { BettingGameList } from "../components/lists/BettingGameList";
 import { useCurrentUser, useLogout } from "../models/user/UserContext";
 import { Button } from "../components/Button";
@@ -9,13 +8,13 @@ export function HomePage() {
   const logout = useLogout();
 
   return (
-    <MenuPage>
-      <div className={styles.container}>
-        <h3>Hallo {user.name}!</h3>
-        <BettingGameList user={user} show_games={"user"} />
-        <BettingGameList user={user} show_games={"other"} />
-        <Button onClick={logout} title={"Logout"} type={"negative"} />
-      </div>
-    </MenuPage>
+    /*<MenuPage>*/
+    <div className={styles.container}>
+      <h3>Hallo {user.name}!</h3>
+      <BettingGameList user={user} show_games={"user"} />
+      <BettingGameList user={user} show_games={"other"} />
+      <Button onClick={logout} title={"Logout"} type={"negative"} />
+    </div>
+    /*</MenuPage>*/
   );
 }

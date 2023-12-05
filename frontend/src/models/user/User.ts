@@ -1,3 +1,5 @@
+import { NetworkHelper } from "../NetworkHelper";
+
 /**
  * A user of the system.
  */
@@ -16,6 +18,23 @@ export class User {
     name: string,
   ) {
     this._name = name;
+  }
+
+  public static create(name: string, pw: string): Promise<User> {
+    const builder = (json: any): User => {
+      return new User(json["id"], json["name"]);
+    };
+    return NetworkHelper.create(`/api/register?name=${name}&pw=${pw}`, builder);
+  }
+
+  public static login(name: string, password: string): Promise<User> {
+    const builder = (json: any): User => {
+      return new User(json["id"], json["name"]);
+    };
+    return NetworkHelper.execute(
+      `/api/login?name=${name}&pw=${password}`,
+      builder,
+    );
   }
 
   public get name(): string {

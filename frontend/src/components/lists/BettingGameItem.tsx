@@ -41,7 +41,6 @@ export function BettingGameItem({
         if (joined) {
           _onGameSelect(item.game.id);
         } else {
-          console.log("ask to join");
           if (!joining) setJoining(true);
         }
       }
@@ -57,6 +56,7 @@ export function BettingGameItem({
             styles.visible,
             styles.game,
             joining && styles.joining,
+            joined && styles.joined,
           )}
           onClick={onClick}
         >
