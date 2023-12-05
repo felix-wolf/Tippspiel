@@ -4,10 +4,11 @@ import { Game } from "../models/Game";
 import styles from "./GamePage.module.scss";
 import { EventCreator } from "../components/EventCreator";
 import { EventList } from "../components/lists/EventList";
-import { User } from "../models/user/User";
+import { useCurrentUser } from "../models/user/UserContext";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
+  const user = useCurrentUser();
   const [game, setGame] = useState<Game | undefined>(undefined);
 
   useEffect(() => {
