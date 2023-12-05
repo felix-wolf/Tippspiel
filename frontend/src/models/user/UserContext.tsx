@@ -9,7 +9,8 @@ import { Outlet } from "react-router-dom";
 import { User } from "./User";
 
 type UserContext = {
-  current: User | null;
+  //current: User | null;
+  setCurrent: (user: User) => void;
   login: (name: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -20,6 +21,7 @@ type UserContextProviderProps = React.PropsWithChildren;
 
 export function UserContextProvider({ children }: UserContextProviderProps) {
   const [current, setCurrent] = useState<User | null>(null);
+
   const login = useCallback(
     async (name: string, password: string) => {
       return new Promise<void>((resolve, reject) => {
@@ -28,6 +30,8 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
         User.login(name, password)
           .then((user) => {
             setCurrent(user);
+            localStorage.setItem("user", user.toJson());
+            console.log(user.toJson());
             resolve();
           })
           .catch((error) => {
@@ -50,12 +54,13 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
     [current],
   );
   const logout = useCallback(async () => {
+    localStorage.removeItem("user");
     setCurrent(null);
   }, []);
 
   const context = useMemo(
-    () => ({ current, login, logout }),
-    [current, login, logout],
+    () => ({ current, setCurrent, login, logout }),
+    [current, setCurrent, login, logout],
   );
 
   return (
@@ -67,17 +72,20 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
  * Hook to determine whether a user is currently logged in.
  */
 export function useIsLoggedIn(): boolean {
-  const { current } = useContext(UserContext);
-  return current !== null;
+  //const { current } = useContext(UserContext);
+  return useCurrentUser() != null;
 }
 
 /**
  * Hook to retrieve the current user. Throws an error if no user is logged in.
  */
-export function useCurrentUser(): User {
-  const { current } = useContext(UserContext);
-  if (current === null) throw new Error("Not logged in");
-  return current;
+export function useCurrentUser(): User | null {
+  const storageUser = localStorage.getItem("user");
+  if (storageUser) {
+    const user = User.fromJSON(storageUser);
+    if (user) return user;
+  }
+  return null;
 }
 
 /**

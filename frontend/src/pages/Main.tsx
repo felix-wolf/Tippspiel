@@ -7,7 +7,7 @@ export function Main() {
   const login = useLogin();
 
   useEffect(() => {
-    login("felix", "felix");
+    //login("felix", "felix");
   }, []);
 
   const isLoggedIn = useIsLoggedIn();
