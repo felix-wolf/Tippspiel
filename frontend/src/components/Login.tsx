@@ -1,19 +1,21 @@
 import styles from "./Login.module.scss";
 import logo from "../assets/icons/snowflake-light.svg";
 import { TextField } from "./TextField";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "./Button";
 import { Shakable } from "./Shakable";
 import { cls } from "../styles/cls";
 import ReactConfetti from "react-confetti";
-import { useLogin } from "../models/user/UserContext";
+import { useCurrentUser, useLogin } from "../models/user/UserContext";
 import { User } from "../models/user/User";
+import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
 
 type Mode = "login" | "register";
 
 export function Login() {
   const error_timeout = 3000;
   const login = useLogin();
+  const navigate = useNavigateParams();
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
   const [nameShake, setNameShake] = useState(false);
@@ -21,6 +23,13 @@ export function Login() {
   const [passwordShake, setPasswordShake] = useState(false);
   const [confetti, setConfetti] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const u = useCurrentUser();
+    if (u) {
+      navigate(SiteRoutes.Home, {});
+    }
+  }, []);
 
   const onDisabledClick = useCallback(() => {
     if (name == "") {
@@ -34,11 +43,15 @@ export function Login() {
   }, [name, password]);
 
   const onLoginClick = useCallback(() => {
-    login(name, password).catch((error) => {
-      console.log(error);
-      setError(error);
-      setTimeout(() => setError(null), error_timeout);
-    });
+    login(name, password)
+      .then(() => {
+        navigate(SiteRoutes.Home, {});
+      })
+      .catch((error) => {
+        console.log(error);
+        setError(error);
+        setTimeout(() => setError(null), error_timeout);
+      });
   }, [name, password, mode]);
 
   const onRegisterClick = useCallback(() => {

@@ -79,13 +79,13 @@ export function useIsLoggedIn(): boolean {
 /**
  * Hook to retrieve the current user. Throws an error if no user is logged in.
  */
-export function useCurrentUser(): User | null {
+export function useCurrentUser(): User | undefined {
   const storageUser = localStorage.getItem("user");
   if (storageUser) {
     const user = User.fromJSON(storageUser);
     if (user) return user;
   }
-  return null;
+  return undefined;
 }
 
 /**

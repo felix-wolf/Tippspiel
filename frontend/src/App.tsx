@@ -4,6 +4,8 @@ import { SiteRoutes } from "../SiteRoutes";
 import { GamePage } from "./pages/GamePage";
 import UserContextLayout from "./models/user/UserContext";
 import { Main } from "./pages/Main";
+import { Login } from "./components/Login";
+import { HomePage } from "./pages/HomePage";
 
 /**
  * All available routes.
@@ -14,7 +16,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route element={<UserContextLayout />}>
-        <Route path={SiteRoutes.Main} element={<Main />} />
+        <Route path={SiteRoutes.Login} element={<Login />} />
+        <Route path={SiteRoutes.Home} element={<HomePage />} />
         <Route path={SiteRoutes.Game} element={<GamePage />} />
       </Route>
     </Routes>

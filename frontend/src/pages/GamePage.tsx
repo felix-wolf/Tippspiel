@@ -1,21 +1,25 @@
-import { SiteRoutes, usePathParams } from "../../SiteRoutes";
+import { SiteRoutes, useNavigateParams, usePathParams } from "../../SiteRoutes";
 import { useEffect, useState } from "react";
 import { Game } from "../models/Game";
 import styles from "./GamePage.module.scss";
 import { EventCreator } from "../components/EventCreator";
 import { EventList } from "../components/lists/EventList";
+import { User } from "../models/user/User";
 import { useCurrentUser } from "../models/user/UserContext";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
-  const user = useCurrentUser();
+  const navigate = useNavigateParams();
   const [game, setGame] = useState<Game | undefined>(undefined);
   const [user, setUser] = useState<User | undefined>(undefined);
 
   useEffect(() => {
-    User.get_current_from_backend().then((user) => {
-      setUser(user);
-    });
+    const u = useCurrentUser();
+    if (u) {
+      setUser(u);
+    } else {
+      navigate(SiteRoutes.Login, {});
+    }
   }, []);
 
   useEffect(() => {
