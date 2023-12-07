@@ -7,7 +7,7 @@ TABLE_NAME_GAMES = "Games"
 TABLE_NAME_GAME_PLAYERS = "GamePlayers"
 TABLE_NAME_COUNTRIES = "Countries"
 TABLE_NAME_USERS = "Users"
-TABLE_NAME_EVENTS = "Users"
+TABLE_NAME_EVENTS = "Events"
 
 
 def open_connection():

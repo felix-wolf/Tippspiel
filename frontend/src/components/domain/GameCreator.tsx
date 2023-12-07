@@ -1,6 +1,6 @@
 import styles from "./GameCreator.module.scss";
-import { TextField } from "./TextField";
-import { Button } from "./Button";
+import { TextField } from "../design/TextField";
+import { Button } from "../design/Button";
 import { useState } from "react";
 
 type GameCreatorProps = {

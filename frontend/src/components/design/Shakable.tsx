@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./Shakable.module.scss";
-import { cls } from "../styles/cls";
+import { cls } from "../../styles/cls";
 
 type ShakableProps = React.PropsWithChildren<{
   shaking: boolean;

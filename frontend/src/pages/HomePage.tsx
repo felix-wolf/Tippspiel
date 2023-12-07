@@ -1,6 +1,6 @@
-import { BettingGameList } from "../components/lists/BettingGameList";
+import { BettingGameList } from "../components/domain/lists/BettingGameList";
 import { useCurrentUser, useLogout } from "../models/user/UserContext";
-import { Button } from "../components/Button";
+import { Button } from "../components/design/Button";
 import styles from "./HomePage.module.scss";
 import { useCallback, useEffect, useState } from "react";
 import { User } from "../models/user/User";

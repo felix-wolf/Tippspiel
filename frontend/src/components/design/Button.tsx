@@ -1,5 +1,5 @@
 import styles from "./Button.module.scss";
-import { cls } from "../styles/cls";
+import { cls } from "../../styles/cls";
 import { useCallback } from "react";
 
 type ButtonProps = {

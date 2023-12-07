@@ -10,18 +10,22 @@ export class Game {
 
   private _hasPassword: boolean = false;
 
+  private _events: Event[];
+
   constructor(
     id: string,
     name: string,
     players: User[],
     creator?: User,
     hasPassword: boolean = false,
+    events: Event[],
   ) {
     this._id = id;
     this._name = name;
     this._players = players;
     this._hasPassword = hasPassword;
     this._creator = creator;
+    this._events = events;
   }
 
   public static fetchOne(id: string): Promise<Game> {

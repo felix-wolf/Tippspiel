@@ -1,14 +1,14 @@
 import styles from "./Login.module.scss";
-import logo from "../assets/icons/snowflake-light.svg";
-import { TextField } from "./TextField";
+import logo from "../../assets/icons/snowflake-light.svg";
+import { TextField } from "../design/TextField";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "./Button";
-import { Shakable } from "./Shakable";
-import { cls } from "../styles/cls";
+import { Button } from "../design/Button";
+import { Shakable } from "../design/Shakable";
+import { cls } from "../../styles/cls";
 import ReactConfetti from "react-confetti";
-import { useCurrentUser, useLogin } from "../models/user/UserContext";
-import { User } from "../models/user/User";
-import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
+import { useCurrentUser, useLogin } from "../../models/user/UserContext";
+import { User } from "../../models/user/User";
+import { SiteRoutes, useNavigateParams } from "../../../SiteRoutes";
 
 type Mode = "login" | "register";
 

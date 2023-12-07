@@ -1,8 +1,8 @@
 import styles from "./GameJoiner.module.scss";
-import { TextField } from "./TextField";
+import { TextField } from "../design/TextField";
 import { useState } from "react";
-import { Button } from "./Button";
-import { Game } from "../models/Game";
+import { Button } from "../design/Button";
+import { Game } from "../../models/Game";
 
 type GameJoinerProps = {
   game: Game;

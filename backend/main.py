@@ -140,6 +140,19 @@ def fetch_events():
     else:
         return "No game_id specified", 404
 
+@app.route('/api/event/create')
+@login_required
+def create_event():
+    name = request.args.get("name")
+    game_id = request.args.get("game_id")
+    event_type = request.args.get("type")
+    dt = request.args.get("datetime")
+    success, event_id = Event.create(name, game_id, event_type, dt)
+    if success:
+        return Event.get_by_id(event_id).to_dict()
+    else:
+        return "Fehler...", 500
+
 
 def hash_password(pw):
     return hashlib.sha256(pw.encode('utf-8')).hexdigest()

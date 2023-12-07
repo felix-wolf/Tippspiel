@@ -1,0 +1,23 @@
+.navContainer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  grid-gap: var(--grid-l);
+  margin-bottom: var(--grid-l);
+}
+
+.headline {
+  font-size: var(--font-size-l);
+  font-weight: var(--font_weight);
+}
+
+.children {
+  display: flex;
+  flex-direction: column;
+  grid-gap: var(--grid-l);
+}
+
+.button {
+  width: 100px;
+}

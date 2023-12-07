@@ -1,0 +1,15 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-gap: var(--grid-s);
+  justify-content: center;
+  width: 100%;
+}
+
+.row {
+  width: 90%;
+  grid-gap: var(--grid-l);
+  display: flex;
+  align-items: center;
+}

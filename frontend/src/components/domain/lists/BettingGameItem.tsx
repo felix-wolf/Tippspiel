@@ -1,10 +1,10 @@
 import styles from "./BettingGameItem.module.scss";
-import plus from "../../assets/icons/plus.svg";
-import { cls } from "../../styles/cls";
+import plus from "../../../assets/icons/plus.svg";
+import { cls } from "../../../styles/cls";
 import { useCallback, useState } from "react";
 import { GameCreator } from "../GameCreator";
 import { GameJoiner } from "../GameJoiner";
-import { Game } from "../../models/Game";
+import { Game } from "../../../models/Game";
 
 export type BettingGameItemGame = {
   game: Game;

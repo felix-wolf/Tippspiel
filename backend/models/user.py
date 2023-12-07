@@ -2,9 +2,8 @@ import hashlib
 
 from database import db_manager
 import sys
+
 sys.path.append("..")
-
-
 
 
 class User:
@@ -69,7 +68,6 @@ class User:
             """
         res = db_manager.query(sql, [game_id])
         return [User.from_dict(u) for u in res]
-
 
     @staticmethod
     def get_by_credentials(name, pw_hash):

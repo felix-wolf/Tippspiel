@@ -1,5 +1,8 @@
 DROP TABLE IF EXISTS Countries;
 DROP TABLE IF EXISTS Athletes;
+DROP TABLE IF EXISTS Bets;
+DROP TABLE IF EXISTS Placements;
+DROP TABLE IF EXISTS Events;
 
 CREATE TABLE if not EXISTS Countries (
     code TEXT PRIMARY KEY NOT NULL,
@@ -38,6 +41,23 @@ CREATE TABLE if not EXISTS Events (
     type TEXT NOT NULL,
     datetime DATETIME NOT NULL,
     FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
+);
+
+CREATE TABLE if not EXISTS Bets (
+    id TEXT PRIMARY KEY NOT NULL,
+    event_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE if not EXISTS Placements (
+    id TEXT PRIMARY KEY NOT NULL,
+    bet_id TEXT NOT NULL,
+    predicted_place NUMERIC NOT NULL,
+    object_id TEXT NOT NULL,
+    actual_place NUMERIC,
+    FOREIGN KEY(bet_id) REFERENCES Bets(id) ON DELETE CASCADE
 );
 
 CREATE TABLE if not EXISTS Users (

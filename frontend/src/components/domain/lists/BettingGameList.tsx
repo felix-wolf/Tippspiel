@@ -1,10 +1,9 @@
-import styles from "./BettingGameList.module.scss";
 import { useCallback, useEffect, useState } from "react";
 import { BettingGameItem, BettingGameItemGame } from "./BettingGameItem";
-import { SiteRoutes, useNavigateParams } from "../../../SiteRoutes";
-import { User } from "../../models/user/User";
-import { Game } from "../../models/Game";
-import { cls } from "../../styles/cls";
+import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes";
+import { User } from "../../../models/user/User";
+import { Game } from "../../../models/Game";
+import { List } from "./List";
 
 type BettingGamesProps = {
   user?: User;
@@ -78,32 +77,22 @@ export function BettingGameList({
   );
 
   return (
-    <div className={styles.container}>
-      <div className={styles.heading}>
-        {show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}
-      </div>
-      {games.length == 0 && (
-        <div className={styles.empty}>
-          <div className={styles.empty_text}>Ganz schön leer hier :(</div>
-        </div>
-      )}
-      {games.length != 0 && (
-        <div className={cls(styles.list, games.length == 0 && styles.empty)}>
-          {games.map((item) => (
-            <BettingGameItem
-              key={item.game.id}
-              item={item}
-              joined={show_games == "user"}
-              onGameSelect={(id) => {
-                useNavigate(SiteRoutes.Game, { game_id: id });
-              }}
-              onCreate={onCreate}
-              onJoin={onJoin}
-              type={item.type}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <List
+      title={show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}
+      items={games.map((item) => (
+        <BettingGameItem
+          key={item.game.id}
+          item={item}
+          joined={show_games == "user"}
+          onGameSelect={(id) => {
+            useNavigate(SiteRoutes.Game, { game_id: id });
+          }}
+          onCreate={onCreate}
+          onJoin={onJoin}
+          type={item.type}
+        />
+      ))}
+      emptyText={"Ganz schön leer hier :("}
+    />
   );
 }

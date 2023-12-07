@@ -12,6 +12,7 @@
 .neutral {
   background: gray;
   border: var(--border-m);
+  color: var(--bg-secondary);
 }
 
 .button {
@@ -34,7 +35,7 @@
   transition: filter 0.2s ease;
 
   &:hover {
-    filter: brightness(1.15);
+    filter: brightness(1.3);
   }
 }
 

@@ -3,8 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { SiteRoutes } from "../SiteRoutes";
 import { GamePage } from "./pages/GamePage";
 import UserContextLayout from "./models/user/UserContext";
-import { Main } from "./pages/Main";
-import { Login } from "./components/Login";
+import { Login } from "./components/domain/Login";
 import { HomePage } from "./pages/HomePage";
 
 /**
