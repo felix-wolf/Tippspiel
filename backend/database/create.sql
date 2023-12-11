@@ -22,6 +22,10 @@ CREATE TABLE if not EXISTS Athletes (
      FOREIGN KEY(country_code) REFERENCES Countries(code) ON DELETE CASCADE
 );
 
+CREATE VIEW if not EXISTS VIEW_Athletes AS
+    SELECT a.*, c.flag FROM Athletes a, Countries c
+    WHERE a.country_code = c.code;
+
 CREATE TABLE if not EXISTS Games (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,

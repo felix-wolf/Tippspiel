@@ -1,4 +1,5 @@
 import { NetworkHelper } from "./NetworkHelper";
+import { BetInputItem } from "../components/design/BetInput";
 
 export class Country {
   private readonly _code: string;
@@ -23,8 +24,8 @@ export class Country {
     return this._flag;
   }
 
-  public toRecord(): Record<string, string> {
-    return { a: this.code, b: this.flag + " " + this.name };
+  public toBetInputItem(): BetInputItem {
+    return { id: this.code, name: this._flag + " " + this.name };
   }
 
   public static fetchAll() {

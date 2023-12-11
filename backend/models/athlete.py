@@ -4,13 +4,14 @@ from backend.models.base_model import BaseModel
 
 class Athlete(BaseModel):
 
-    def __init__(self, athlete_id, name, surname, country_code, gender, discipline):
+    def __init__(self, athlete_id, name, surname, country_code, gender, discipline, flag=None):
         self.id = athlete_id
         self.name = name
         self.surname = surname
         self.country_code = country_code
         self.gender = gender
         self.discipline = discipline
+        self.flag = flag
 
     def to_dict(self):
         return {
@@ -19,15 +20,19 @@ class Athlete(BaseModel):
             "last_name": self.surname,
             "country_code": self.country_code,
             "gender": self.gender,
-            "discipline": self.discipline
+            "discipline": self.discipline,
+            "flag": self.flag
         }
 
     @staticmethod
     def from_dict(a_dict):
         if a_dict:
+            flag = None
+            if "flag" in a_dict:
+                flag = a_dict["flag"]
             try:
                 return Athlete(a_dict['id'], a_dict['first_name'], a_dict['last_name'], a_dict['country_code'],
-                               a_dict['gender'], a_dict['discipline'])
+                               a_dict['gender'], a_dict['discipline'], flag)
             except KeyError as e:
                 print("Could not instantiate athlete with given values:", a_dict)
                 return None
@@ -36,7 +41,7 @@ class Athlete(BaseModel):
 
     @staticmethod
     def get_all():
-        sql = f"SELECT * FROM {db_manager.TABLE_ATHLETES}"
+        sql = f"SELECT * FROM VIEW_{db_manager.TABLE_ATHLETES}"
         res = db_manager.query(sql)
         return [Athlete.from_dict(a) for a in res]
 

@@ -35,7 +35,7 @@ export interface ReactSearchAutocompleteProps<T> {
   showNoResultsText?: string;
   showItemsOnFocus?: boolean;
   maxLength?: number;
-  zindex?: number;
+  z_index?: number;
   defaultText?: string;
 }
 
@@ -59,7 +59,7 @@ export default function ReactSearchAutocomplete<T>({
   showNoResultsText = "No results",
   showItemsOnFocus = false,
   maxLength = 0,
-  zindex = 0,
+  z_index = 0,
 }: ReactSearchAutocompleteProps<T>) {
   const options = { ...defaultFuseOptions, ...fuseOptions };
 
@@ -92,13 +92,6 @@ export default function ReactSearchAutocomplete<T>({
   }, [items]);
 
   useEffect(() => {
-    console.log(
-      showNoResults,
-      searchString.length > 0,
-      !isTyping,
-      results.length === 0,
-      !isSearchComplete,
-    );
     if (
       showNoResults &&
       searchString.length > 0 &&
@@ -147,7 +140,6 @@ export default function ReactSearchAutocomplete<T>({
     setResults(newResults);
     onSearch(keyword, newResults);
     setIsTyping(false);
-    console.log("istyping", false);
   };
 
   const handleOnSearch = useCallback(
@@ -176,7 +168,6 @@ export default function ReactSearchAutocomplete<T>({
     setSearchString(keyword);
     handleOnSearch(keyword);
     setIsTyping(true);
-    console.log("istypeing", true);
 
     if (isSearchComplete) {
       setIsSearchComplete(false);
@@ -239,7 +230,7 @@ export default function ReactSearchAutocomplete<T>({
 
   return (
     <div className={styles.div}>
-      <div className={styles.wrapper} style={{ zIndex: zindex }}>
+      <div className={styles.wrapper} style={{ zIndex: z_index }}>
         <SearchInput
           searchString={searchString}
           setSearchString={handleSetSearchString}

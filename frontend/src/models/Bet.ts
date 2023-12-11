@@ -51,10 +51,21 @@ type Placements = readonly [
 ];
 
 export class Bet {
+  private readonly _id: string;
   private readonly _user_id: string;
   private readonly _placements: Placements;
+  private readonly _predicted_place: number;
+  private readonly _object_id: string;
+  private readonly _actual_place: number | undefined;
+  private readonly _score: number | undefined;
 
-  constructor(user_id: string, placements: Placements) {
+  constructor(
+    user_id: string,
+    predicted_place: number,
+    object_id: string,
+    actual_place: number,
+    score: number,
+  ) {
     this._user_id = user_id;
     this._placements = placements;
   }

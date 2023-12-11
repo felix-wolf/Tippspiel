@@ -2,51 +2,48 @@ import ReactSearchAutocomplete from "./SearchBox/ReactSearchAutocomplete";
 
 type BetInputProps = {
   place: number;
+  prev_selected?: BetInputItem;
+  items: BetInputItem[];
+  onSelect: (item: BetInputItem, place: number) => void;
 };
 
-export function BetInput({ place }: BetInputProps) {
-  const handleOnSearch = (string: string, results: Item[]) => {
+export type BetInputItem = {
+  id?: string;
+  name: string;
+};
+
+export function BetInput({
+  place,
+  prev_selected,
+  items,
+  onSelect: _onSelect,
+}: BetInputProps) {
+  const handleOnSearch = (string: string, results: BetInputItem[]) => {
     // onSearch will have as the first callback parameter
     // the string searched and for the second the results.
     console.log(string, results);
   };
 
-  const handleOnHover = (result: Item) => {
+  const handleOnHover = (result: BetInputItem) => {
     // the item hovered
-    console.log(result);
+    console.log("hover", result);
   };
 
-  const handleOnSelect = (item: Item) => {
+  const handleOnSelect = (item: BetInputItem) => {
     // the item selected
-    console.log(item);
+    console.log("select", item);
+    _onSelect(item, place);
   };
 
   const handleOnFocus = () => {
     console.log("Focused");
   };
 
-  type Item = {
-    id: string;
-    name: string;
-  };
-
-  const formatResult = (item: Item) => {
+  const formatResult = (item: BetInputItem) => {
     return (
-      <>
-        <span style={{ display: "block", textAlign: "left" }}>
-          id: {item.id}
-        </span>
-        <span style={{ display: "block", textAlign: "left" }}>
-          name: {item.name}
-        </span>
-      </>
+      <span style={{ display: "block", textAlign: "left" }}>{item.name}</span>
     );
   };
-
-  const items: Item[] = [
-    { id: "1", name: "JT" },
-    { id: "2", name: "Sturla" },
-  ];
 
   return (
     <>
@@ -58,8 +55,8 @@ export function BetInput({ place }: BetInputProps) {
         onFocus={handleOnFocus}
         formatResult={formatResult}
         placeholder={"Platz " + place}
-        zindex={5 - place}
-        inputSearchString={"hello"}
+        z_index={5 - place}
+        inputSearchString={prev_selected?.name ?? ""}
       />
     </>
   );

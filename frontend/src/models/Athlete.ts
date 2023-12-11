@@ -1,23 +1,28 @@
 import { NetworkHelper } from "./NetworkHelper";
+import { BetInputItem } from "../components/design/BetInput";
 
 export class Athlete {
-  private _id: string;
-  private _first_name: string;
-  private _last_name: string;
-  private _country_code: string;
-  private _gender: string;
+  private readonly _id: string;
+  private readonly _first_name: string;
+  private readonly _last_name: string;
+  private readonly _country_code: string;
+  private readonly _gender: string;
+  private readonly _flag: string;
+
   constructor(
     id: string,
     first_name: string,
     last_name: string,
     country_code: string,
     gender: string,
+    flag: string,
   ) {
     this._id = id;
     this._first_name = first_name;
     this._last_name = last_name;
     this._country_code = country_code;
     this._gender = gender;
+    this._flag = flag;
   }
 
   get id(): string {
@@ -40,8 +45,11 @@ export class Athlete {
     return this._gender;
   }
 
-  public toRecord(): Record<string, string> {
-    return { a: this.country_code, b: this.last_name };
+  public toBetInputItem(): BetInputItem {
+    return {
+      id: this.id,
+      name: `${this._flag} ${this.first_name} ${this.last_name}`,
+    };
   }
 
   public static fetchAll() {
@@ -54,6 +62,7 @@ export class Athlete {
             r["last_name"],
             r["country_code"],
             r["gender"],
+            r["flag"],
           ),
       );
     };
