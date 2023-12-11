@@ -45,14 +45,14 @@ class User:
     @staticmethod
     def create(name, pw_hash):
         user_id = hashlib.md5("".join([name, pw_hash]).encode('utf-8')).hexdigest()
-        sql = f"INSERT INTO {db_manager.TABLE_NAME_USERS} (id, name, pw_hash) VALUES (?,?,?)"
+        sql = f"INSERT INTO {db_manager.TABLE_USERS} (id, name, pw_hash) VALUES (?,?,?)"
         success = db_manager.execute(sql, [user_id, name, pw_hash])
         return success, user_id
 
     @staticmethod
     def get_by_id(user_id):
         sql = f"""
-                SELECT * FROM {db_manager.TABLE_NAME_USERS} a
+                SELECT * FROM {db_manager.TABLE_USERS} a
                 WHERE a.id = ?
                 """
         res = db_manager.query_one(sql, [user_id])
@@ -62,7 +62,7 @@ class User:
     def get_by_game_id(game_id):
         sql = f"""
             SELECT u.* 
-            FROM {db_manager.TABLE_NAME_USERS} u, {db_manager.TABLE_NAME_GAME_PLAYERS} gp
+            FROM {db_manager.TABLE_USERS} u, {db_manager.TABLE_GAME_PLAYERS} gp
             WHERE u.id = gp.player_id AND
             gp.game_id = ?
             """
@@ -72,7 +72,7 @@ class User:
     @staticmethod
     def get_by_credentials(name, pw_hash):
         sql = f"""
-                SELECT * FROM {db_manager.TABLE_NAME_USERS} a
+                SELECT * FROM {db_manager.TABLE_USERS} a
                 WHERE a.name = ? and a.pw_hash = ?
                 """
         res = db_manager.query_one(sql, [name, pw_hash])

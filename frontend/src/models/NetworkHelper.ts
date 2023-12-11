@@ -34,9 +34,14 @@ export class NetworkHelper {
     return new Promise((resolve, reject) => {
       fetch(url).then((res) => {
         if (res.status == 200) {
-          res.json().then((object) => {
-            resolve(builder(object));
-          });
+          res
+            .json()
+            .then((object) => {
+              resolve(builder(object));
+            })
+            .catch((error) => {
+              console.log("no or faulty json", error);
+            });
         } else {
           res.text().then((error_text) => {
             reject({ status: res.status, text: error_text });

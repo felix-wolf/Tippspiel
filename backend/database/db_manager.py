@@ -1,13 +1,17 @@
-import sqlite3
 import csv
 import hashlib
+import sqlite3
 
-TABLE_NAME_ATHLETES = "Athletes"
-TABLE_NAME_GAMES = "Games"
-TABLE_NAME_GAME_PLAYERS = "GamePlayers"
-TABLE_NAME_COUNTRIES = "Countries"
-TABLE_NAME_USERS = "Users"
-TABLE_NAME_EVENTS = "Events"
+TABLE_ATHLETES = "Athletes"
+TABLE_GAMES = "Games"
+TABLE_GAME_PLAYERS = "GamePlayers"
+TABLE_COUNTRIES = "Countries"
+TABLE_USERS = "Users"
+TABLE_EVENTS = "Events"
+TABLE_EVENT_TYPES = "EventTypes"
+TABLE_BETS = "Bets"
+TABLE_PLACEMENTS = "Placements"
+TABLE_DISCIPLINES = "Disciplines"
 
 
 def open_connection():
@@ -18,7 +22,7 @@ def open_connection():
 
 def start():
     # get connect, create db if not exist
-    populate_db()
+    execute_script("create.sql")
 
 
 def query(sql, params=None):
@@ -113,34 +117,6 @@ def execute_script(script_name):
         print(err)
 
 
-def populate_db():
-    # execute script
-    execute_script("create.sql")
-
-    countries = load_csv("countries.csv")
-    countries = [(c["Code"], c["Name"], c["Flagge"]) for c in countries]
-    try:
-        execute_many(
-            f"Insert OR IGNORE into {TABLE_NAME_COUNTRIES} (code, name, flag) VALUES (?,?,?)",
-            params=countries)
-    except Exception as err:
-        print(err)
-
-    # insert athletes
-    athletes = load_csv("athletes.csv", generate_id=True)
-    athletes = [(a["Id"], a["Vorname"], a["Nachname"], a["Land_Code"], a["Geschlecht"]) for a in athletes]
-    try:
-        execute_many(
-            f"""
-            Insert OR IGNORE into {TABLE_NAME_ATHLETES} 
-            (id, first_name, last_name, country_code, gender)
-            VALUES (?,?,?,?,?)
-            """,
-            params=athletes)
-    except Exception as err:
-        print(err)
-
-
 def load_csv(file_name, generate_id=False):
     values = []
     with open(f'database/{file_name}', newline='') as csvfile:
@@ -149,6 +125,6 @@ def load_csv(file_name, generate_id=False):
             if generate_id:
                 concat_string = "".join(row.values())
                 # generate ID
-                row['Id'] = hashlib.md5(concat_string.encode('utf8')).hexdigest()
+                row['id'] = hashlib.md5(concat_string.encode('utf8')).hexdigest()
             values.append(row)
         return values

@@ -1,0 +1,14 @@
+.container {
+  width: 100%;
+  height: var(--height-s);
+  border-radius: var(--corner-s);
+  border: 2px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--grid-s);
+}
+
+.buttonContainer {
+  width: 100px;
+}

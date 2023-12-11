@@ -1,33 +1,27 @@
 import { NetworkHelper } from "./NetworkHelper";
 import { Bet } from "./Bet";
-import { Terser } from "vite";
-
-export const EventTypes = {
-  men: "Männer",
-  women: "Frauen",
-  relay: "Staffel",
-} satisfies Record<string, string>;
-
-export type EventType = keyof typeof EventTypes;
+import { EventType } from "./user/EventType";
 
 export class Event {
-  private _id: string;
-  private _name: string;
-  private _game_id: string;
-  private _type: EventType;
-  private _bets: Bet[];
-  private _datetime: Date;
+  private readonly _id: string;
+  private readonly _name: string;
+  private readonly _game_id: string;
+  private readonly _eventType: EventType;
+  private readonly _bets: Bet[];
+  private readonly _datetime: Date;
   constructor(
     id: string,
     name: string,
     game_id: string,
     type: EventType,
     datetime: string,
+    bets: Bet[],
   ) {
     this._id = id;
     this._name = name;
     this._game_id = game_id;
-    this._type = type;
+    this._eventType = type;
+    this._bets = bets;
     this._datetime = new Date(Date.parse(datetime));
   }
 
@@ -35,48 +29,24 @@ export class Event {
     return this._id;
   }
 
-  set id(value: string) {
-    this._id = value;
-  }
-
   get name(): string {
     return this._name;
-  }
-
-  set name(value: string) {
-    this._name = value;
   }
 
   get game_id(): string {
     return this._game_id;
   }
 
-  set game_id(value: string) {
-    this._game_id = value;
-  }
-
   get type(): EventType {
-    return this._type;
-  }
-
-  set type(value: EventType) {
-    this._type = value;
+    return this._eventType;
   }
 
   get bets(): Bet[] {
     return this._bets;
   }
 
-  set bets(value: Bet[]) {
-    this._bets = value;
-  }
-
   get datetime(): Date {
     return this._datetime;
-  }
-
-  set datetime(value: Date) {
-    this._datetime = value;
   }
 
   public static fromJson(json: any) {
@@ -84,22 +54,23 @@ export class Event {
       json["id"],
       json["name"],
       json["game_id"],
-      json["type"],
+      EventType.fromJson(json["event_type"]),
       json["datetime"],
+      json["bets"].map((bet: any) => Bet.fromJson(bet)),
+    );
+  }
+
+  public static fetchOne(event_id: string): Promise<Event> {
+    const builder = (res: any): Event => Event.fromJson(res);
+    return NetworkHelper.fetchOne(
+      `/api/event/get?event_id=${event_id}`,
+      builder,
     );
   }
 
   public static fetchAll(game_id: string): Promise<Event[]> {
     const builder = (res: any): Event[] => {
-      return res.map((e: any) => {
-        return new Event(
-          e["id"],
-          e["name"],
-          e["game_id"],
-          e["type"],
-          e["datetime"],
-        );
-      });
+      return res.map((e: any) => Event.fromJson(e));
     };
     return NetworkHelper.fetchAll(`/api/event/get?game_id=${game_id}`, builder);
   }
@@ -120,7 +91,7 @@ export class Event {
       return Event.fromJson(res);
     };
     return NetworkHelper.create<Event>(
-      `/api/event/create?name=${name}&game_id=${game_id}&type=${type}&datetime=${date_string}`,
+      `/api/event/create?name=${name}&game_id=${game_id}&type=${type.id}&datetime=${date_string}`,
       builder,
     );
   }

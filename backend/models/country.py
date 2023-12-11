@@ -1,7 +1,7 @@
 from backend.database import db_manager
+from backend.models.base_model import BaseModel
 
-
-class Country:
+class Country(BaseModel):
 
     def __init__(self, code, name, flag):
         self.code = code
@@ -24,6 +24,23 @@ class Country:
 
     @staticmethod
     def get_all():
-        sql = f"""SELECT * FROM {db_manager.TABLE_NAME_COUNTRIES}"""
+        sql = f"""SELECT * FROM {db_manager.TABLE_COUNTRIES}"""
         res = db_manager.query(sql)
         return [Country.from_dict(c) for c in res]
+
+    def save_to_db(self):
+        sql = f"""
+            Insert OR IGNORE into {db_manager.TABLE_COUNTRIES} 
+            (code, name, flag)
+            VALUES (?,?,?)
+            """
+        success = db_manager.execute(sql, [self.code, self.name, self.flag])
+        return success, self.code
+
+    @staticmethod
+    def load_into_db():
+        countries = db_manager.load_csv("countries.csv")
+        countries = [Country.from_dict(c) for c in countries]
+        for country in countries:
+            if not country.save_to_db():
+                print("Error saving country")

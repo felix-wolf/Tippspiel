@@ -31,7 +31,6 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
           .then((user) => {
             setCurrent(user);
             localStorage.setItem("user", user.toJson());
-            console.log(user.toJson());
             resolve();
           })
           .catch((error) => {
@@ -54,6 +53,10 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
     [current],
   );
   const logout = useCallback(async () => {
+    useCurrentUser()
+      ?.logout()
+      .then()
+      .catch((error) => console.log("ERROR logging out", error));
     localStorage.removeItem("user");
     setCurrent(null);
   }, []);
@@ -82,7 +85,7 @@ export function useIsLoggedIn(): boolean {
 export function useCurrentUser(): User | undefined {
   const storageUser = localStorage.getItem("user");
   if (storageUser) {
-    const user = User.fromJSON(storageUser);
+    const user = User.fromJson(JSON.parse(storageUser));
     if (user) return user;
   }
   return undefined;

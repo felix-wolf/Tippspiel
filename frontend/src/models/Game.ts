@@ -1,24 +1,28 @@
 import { User } from "./user/User";
 import { NetworkHelper } from "./NetworkHelper";
+import { Discipline } from "./user/Discipline";
 
 export class Game {
-  private _id: string;
-  private _name: string;
-  private _players: User[];
+  private readonly _id: string;
+  private readonly _name: string;
+  private readonly _players: User[];
 
-  private _creator?: User;
+  private readonly _creator?: User;
 
-  private _hasPassword: boolean = false;
+  private readonly _hasPassword: boolean = false;
 
-  private _events: Event[];
+  private readonly _events: Event[];
+
+  private readonly _discipline: Discipline;
 
   constructor(
     id: string,
     name: string,
     players: User[],
+    discipline: Discipline,
     creator?: User,
     hasPassword: boolean = false,
-    events: Event[],
+    events: Event[] = [],
   ) {
     this._id = id;
     this._name = name;
@@ -26,22 +30,27 @@ export class Game {
     this._hasPassword = hasPassword;
     this._creator = creator;
     this._events = events;
+    this._discipline = discipline;
   }
 
   public static fetchOne(id: string): Promise<Game> {
     const builder = (game_dict: any): Game => {
-      return new Game(
-        game_dict["id"],
-        game_dict["name"],
-        game_dict["players"],
-        game_dict["creator"],
-      );
+      return Game.fromJson(game_dict);
     };
     return NetworkHelper.fetchOne(`/api/game/get?id=${id}`, builder);
   }
 
   public static fromJson(json: any) {
-    return new Game(json["id"], json["name"], json["players"], json["creator"]);
+    return new Game(
+      json["id"],
+      json["name"],
+      json["players"],
+      Discipline.fromJson(json["discipline"]),
+      User.fromJson(json["creator"]),
+      json["pw_set"],
+
+      json["_discipline"],
+    );
   }
 
   public static fetchAll(): Promise<Game[]> {
@@ -53,12 +62,16 @@ export class Game {
     return NetworkHelper.fetchOne("/api/game/get", builder);
   }
 
-  public static create(name: string, pw: string): Promise<Game> {
+  public static create(
+    name: string,
+    pw: string,
+    discipline: string,
+  ): Promise<Game> {
     const builder = (res: any): Game => {
       return Game.fromJson(res);
     };
     return NetworkHelper.create<Game>(
-      `/api/game/create?name=${name}${pw}`,
+      `/api/game/create?name=${name}${pw}${discipline}`,
       builder,
     );
   }
@@ -85,20 +98,8 @@ export class Game {
     return this._id;
   }
 
-  set id(value: string) {
-    this._id = value;
-  }
-
-  set name(value: string) {
-    this._name = value;
-  }
-
   get players(): User[] {
     return this._players;
-  }
-
-  set players(value: User[]) {
-    this._players = value;
   }
 
   get hasPassword(): boolean {
@@ -107,5 +108,9 @@ export class Game {
 
   get creator(): User | undefined {
     return this._creator;
+  }
+
+  get discipline(): Discipline {
+    return this._discipline;
   }
 }

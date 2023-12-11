@@ -1,10 +1,12 @@
 import styles from "./GameCreator.module.scss";
 import { TextField } from "../design/TextField";
 import { Button } from "../design/Button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { DropDown, DropDownOption } from "../design/DropDown";
+import { Discipline } from "../../models/user/Discipline";
 
 type GameCreatorProps = {
-  onCreate: (name: string, password?: string) => void;
+  onCreate: (name: string, password?: string, disciplineId?: string) => void;
   onClose: () => void;
 };
 
@@ -14,6 +16,24 @@ export function GameCreator({
 }: GameCreatorProps) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [disciplines, setDisciplines] = useState<DropDownOption[]>([]);
+  const [selectedDiscipline, setSelectedDiscipline] = useState<
+    DropDownOption | undefined
+  >(undefined);
+
+  useEffect(() => {
+    {
+      Discipline.fetchAll()
+        .then((disciplines) => {
+          const options: DropDownOption[] = disciplines.map((d) => {
+            return { id: d.id, label: d.name };
+          });
+          setDisciplines(options);
+          if (options.length > 0) setSelectedDiscipline(options[0]);
+        })
+        .catch((error) => console.log(error));
+    }
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -24,13 +44,20 @@ export function GameCreator({
           }}
           placeholder={"Name"}
         />
-        <TextField
-          onInput={(i) => {
-            setPassword(i);
-          }}
-          placeholder={"Passwort (optional)"}
-          type={"password"}
-        />
+        <div className={styles.row}>
+          <TextField
+            onInput={(i) => {
+              setPassword(i);
+            }}
+            placeholder={"Passwort (optional)"}
+            type={"password"}
+          />
+          <DropDown
+            options={disciplines}
+            onChange={(o) => setSelectedDiscipline(o)}
+            initial={selectedDiscipline}
+          />
+        </div>
       </div>
       <div className={styles.buttonsContainer}>
         <Button
@@ -42,7 +69,11 @@ export function GameCreator({
         />
         <Button
           onClick={() => {
-            _onCreate(name, password ? password : undefined);
+            _onCreate(
+              name,
+              password ? password : undefined,
+              selectedDiscipline ? selectedDiscipline?.id : undefined,
+            );
           }}
           title={"Erstellen"}
           type={"positive"}

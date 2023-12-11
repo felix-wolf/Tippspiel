@@ -1,12 +1,14 @@
 import hashlib
 
 from backend.database import db_manager
+from backend.models.discipline import Discipline
 from backend.models.user import User
+from backend.models.base_model import BaseModel
 
 
-class Game:
+class Game(BaseModel):
 
-    def __init__(self, name, pw_hash, creator: User, game_id=None, players=None):
+    def __init__(self, name, pw_hash, creator: User, discipline: Discipline, game_id=None, players=None):
         if players is None:
             players = []
         if game_id:
@@ -15,12 +17,14 @@ class Game:
             self.id = hashlib.md5("".join([name, creator.id, str(pw_hash)]).encode('utf-8')).hexdigest()
         self.name = name
         self.pw_hash = pw_hash
+        self.discipline = Discipline
         self.players = players
         self.creator = creator
+        self.discipline = discipline
 
     def add_player(self, player: User):
         sql = f"""
-            INSERT INTO {db_manager.TABLE_NAME_GAME_PLAYERS} 
+            INSERT INTO {db_manager.TABLE_GAME_PLAYERS} 
             (player_id, game_id) VALUES (?,?)
         """
         success = db_manager.execute(sql, [player.id, self.id])
@@ -34,25 +38,26 @@ class Game:
             "name": self.name,
             "pw_set": self.pw_hash is not None,
             "players": [p.to_dict() for p in self.players],
-            "creator": self.creator.to_dict()
+            "creator": self.creator.to_dict(),
+            "discipline": self.discipline.to_dict()
         }
 
     def save_to_db(self):
-        sql = f"INSERT INTO {db_manager.TABLE_NAME_GAMES} (id, name, pw_hash, owner_id) VALUES (?,?,?,?)"
-        first = db_manager.execute(sql, [self.id, self.name, self.pw_hash, self.creator.id])
+        sql = f"INSERT INTO {db_manager.TABLE_GAMES} (id, name, pw_hash, owner_id, discipline) VALUES (?,?,?,?,?)"
+        first = db_manager.execute(sql, [self.id, self.name, self.pw_hash, self.creator.id, self.discipline.id])
         for player in self.players:
-            sql = f"INSERT INTO {db_manager.TABLE_NAME_GAME_PLAYERS} (player_id, game_id) VALUES (?,?)"
+            sql = f"INSERT INTO {db_manager.TABLE_GAME_PLAYERS} (player_id, game_id) VALUES (?,?)"
             success = db_manager.execute(sql, [player.id, self.id])
             if not success:
                 return False
         return first, self.id
 
     @staticmethod
-    def from_dict(g_dict, creator, players=None):
+    def from_dict(g_dict, discipline, creator, players=None):
         if g_dict:
             try:
                 return Game(
-                    game_id=g_dict['id'], name=g_dict['name'],
+                    game_id=g_dict['id'], name=g_dict['name'], discipline=discipline,
                     pw_hash=g_dict['pw_hash'], creator=creator, players=players
                 )
             except KeyError as e:
@@ -63,26 +68,27 @@ class Game:
 
     @staticmethod
     def get_all():
-        sql = f"SELECT g.id FROM {db_manager.TABLE_NAME_GAMES} g"
+        sql = f"SELECT g.id FROM {db_manager.TABLE_GAMES} g"
         game_ids = db_manager.query(sql)
         if not game_ids:
             game_ids = []
-        return [Game.get_by_id(id['id']) for id in game_ids]
+        return [Game.get_by_id(g['id']) for g in game_ids]
 
     @staticmethod
     def get_by_id(game_id):
-        sql = f"SELECT g.* FROM {db_manager.TABLE_NAME_GAMES} g WHERE g.id = ?"
+        sql = f"SELECT g.* FROM {db_manager.TABLE_GAMES} g WHERE g.id = ?"
         game = db_manager.query_one(sql, [game_id])
         if game:
             players = User.get_by_game_id(game['id'])
             creator = User.get_by_id(game['owner_id'])
-            return Game.from_dict(game, creator, players=players)
+            discipline = Discipline.get_by_id(game['discipline'])
+            return Game.from_dict(g_dict=game, discipline=discipline, creator=creator, players=players)
         return None
 
     @staticmethod
-    def create(user_id, name, pw_hash):
+    def create(user_id, name, pw_hash, discipline_name):
         # insert game
         creator = User.get_by_id(user_id)
-        game = Game(name=name, pw_hash=pw_hash, creator=creator, players=[creator])
+        discipline = Discipline.get_by_id(discipline_name)
+        game = Game(name=name, pw_hash=pw_hash, discipline=discipline, creator=creator, players=[creator])
         return game.save_to_db()
-

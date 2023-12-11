@@ -13,7 +13,7 @@ export type BettingGameItemGame = {
 
 type BettingGameItemProps = {
   onGameSelect?: (id: string) => void;
-  onCreate?: (name: string, password?: string) => void;
+  onCreate?: (name: string, password?: string, disciplineId?: string) => void;
   onJoin?: (game_id: string, password?: string) => void;
   item?: BettingGameItemGame;
   type: "real" | "add";
@@ -91,8 +91,8 @@ export function BettingGameItem({
           )}
           {creating && (
             <GameCreator
-              onCreate={(name, password) => {
-                _onCreate && _onCreate(name, password);
+              onCreate={(name, password, disciplineId) => {
+                _onCreate && _onCreate(name, password, disciplineId);
               }}
               onClose={() => setCreating(false)}
             />

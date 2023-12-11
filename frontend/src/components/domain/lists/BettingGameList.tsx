@@ -34,7 +34,7 @@ export function BettingGameList({
             );
           });
           const add_item: BettingGameItemGame = {
-            game: new Game("add", "Neu", []),
+            game: new Game("add", "Neu", [], undefined, false, []),
             type: "add",
           };
 
@@ -47,18 +47,22 @@ export function BettingGameList({
     }
   }, [user]);
 
-  const onCreate = useCallback((name: string, password?: string) => {
-    console.log("create");
-    let pw = "";
-    if (password) pw = `&pw=${password}`;
-    Game.create(name, pw)
-      .then((game) => {
-        useNavigate(SiteRoutes.Game, { game_id: game.id });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, []);
+  const onCreate = useCallback(
+    (name: string, password?: string, discipline?: string) => {
+      let pw = "";
+      if (password) pw = `&pw=${password}`;
+      let d_id = "";
+      if (discipline) pw = `&discipline=${discipline}`;
+      Game.create(name, pw, d_id)
+        .then((game) => {
+          useNavigate(SiteRoutes.Game, { game_id: game.id });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    [],
+  );
 
   const onJoin = useCallback(
     (game_id: string, password?: string) => {

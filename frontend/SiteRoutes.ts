@@ -17,7 +17,7 @@ export const SiteRoutes = {
   Login: "/",
   Home: "/home",
   Game: "/home/game/:game_id",
-  Subject: "/:studyId/:subjectId",
+  Bet: "/home/game/bet/:game_id/:event_id",
   Export: "/:studyId/export",
   Debug: "/debug/*",
   Test: "/test/:studyId/:subjectId",

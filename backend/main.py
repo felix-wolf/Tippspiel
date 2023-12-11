@@ -4,12 +4,14 @@ from datetime import datetime
 from flask import Flask, request
 from flask_login import *
 
-from database import db_manager
+from backend.database import db_manager
 from models.user import User
 from models.athlete import Athlete
 from models.country import Country
 from models.game import Game
 from models.event import Event
+from models.discipline import Discipline
+from models.event_type import EventType
 
 app = Flask(__name__)
 app.secret_key = "1b98d3e890b6bd7213300e0a98e66856"
@@ -44,15 +46,13 @@ def login():
 @app.route('/api/logout')
 def logout():
     logout_user()
-    return "Successful"
+    return {"message": "Logout successful"}
 
 
 @app.route('/api/current_user')
 def get_cur_user():
     user_id = current_user.get_id()
-    print(user_id)
     if user_id:
-        print("Returning")
         return User.get_by_id(user_id).to_dict()
     return "No user logged in", 400
 
@@ -81,18 +81,25 @@ def get_countries():
     return [country.to_dict() for country in Country.get_all()]
 
 
+@app.route('/api/disciplines')
+@login_required
+def get_disciplines():
+    return [discipline.to_dict() for discipline in Discipline.get_all()]
+
+
 @app.route('/api/game/create')
 @login_required
 def create_game():
     name = request.args.get("name")
     pw = request.args.get("pw")
+    discipline = request.args.get("discipline")
+    if name is None or discipline is None:
+        return "Missing parameters", 400
     pw_hash = None
     if pw:
         pw_hash = hash_password(pw)
     user_id = current_user.get_id()
-    if user_id:
-        user_id = User.get_by_id(user_id).id
-    success, game_id = Game.create(user_id, name, pw_hash)
+    success, game_id = Game.create(user_id=user_id, name=name, pw_hash=pw_hash, discipline_name=discipline)
     if success:
         return Game.get_by_id(game_id).to_dict()
     else:
@@ -135,14 +142,21 @@ def fetch_games():
 @login_required
 def fetch_events():
     game_id = request.args.get("game_id")
+    event_id = request.args.get("event_id")
     if game_id:
         return [event.to_dict() for event in Event.get_all_by_game_id(game_id)]
+    if event_id:
+        return Event.get_by_id(event_id).to_dict()
     else:
         return "No game_id specified", 404
+
 
 @app.route('/api/event/create')
 @login_required
 def create_event():
+    user_id = current_user.get_id()
+    if not user_id:
+        return "not logged in", 400
     name = request.args.get("name")
     game_id = request.args.get("game_id")
     event_type = request.args.get("type")
@@ -160,5 +174,9 @@ def hash_password(pw):
 
 if __name__ == '__main__':
     db_manager.start()
+    Country.load_into_db()
+    Discipline.load_into_db()
+    Athlete.load_into_db()
+    EventType.load_into_db()
     print("db started")
     app.run(debug=True)
