@@ -1,3 +1,5 @@
+import ReactSearchAutocomplete from "./SearchBox/ReactSearchAutocomplete";
+
 type BetInputProps = {
   place: number;
 };
@@ -55,8 +57,9 @@ export function BetInput({ place }: BetInputProps) {
         onSelect={handleOnSelect}
         onFocus={handleOnFocus}
         formatResult={formatResult}
-        styling={{ zIndex: 5 - place }}
         placeholder={"Platz " + place}
+        zindex={5 - place}
+        inputSearchString={"hello"}
       />
     </>
   );

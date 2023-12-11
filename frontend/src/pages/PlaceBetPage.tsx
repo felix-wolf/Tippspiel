@@ -6,9 +6,8 @@ import { Country } from "../models/Country";
 import { Athlete } from "../models/Athlete";
 import { EventType } from "../models/user/EventType";
 import { useCurrentUser } from "../models/user/UserContext";
-import { TextField } from "../components/design/TextField";
-import { Placement } from "../models/Bet";
 import { BetInput } from "../components/design/BetInput";
+import styles from "./PlaceBetPage.module.scss";
 
 type Place = {
   id: string;
@@ -36,9 +35,9 @@ export function PlaceBetPage() {
           });
         } else {
           setBet({
-            places: Array.from({ length: 5 }).map((i) => {
+            places: Array.from({ length: 5 }).map((_, index) => {
               return {
-                id: i,
+                id: index.toString(),
               };
             }),
           });
@@ -84,8 +83,8 @@ export function PlaceBetPage() {
 
   return (
     <NavPage title={"TIPPEN FÜR: " + event?.name}>
-      <div>
-        {bet?.places.map((placement, index) => (
+      <div className={styles.container}>
+        {bet?.places.map((_, index) => (
           <BetInput key={index} place={index + 1} />
         ))}
       </div>
