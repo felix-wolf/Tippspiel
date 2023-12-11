@@ -1,16 +1,18 @@
+type BettingOn = "countries" | "athletes";
+
 export class EventType {
   private readonly _id: string;
   private readonly _name: string;
   private readonly _display_name: string;
   private readonly _discipline_id: string;
-  private readonly _betting_on: string;
+  private readonly _betting_on: BettingOn;
 
   constructor(
     id: string,
     name: string,
     display_name: string,
     discipline_id: string,
-    betting_on: string,
+    betting_on: BettingOn,
   ) {
     this._id = id;
     this._name = name;
@@ -35,7 +37,7 @@ export class EventType {
     return this._discipline_id;
   }
 
-  get betting_on(): string {
+  get betting_on(): BettingOn {
     return this._betting_on;
   }
 

@@ -67,6 +67,10 @@ export class Bet {
     return this._placements;
   }
 
+  public static initEmpty(user_id: string) {
+    return new Bet(user_id);
+  }
+
   public static fromJson(json: any) {
     return new Bet(
       json["user_id"],

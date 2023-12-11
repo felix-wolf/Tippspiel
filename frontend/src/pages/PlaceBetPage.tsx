@@ -5,14 +5,46 @@ import { SiteRoutes, usePathParams } from "../../SiteRoutes";
 import { Country } from "../models/Country";
 import { Athlete } from "../models/Athlete";
 import { EventType } from "../models/user/EventType";
+import { useCurrentUser } from "../models/user/UserContext";
+import { TextField } from "../components/design/TextField";
+import { Placement } from "../models/Bet";
+import { BetInput } from "../components/design/BetInput";
 
-export function BetPage() {
+type Place = {
+  id: string;
+};
+
+type Placements = { places: Place[] };
+
+export function PlaceBetPage() {
   const [options, setOptions] = useState<Record<string, string>[]>([]);
   const { event_id, game_id } = usePathParams(SiteRoutes.Bet);
+  const user = useCurrentUser();
+  const [bet, setBet] = useState<Placements>();
   const [event, setEvent] = useState<Event | undefined>(undefined);
   useEffect(() => {
     Event.fetchOne(event_id)
       .then((event) => {
+        const userBet = event.bets.find((bet) => bet.user_id == user?.id);
+        if (userBet) {
+          setBet({
+            places: userBet.placements.map((placement): Place => {
+              return {
+                id: placement.object_id,
+              };
+            }),
+          });
+        } else {
+          setBet({
+            places: Array.from({ length: 5 }).map((i) => {
+              return {
+                id: i,
+              };
+            }),
+          });
+          console.log(bet);
+        }
+        //setOptions(userBets);
         setEvent(event);
         loadData(event.type);
       })
@@ -23,17 +55,18 @@ export function BetPage() {
 
   function loadData(eventType: EventType): void {
     switch (eventType.betting_on) {
-      case "relay":
+      case "countries":
         Country.fetchAll()
           .then((countries) => {
             console.log(countries);
+            setOptions(countries.map((country) => country.toRecord()));
           })
           .catch((error) => {
             console.log(error);
           });
         break;
-      default: {
-        const desiredType = eventType.betting_on == "men" ? "m" : "f";
+      case "athletes": {
+        const desiredType = eventType.name == "men" ? "m" : "f";
         Athlete.fetchAll()
           .then((athletes) => {
             const a = athletes.filter(
@@ -41,7 +74,6 @@ export function BetPage() {
             );
             const records = a.map((athlete) => athlete.toRecord());
             setOptions(records);
-            console.log(records);
           })
           .catch((error) => {
             console.log(error);
@@ -50,5 +82,13 @@ export function BetPage() {
     }
   }
 
-  return <NavPage title={"TIPPEN FÜR: " + event?.name}></NavPage>;
+  return (
+    <NavPage title={"TIPPEN FÜR: " + event?.name}>
+      <div>
+        {bet?.places.map((placement, index) => (
+          <BetInput key={index} place={index + 1} />
+        ))}
+      </div>
+    </NavPage>
+  );
 }

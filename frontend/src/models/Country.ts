@@ -23,6 +23,10 @@ export class Country {
     return this._flag;
   }
 
+  public toRecord(): Record<string, string> {
+    return { a: this.code, b: this.flag + " " + this.name };
+  }
+
   public static fetchAll() {
     const builder = (res: any): Country[] => {
       return res.map((r: any) => new Country(r["code"], r["name"], r["flag"]));
