@@ -39,7 +39,7 @@ export function EventItem({
               if (_onEventClicked) _onEventClicked(event.id);
             }}
             type={hasBets ? "neutral" : "positive"}
-            title={hasBets ? "Tipps einsehen" : "Tippen"}
+            title={hasBets ? "Tipps bearbeiten" : "Tippen"}
             width={"flexible"}
             height={"flexible"}
           />

@@ -33,7 +33,6 @@ export function PlaceBetPage() {
             const userBets =
               event?.bets?.filter((bet) => bet.user_id == user?.id) ??
               undefined;
-            console.log(userBets);
             if (userBets && userBets.length == 5) {
               const selected = items.filter((item) => {
                 return (
@@ -79,7 +78,6 @@ export function PlaceBetPage() {
         if (bet.id == item.id) array[index] = { id: "", name: "" };
       });
       bets[place - 1] = item;
-      console.log(bets);
       setPlacedBets(bets);
       calcCompleted(bets);
     },
@@ -120,16 +118,10 @@ export function PlaceBetPage() {
   }
 
   const calcCompleted = useCallback((bets: BetInputItem[]) => {
-    console.log(
-      "completed",
-      bets.filter((bet) => bet.id).length == 5,
-      bets.filter((bet) => bet.id),
-    );
     setCompleted(bets.filter((bet) => bet.id).length == 5);
   }, []);
 
   const onSave = useCallback(() => {
-    console.log("save");
     const existing_ids = placedBets.map((bet) => bet.id);
     const bets = placedBets.map((bet, index) => {
       return new Bet(

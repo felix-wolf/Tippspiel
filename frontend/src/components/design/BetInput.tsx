@@ -23,26 +23,26 @@ export function BetInput({
   const handleOnSearch = (string: string, results: BetInputItem[]) => {
     // onSearch will have as the first callback parameter
     // the string searched and for the second the results.
-    console.log(string, results);
+    //console.log(string, results);
   };
 
   const handleOnHover = (result: BetInputItem) => {
     // the item hovered
-    console.log("hover", result);
+    //console.log("hover", result);
   };
 
   const handleOnSelect = (item: BetInputItem) => {
     // the item selected
-    console.log("select", item);
+    //console.log("select", item);
     _onSelect(item, place);
   };
 
   const handleOnFocus = () => {
-    console.log("Focused");
+    //console.log("Focused");
   };
 
   const handleOnClear = () => {
-    console.log("Clear");
+    //console.log("Clear");
     _onClear();
   };
 
