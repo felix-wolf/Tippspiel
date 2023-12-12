@@ -7,7 +7,7 @@ import { GameJoiner } from "../GameJoiner";
 import { Game } from "../../../models/Game";
 
 export type BettingGameItemGame = {
-  game: Game;
+  game?: Game;
   type: "real" | "add";
 };
 
@@ -38,7 +38,7 @@ export function BettingGameItem({
   const onClick = useCallback(() => {
     if (!creating) {
       if (_onGameSelect && item) {
-        if (joined) {
+        if (joined && item.game?.id) {
           _onGameSelect(item.game.id);
         } else {
           if (!joining) setJoining(true);
@@ -60,7 +60,7 @@ export function BettingGameItem({
           )}
           onClick={onClick}
         >
-          {!joining && item?.game.name}
+          {!joining && item?.game?.name}
           {joining && item?.game && (
             <GameJoiner
               game={item?.game}
@@ -68,7 +68,7 @@ export function BettingGameItem({
                 setJoining(false);
               }}
               onJoin={(password) => {
-                _onJoin && _onJoin(item?.game.id, password);
+                _onJoin && item?.game?.id && _onJoin(item.game.id, password);
               }}
             />
           )}

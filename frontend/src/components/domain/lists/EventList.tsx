@@ -25,7 +25,7 @@ export function EventList({
         items={events.map((event) => (
           <EventItem
             key={event.id}
-            hasBets={event.bets.length != 0}
+            hasBets={event.bets !== undefined && event.bets.length == 5}
             event={event}
             type={type}
             onEventClicked={_onEventClicked}

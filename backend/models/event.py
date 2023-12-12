@@ -22,6 +22,8 @@ class Event:
         self.bets = bets
 
     def to_dict(self):
+        if len(self.bets) > 0 and self.bets[0] is None:
+            i = 0
         return {
             "id": self.id,
             "name": self.name,
@@ -39,6 +41,18 @@ class Event:
                 self.event_type.id, self.dt.strftime("%Y-%m-%d %H:%M:%S")
             ])
         return success, self.id
+
+    def save_bets(self, user_id, bets):
+        if len(self.bets) > 0:
+            for bet in self.bets:
+                bet.delete()
+        bets = [Bet(user_id=user_id, event_id=self.id, predicted_place=b["place"], object_id=b["object_id"]) for b in bets]
+        if len(bets) != 5:
+            return False, None
+        for bet in bets:
+            if not bet.save_to_db():
+                return False, None
+        return True, self.id
 
     @staticmethod
     def get_by_id(event_id):
@@ -92,3 +106,4 @@ class Event:
             return False, None
         event = Event(name=name, game_id=game_id, event_type=event_type, dt=dt)
         return event.save_to_db()
+

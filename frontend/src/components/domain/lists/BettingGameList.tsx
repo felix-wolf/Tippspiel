@@ -26,15 +26,14 @@ export function BettingGameList({
             return { game: game, type: "real" };
           });
           const user_games = converted_games.filter((game) => {
-            return game.game.players.find((player) => player.id == user.id);
+            return game?.game?.players.find((player) => player.id == user.id);
           });
           const other_games = converted_games.filter((game) => {
             return !user_games.find(
-              (user_game) => user_game.game.id == game.game.id,
+              (user_game) => user_game?.game?.id == game?.game?.id,
             );
           });
           const add_item: BettingGameItemGame = {
-            game: new Game("add", "Neu", [], undefined, false, []),
             type: "add",
           };
 
@@ -49,17 +48,14 @@ export function BettingGameList({
 
   const onCreate = useCallback(
     (name: string, password?: string, discipline?: string) => {
-      let pw = "";
-      if (password) pw = `&pw=${password}`;
-      let d_id = "";
-      if (discipline) pw = `&discipline=${discipline}`;
-      Game.create(name, pw, d_id)
-        .then((game) => {
-          useNavigate(SiteRoutes.Game, { game_id: game.id });
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      if (discipline)
+        Game.create(name, discipline, password)
+          .then((game) => {
+            useNavigate(SiteRoutes.Game, { game_id: game.id });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
     },
     [],
   );
@@ -85,7 +81,7 @@ export function BettingGameList({
       title={show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}
       items={games.map((item) => (
         <BettingGameItem
-          key={item.game.id}
+          key={item.game?.id}
           item={item}
           joined={show_games == "user"}
           onGameSelect={(id) => {

@@ -1,3 +1,7 @@
+import hashlib
+from backend.database import db_manager
+
+
 class Placement:
 
     def __init__(self, predicted_place, object_id, actual_place=None):
@@ -16,7 +20,11 @@ class Placement:
 class Bet:
 
     def __init__(self, user_id: str, event_id: str, predicted_place: int,
-                 object_id: str, actual_place: int = None, score: int = None):
+                 object_id: str, actual_place: int = None, score: int = None, bet_id: str = None):
+        if bet_id:
+            self.id = bet_id
+        else:
+            self.id = hashlib.md5("".join([user_id, event_id, str(predicted_place)]).encode('utf-8')).hexdigest()
         self.user_id = user_id
         self.event_id = event_id
         self.predicted_place = predicted_place
@@ -28,22 +36,32 @@ class Bet:
         return 12
 
     def to_dict(self):
-        d = {
+        return {
+            "id": self.id,
             "user_id": self.user_id,
-            "placements": [p.to_dict() for p in self.placements]
+            "event_id": self.event_id,
+            "predicted_place": self.predicted_place,
+            "object_id": self.object_id,
+            "actual_place": self.actual_place,
+            "score": self.score
         }
-        score = self.calc_score()
-        if score:
-            d["score"] = score
-        return d
+
+    def delete(self):
+        sql = f"""
+            DELETE FROM {db_manager.TABLE_BETS} 
+            WHERE id = ?
+        """
+        success = db_manager.execute(sql, [self.id])
+        return success, self.id
 
     @staticmethod
-    def from_dict(bet_dict: str = None):
+    def from_dict(bet_dict):
         if bet_dict:
             try:
                 return Bet(
-                    user_id=bet_dict['id'], event_id=bet_dict['name'], predicted_place=bet_dict['predicted_place'],
-                    object_id=bet_dict['object_id'], actual_place=bet_dict["actual_place"]
+                    bet_id=bet_dict['id'], event_id=bet_dict['event_id'], user_id=bet_dict["user_id"],
+                    predicted_place=bet_dict['predicted_place'], object_id=bet_dict['object_id'],
+                    actual_place=bet_dict["actual_place"], score=bet_dict["score"]
                 )
             except KeyError as e:
                 print("Could not instantiate bet with given values:", bet_dict)
@@ -52,4 +70,14 @@ class Bet:
             return None
 
     def save_to_db(self):
-        print("NOT IMPLEMENTATION")
+        sql = f"""
+            INSERT INTO {db_manager.TABLE_BETS} 
+            (id, event_id, user_id, predicted_place, object_id, actual_place, score)
+            VALUES (?,?,?,?,?,?,?)
+        """
+        success = db_manager.execute(
+            sql, [
+                self.id, self.event_id, self.user_id, self.predicted_place,
+                self.object_id, self.actual_place, self.score
+            ])
+        return success, self.id

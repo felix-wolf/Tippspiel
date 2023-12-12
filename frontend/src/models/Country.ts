@@ -25,7 +25,7 @@ export class Country {
   }
 
   public toBetInputItem(): BetInputItem {
-    return { id: this.code, name: this._flag + " " + this.name };
+    return { id: this.code, flag: this.flag, name: this.name };
   }
 
   public static fetchAll() {

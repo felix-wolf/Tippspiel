@@ -33,13 +33,6 @@ export class Game {
     this._discipline = discipline;
   }
 
-  public static fetchOne(id: string): Promise<Game> {
-    const builder = (game_dict: any): Game => {
-      return Game.fromJson(game_dict);
-    };
-    return NetworkHelper.fetchOne(`/api/game/get?id=${id}`, builder);
-  }
-
   public static fromJson(json: any) {
     return new Game(
       json["id"],
@@ -53,27 +46,35 @@ export class Game {
     );
   }
 
+  public static fetchOne(id: string): Promise<Game> {
+    const builder = (game_dict: any): Game => {
+      return Game.fromJson(game_dict);
+    };
+    return NetworkHelper.fetchOne(`/api/game?id=${id}`, builder);
+  }
+
   public static fetchAll(): Promise<Game[]> {
     const builder = (res: any): Game[] => {
       return res.map((game: any) => {
         return Game.fromJson(game);
       });
     };
-    return NetworkHelper.fetchOne("/api/game/get", builder);
+    return NetworkHelper.fetchOne("/api/game", builder);
   }
 
   public static create(
     name: string,
-    pw: string,
     discipline: string,
+    pw?: string,
   ): Promise<Game> {
     const builder = (res: any): Game => {
       return Game.fromJson(res);
     };
-    return NetworkHelper.create<Game>(
-      `/api/game/create?name=${name}${pw}${discipline}`,
-      builder,
-    );
+    return NetworkHelper.create<Game>("/api/game", builder, {
+      name: name,
+      pw: pw,
+      discipline: discipline,
+    });
   }
 
   public static join(

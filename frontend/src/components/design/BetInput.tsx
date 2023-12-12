@@ -9,6 +9,7 @@ type BetInputProps = {
 
 export type BetInputItem = {
   id?: string;
+  flag: string;
   name: string;
 };
 
@@ -41,7 +42,9 @@ export function BetInput({
 
   const formatResult = (item: BetInputItem) => {
     return (
-      <span style={{ display: "block", textAlign: "left" }}>{item.name}</span>
+      <span style={{ display: "block", textAlign: "left" }}>
+        {item.flag} {item.name}
+      </span>
     );
   };
 

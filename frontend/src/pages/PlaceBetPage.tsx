@@ -1,6 +1,6 @@
 import { NavPage } from "./NavPage";
 import { useCallback, useEffect, useState } from "react";
-import { Event } from "../models/Event";
+import { Bets, Event } from "../models/Event";
 import { SiteRoutes, usePathParams } from "../../SiteRoutes";
 import { Country } from "../models/Country";
 import { Athlete } from "../models/Athlete";
@@ -8,15 +8,19 @@ import { EventType } from "../models/user/EventType";
 import { useCurrentUser } from "../models/user/UserContext";
 import { BetInput, BetInputItem } from "../components/design/BetInput";
 import { Button } from "../components/design/Button";
+import { Bet } from "../models/Bet";
+import { useNavigate } from "react-router-dom";
 
 export function PlaceBetPage() {
   const [items, setItems] = useState<BetInputItem[]>([]);
   const [placedBets, setPlacedBets] = useState<BetInputItem[]>([]);
+  // TODO: this is only needed because of enter bug, fix it
+  const [newBets, setNewBets] = useState<BetInputItem[]>([]);
   const { event_id, game_id } = usePathParams(SiteRoutes.Bet);
   const user = useCurrentUser();
   const [event, setEvent] = useState<Event | undefined>(undefined);
   const [completed, setCompleted] = useState(false);
-  const betId: string | undefined = undefined;
+  const navigate = useNavigate();
 
   useEffect(() => {
     Event.fetchOne(event_id)
@@ -25,15 +29,24 @@ export function PlaceBetPage() {
         loadData(event.type)
           .then((items) => {
             setItems(items);
-            const userBet = event.bets.find((bet) => bet.user_id == user?.id);
-            if (userBet) {
-              betId = userBet.user_id;
+            const userBets =
+              event?.bets?.filter((bet) => bet.user_id == user?.id) ??
+              undefined;
+            console.log(userBets);
+            if (userBets && userBets.length == 5) {
               const selected = items.filter((item) => {
-                userBet.placements
-                  .map((p) => p.object_id)
-                  .indexOf(item.id ?? "");
+                return (
+                  userBets.map((p) => p.object_id).indexOf(item.id ?? "") != -1
+                );
               });
+              selected.sort(
+                (a, b) =>
+                  userBets.map((p) => p.object_id).indexOf(a.id ?? "") -
+                  userBets.map((p) => p.object_id).indexOf(b.id ?? ""),
+              );
               setPlacedBets(selected);
+              setNewBets(selected);
+              calcCompleted(selected);
             } else {
               const new_bets: [
                 BetInputItem,
@@ -42,11 +55,11 @@ export function PlaceBetPage() {
                 BetInputItem,
                 BetInputItem,
               ] = [
-                { id: undefined, name: "" },
-                { id: undefined, name: "" },
-                { id: undefined, name: "" },
-                { id: undefined, name: "" },
-                { id: undefined, name: "" },
+                { id: undefined, flag: "", name: "" },
+                { id: undefined, flag: "", name: "" },
+                { id: undefined, flag: "", name: "" },
+                { id: undefined, flag: "", name: "" },
+                { id: undefined, flag: "", name: "" },
               ];
               setPlacedBets(new_bets);
             }
@@ -60,12 +73,12 @@ export function PlaceBetPage() {
 
   const onSelectItem = useCallback(
     (item: BetInputItem, place: number) => {
-      const bets = [...placedBets];
+      const bets = [...newBets];
       bets[place - 1] = item;
-      setPlacedBets(bets);
-      calcCompleted();
+      setNewBets(bets);
+      calcCompleted(bets);
     },
-    [placedBets],
+    [newBets],
   );
 
   function loadData(eventType: EventType): Promise<BetInputItem[]> {
@@ -97,13 +110,37 @@ export function PlaceBetPage() {
     });
   }
 
-  const calcCompleted = useCallback(() => {
-    setCompleted(placedBets.filter((bet) => bet.id).length == 5);
-  }, [placedBets]);
+  const calcCompleted = useCallback((bets: BetInputItem[]) => {
+    console.log(
+      "completed",
+      bets.filter((bet) => bet.id).length == 5,
+      bets.filter((bet) => bet.id),
+    );
+    setCompleted(bets.filter((bet) => bet.id).length == 5);
+  }, []);
 
   const onSave = useCallback(() => {
-    Bet;
-  }, [placedBets]);
+    const existing_ids = placedBets.map((bet) => bet.id);
+    const bets = newBets.map((bet, index) => {
+      return new Bet(
+        existing_ids && existing_ids.length == 5
+          ? existing_ids[index]
+          : undefined,
+        user?.id!,
+        index + 1,
+        bet.id!,
+        undefined,
+        undefined,
+      );
+    });
+    if (bets.length == 5 && user?.id) {
+      Event.saveBets(event_id, user.id, bets as Bets)
+        .then((event) => {
+          navigate(-1);
+        })
+        .catch((error) => console.log("error saving bets", error));
+    }
+  }, [newBets]);
 
   return (
     <NavPage title={"TIPPEN FÜR: " + event?.name}>
@@ -112,7 +149,10 @@ export function PlaceBetPage() {
           <BetInput
             key={index}
             place={index + 1}
-            items={items}
+            items={items
+              .filter
+              //(i) => placedBets.map((i) => i.id).indexOf(i.id) != -1,
+              ()}
             prev_selected={item}
             onSelect={onSelectItem}
           />

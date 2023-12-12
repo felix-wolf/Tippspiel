@@ -16,11 +16,11 @@ export class User {
     return new User(d["id"], d["name"]);
   }
 
-  public static create(name: string, pw: string): Promise<User> {
-    return NetworkHelper.create(
-      `/api/register?name=${name}&pw=${pw}`,
-      User.fromJson,
-    );
+  public static create(name: string, password: string): Promise<User> {
+    return NetworkHelper.create("/api/register", User.fromJson, {
+      name: name,
+      password: password,
+    });
   }
 
   public logout(): Promise<void> {
@@ -32,10 +32,10 @@ export class User {
   }
 
   public static login(name: string, password: string): Promise<User> {
-    return NetworkHelper.execute(
-      `/api/login?name=${name}&pw=${password}`,
-      User.fromJson,
-    );
+    return NetworkHelper.create(`/api/login`, User.fromJson, {
+      name: name,
+      password: password,
+    });
   }
 
   public static get_current_from_backend(): Promise<User> {

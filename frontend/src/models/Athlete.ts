@@ -48,7 +48,8 @@ export class Athlete {
   public toBetInputItem(): BetInputItem {
     return {
       id: this.id,
-      name: `${this._flag} ${this.first_name} ${this.last_name}`,
+      flag: this._flag,
+      name: `${this.first_name} ${this.last_name}`,
     };
   }
 

@@ -27,8 +27,7 @@ export function GamePage() {
   const fetchGame = useCallback(() => {
     Game.fetchOne(game_id)
       .then((game) => {
-        console.log(game, game.discipline.eventTypes);
-        if (game) setGame(game);
+        setGame(game);
       })
       .catch((error) => console.log(error));
   }, [game_id]);
@@ -57,7 +56,6 @@ export function GamePage() {
     (type: EventType, name: string, datetime: Date) => {
       Event.create(name, game_id, type, datetime)
         .then((event) => {
-          console.log(event);
           fetchEvents();
         })
         .catch((error) => {

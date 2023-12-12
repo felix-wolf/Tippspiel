@@ -198,6 +198,8 @@ export default function ReactSearchAutocomplete<T>({
       results?.[index] && onHover(results[index]);
     } else if (event) {
       switch (event.key) {
+        case "Tab":
+        // fall through to enter case
         case "Enter":
           if (results.length > 0 && results[highlightedItem]) {
             event.preventDefault();
