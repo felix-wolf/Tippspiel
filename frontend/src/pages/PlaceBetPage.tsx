@@ -10,12 +10,13 @@ import { BetInput, BetInputItem } from "../components/design/BetInput";
 import { Button } from "../components/design/Button";
 import { Bet } from "../models/Bet";
 import { useNavigate } from "react-router-dom";
+import styles from "./PlaceBetPage.module.scss";
 
 export function PlaceBetPage() {
   const [items, setItems] = useState<BetInputItem[]>([]);
   const [placedBets, setPlacedBets] = useState<BetInputItem[]>([]);
   // TODO: this is only needed because of enter bug, fix it
-  const [newBets, setNewBets] = useState<BetInputItem[]>([]);
+  //const [newBets, setNewBets] = useState<BetInputItem[]>([]);
   const { event_id, game_id } = usePathParams(SiteRoutes.Bet);
   const user = useCurrentUser();
   const [event, setEvent] = useState<Event | undefined>(undefined);
@@ -45,7 +46,7 @@ export function PlaceBetPage() {
                   userBets.map((p) => p.object_id).indexOf(b.id ?? ""),
               );
               setPlacedBets(selected);
-              setNewBets(selected);
+              //setNewBets(selected);
               calcCompleted(selected);
             } else {
               const new_bets: [
@@ -55,11 +56,11 @@ export function PlaceBetPage() {
                 BetInputItem,
                 BetInputItem,
               ] = [
-                { id: undefined, flag: "", name: "" },
-                { id: undefined, flag: "", name: "" },
-                { id: undefined, flag: "", name: "" },
-                { id: undefined, flag: "", name: "" },
-                { id: undefined, flag: "", name: "" },
+                { id: undefined, name: "" },
+                { id: undefined, name: "" },
+                { id: undefined, name: "" },
+                { id: undefined, name: "" },
+                { id: undefined, name: "" },
               ];
               setPlacedBets(new_bets);
             }
@@ -73,13 +74,21 @@ export function PlaceBetPage() {
 
   const onSelectItem = useCallback(
     (item: BetInputItem, place: number) => {
-      const bets = [...newBets];
+      const bets = [...placedBets];
+      bets.forEach((bet, index, array) => {
+        if (bet.id == item.id) array[index] = { id: "", name: "" };
+      });
       bets[place - 1] = item;
-      setNewBets(bets);
+      console.log(bets);
+      setPlacedBets(bets);
       calcCompleted(bets);
     },
-    [newBets],
+    [placedBets],
   );
+
+  const onClear = useCallback(() => {
+    setCompleted(false);
+  }, []);
 
   function loadData(eventType: EventType): Promise<BetInputItem[]> {
     return new Promise((resolve, reject) => {
@@ -120,8 +129,9 @@ export function PlaceBetPage() {
   }, []);
 
   const onSave = useCallback(() => {
+    console.log("save");
     const existing_ids = placedBets.map((bet) => bet.id);
-    const bets = newBets.map((bet, index) => {
+    const bets = placedBets.map((bet, index) => {
       return new Bet(
         existing_ids && existing_ids.length == 5
           ? existing_ids[index]
@@ -135,26 +145,29 @@ export function PlaceBetPage() {
     });
     if (bets.length == 5 && user?.id) {
       Event.saveBets(event_id, user.id, bets as Bets)
-        .then((event) => {
+        .then((_) => {
           navigate(-1);
         })
         .catch((error) => console.log("error saving bets", error));
     }
-  }, [newBets]);
+  }, [placedBets]);
 
   return (
     <NavPage title={"TIPPEN FÜR: " + event?.name}>
-      <div>
+      <form
+        className={styles.container}
+        onSubmit={(event) => {
+          event.preventDefault();
+        }}
+      >
         {placedBets?.map((item, index) => (
           <BetInput
-            key={index}
+            key={`${index} ${item.id} ${item.name}`}
             place={index + 1}
-            items={items
-              .filter
-              //(i) => placedBets.map((i) => i.id).indexOf(i.id) != -1,
-              ()}
+            items={items}
             prev_selected={item}
             onSelect={onSelectItem}
+            onClear={onClear}
           />
         ))}
         {placedBets.length == 0 &&
@@ -164,12 +177,14 @@ export function PlaceBetPage() {
               place={index + 1}
               items={items}
               onSelect={onSelectItem}
+              onClear={onClear}
             />
           ))}
-      </div>
-      {completed && (
-        <Button onClick={onSave} title={"Speichern"} type={"positive"} />
-      )}
+
+        {completed && (
+          <Button onClick={onSave} title={"Speichern"} type={"positive"} />
+        )}
+      </form>
     </NavPage>
   );
 }

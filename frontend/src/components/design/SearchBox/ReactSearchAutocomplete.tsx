@@ -74,6 +74,7 @@ export default function ReactSearchAutocomplete<T>({
   const [showNoResultsFlag, setShowNoResultsFlag] = useState<boolean>(false);
   const [hasFocus, setHasFocus] = useState<boolean>(false);
 
+  /*
   useEffect(() => {
     setSearchString(inputSearchString);
     const timeoutId = setTimeout(
@@ -83,6 +84,7 @@ export default function ReactSearchAutocomplete<T>({
 
     return () => clearTimeout(timeoutId);
   }, [inputSearchString]);
+   */
 
   useEffect(() => {
     searchString?.length > 0 &&
@@ -117,6 +119,10 @@ export default function ReactSearchAutocomplete<T>({
   }, [showItemsOnFocus, results, searchString, hasFocus, isTyping]);
 
   useEffect(() => {
+    eraseResults();
+  }, []);
+
+  useEffect(() => {
     const handleDocumentClick = () => {
       eraseResults();
       setHasFocus(false);
@@ -144,23 +150,28 @@ export default function ReactSearchAutocomplete<T>({
 
   const handleOnSearch = useCallback(
     (keyword: string) => {
+      onClear();
       setTimeout(() => callOnSearch(keyword), 200);
     },
     [items],
   );
 
   const handleOnClick = (result: Item<T>) => {
-    eraseResults();
     onSelect(result);
     setSearchString(result[resultStringKeyName]);
     setHighlightedItem(0);
+    eraseResults();
   };
 
-  const fuseResults = (keyword: string) =>
-    fuse
-      .search(keyword, { limit: maxResults })
+  const fuseResults = (keyword: string): T[] => {
+    const splits = keyword.split("  ");
+    let k = keyword;
+    if (splits.length > 1) k = splits[1];
+    return fuse
+      .search(k, { limit: maxResults })
       .map((result) => ({ ...result.item }))
       .slice(0, maxResults);
+  };
 
   const handleSetSearchString = ({ target }: ChangeEvent<HTMLInputElement>) => {
     const keyword = target.value;

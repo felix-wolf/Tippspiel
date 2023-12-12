@@ -5,11 +5,11 @@ type BetInputProps = {
   prev_selected?: BetInputItem;
   items: BetInputItem[];
   onSelect: (item: BetInputItem, place: number) => void;
+  onClear: () => void;
 };
 
 export type BetInputItem = {
   id?: string;
-  flag: string;
   name: string;
 };
 
@@ -18,6 +18,7 @@ export function BetInput({
   prev_selected,
   items,
   onSelect: _onSelect,
+  onClear: _onClear,
 }: BetInputProps) {
   const handleOnSearch = (string: string, results: BetInputItem[]) => {
     // onSearch will have as the first callback parameter
@@ -40,11 +41,14 @@ export function BetInput({
     console.log("Focused");
   };
 
+  const handleOnClear = () => {
+    console.log("Clear");
+    _onClear();
+  };
+
   const formatResult = (item: BetInputItem) => {
     return (
-      <span style={{ display: "block", textAlign: "left" }}>
-        {item.flag} {item.name}
-      </span>
+      <span style={{ display: "block", textAlign: "left" }}>{item.name}</span>
     );
   };
 
@@ -59,6 +63,7 @@ export function BetInput({
         formatResult={formatResult}
         placeholder={"Platz " + place}
         z_index={5 - place}
+        onClear={handleOnClear}
         inputSearchString={prev_selected?.name ?? ""}
       />
     </>

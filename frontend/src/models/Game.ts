@@ -114,4 +114,8 @@ export class Game {
   get discipline(): Discipline {
     return this._discipline;
   }
+
+  get events(): Event[] {
+    return this._events;
+  }
 }

@@ -64,6 +64,7 @@ export function useNavigateParams() {
  * @param route the route to get the children for.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-ignore
 export function usePathParams<T extends string>(route: T): RouteParams<T> {
   return useParams() as RouteParams<T>;
 }

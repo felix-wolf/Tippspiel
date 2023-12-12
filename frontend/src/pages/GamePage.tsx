@@ -7,6 +7,7 @@ import { useCurrentUser } from "../models/user/UserContext";
 import { NavPage } from "./NavPage";
 import { Event } from "../models/Event";
 import { EventType } from "../models/user/EventType";
+import { propertyIsEnumerable } from "@typescript-eslint/eslint-plugin";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -32,13 +33,20 @@ export function GamePage() {
       .catch((error) => console.log(error));
   }, [game_id]);
 
+  const sortEvents = (date_a: Event, date_b: Event): number =>
+    date_a.datetime.getTime() - date_b.datetime.getTime();
+
   const fetchEvents = useCallback(() => {
     Event.fetchAll(game_id)
       .then((events) => {
-        const past = events.filter((event) => event.datetime < new Date());
-        const upcoming = events.filter(
-          (event) => !past.find((past_event) => past_event.id == event.id),
-        );
+        const past = events
+          .filter((event) => event.datetime < new Date())
+          .sort(sortEvents);
+        const upcoming = events
+          .filter(
+            (event) => !past.find((past_event) => past_event.id == event.id),
+          )
+          .sort(sortEvents);
         setPastEvents(past);
         setUpcomingEvents(upcoming);
       })
@@ -55,7 +63,7 @@ export function GamePage() {
   const onCreate = useCallback(
     (type: EventType, name: string, datetime: Date) => {
       Event.create(name, game_id, type, datetime)
-        .then((event) => {
+        .then((_) => {
           fetchEvents();
         })
         .catch((error) => {
