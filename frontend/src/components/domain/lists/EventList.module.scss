@@ -1,4 +1,4 @@
 .heading {
- font-size: var(--font-size-l);
-  font-weight: var(--font_weight);
+ composes: text-subtitle from global;
+ margin-bottom: 10px;
 }

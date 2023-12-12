@@ -1,0 +1,123 @@
+.buttonDataEntry {
+  text-align: right;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+}
+
+.button {
+  width: 50px;
+  height: 50px;
+  border: none;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.table {
+  position: relative;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 15px;
+  border-radius: 16px;
+}
+
+.caption {
+  composes: text-subtitle_emphasis from global;
+  text-align: start;
+}
+
+.listTitle {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+thead {
+  width: 100%;
+  position: sticky;
+  top: calc(-1 * var(--grid-m));
+  z-index: 2;
+
+  &:before {
+    display: block;
+    //position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: scale(2);
+    transform-origin: center top;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+    pointer-events: none;
+  }
+
+  &.scrolled:before {
+    opacity: 1;
+  }
+}
+
+.tableHead {
+  text-align: left;
+  composes: text-emphasis from global;
+}
+
+.tableRow {
+  composes: text-regular from global;
+
+  background-color: var(--bg-secondary);
+  filter: var(--shadow-xs);
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: var(--shadow-s);
+  }
+}
+
+.hidden {
+  composes: text-regular from global;
+
+  opacity: 0 !important;
+}
+
+td {
+  text-align: left;
+  height: 40px;
+  cursor: pointer;
+}
+
+th, td {
+  &:first-child {
+    border-bottom-left-radius: 16px;
+    border-top-left-radius: 16px;
+    padding-left: var(--grid-m);
+  }
+
+  &:last-child {
+    border-bottom-right-radius: 16px;
+    border-top-right-radius: 16px;
+    padding-right: var(--grid-m);
+  }
+}
+
+.scrollDiv {
+  padding: 0;
+  width: 100%;
+  //height: 500px;
+  max-height: 300px;
+}
+
+.scrollDivParent {
+  overflow-y: scroll;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+

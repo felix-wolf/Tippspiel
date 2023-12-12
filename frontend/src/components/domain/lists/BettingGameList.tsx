@@ -3,7 +3,7 @@ import { BettingGameItem, BettingGameItemGame } from "./BettingGameItem";
 import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes";
 import { User } from "../../../models/user/User";
 import { Game } from "../../../models/Game";
-import { List } from "./List";
+import { List } from "../../design/List";
 
 type BettingGamesProps = {
   user?: User;
@@ -79,9 +79,9 @@ export function BettingGameList({
   return (
     <List
       title={show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}
-      items={games.map((item) => (
+      items={games.map((item, index) => (
         <BettingGameItem
-          key={item.game?.id}
+          key={`${index}${item.game?.id}`}
           item={item}
           joined={show_games == "user"}
           onGameSelect={(id) => {

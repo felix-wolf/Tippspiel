@@ -1,5 +1,5 @@
 import styles from "./List.module.scss";
-import { cls } from "../../../styles/cls";
+import { cls } from "../../styles/cls";
 import React from "react";
 
 type ListProps = {

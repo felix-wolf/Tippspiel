@@ -134,6 +134,33 @@ body {
   display: contents;
 }
 
+.text {
+  &-regular {
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  &-emphasis {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  &-subtitle {
+    font-size: 24px;
+    font-weight: 400;
+  }
+
+  &-title {
+    font-size: 60px;
+    font-weight: 500;
+  }
+
+  &-subtitle_emphasis {
+    font-size: 30px;
+    font-weight: 600;
+  }
+}
+
 h1, h2, a, button, input {
   all: unset;
 }

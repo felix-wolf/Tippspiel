@@ -1,5 +1,5 @@
 import { SiteRoutes, useNavigateParams, usePathParams } from "../../SiteRoutes";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Game } from "../models/Game";
 import { EventCreator } from "../components/domain/EventCreator";
 import { EventList } from "../components/domain/lists/EventList";
@@ -7,7 +7,7 @@ import { useCurrentUser } from "../models/user/UserContext";
 import { NavPage } from "./NavPage";
 import { Event } from "../models/Event";
 import { EventType } from "../models/user/EventType";
-import { propertyIsEnumerable } from "@typescript-eslint/eslint-plugin";
+import styles from "./GamePage.module.scss";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -88,20 +88,30 @@ export function GamePage() {
           types={game?.discipline.eventTypes ?? []}
         />
       )}
-      <EventList
-        events={upcomingEvents}
-        type={"upcoming"}
-        emptyButton={
-          isCreator && (
-            <EventCreator
-              onClick={onCreate}
-              types={game?.discipline.eventTypes ?? []}
-            />
-          )
-        }
-        onEventClicked={onEventClicked}
-      />
-      <EventList events={pastEvents} type={"past"} />
+      <div className={styles.listContainer}>
+        <EventList
+          events={upcomingEvents}
+          type={"upcoming"}
+          placeholderWhenEmpty={
+            isCreator && (
+              <EventCreator
+                onClick={onCreate}
+                types={game?.discipline.eventTypes ?? []}
+              />
+            )
+          }
+          onEventClicked={onEventClicked}
+        />
+      </div>
+      <div className={styles.listContainer}>
+        <EventList
+          events={pastEvents}
+          type={"past"}
+          placeholderWhenEmpty={
+            <div className={styles.empty_text}>Es gab noch keine...</div>
+          }
+        />
+      </div>
     </NavPage>
   );
 }
