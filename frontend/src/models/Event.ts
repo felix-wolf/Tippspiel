@@ -1,15 +1,21 @@
 import { NetworkHelper } from "./NetworkHelper";
-import { Bet } from "./Bet";
+import { Bet, Prediction } from "./Bet";
 import { EventType } from "./user/EventType";
 
-export type Bets = [Bet, Bet, Bet, Bet, Bet] | undefined;
+export type Predictions = [
+  Prediction,
+  Prediction,
+  Prediction,
+  Prediction,
+  Prediction,
+];
 
 export class Event {
   private readonly _id: string;
   private readonly _name: string;
   private readonly _game_id: string;
   private readonly _eventType: EventType;
-  private readonly _bets: Bets;
+  private readonly _bets: Bet[];
   private readonly _datetime: Date;
   constructor(
     id: string,
@@ -17,7 +23,7 @@ export class Event {
     game_id: string,
     type: EventType,
     datetime: string,
-    bets: Bets | undefined,
+    bets: Bet[],
   ) {
     this._id = id;
     this._name = name;
@@ -43,7 +49,7 @@ export class Event {
     return this._eventType;
   }
 
-  get bets(): Bets | undefined {
+  get bets(): Bet[] {
     return this._bets;
   }
 
@@ -70,7 +76,7 @@ export class Event {
   public static saveBets(
     event_id: string,
     user_id: string,
-    bets: Bets,
+    predictions: Predictions,
   ): Promise<Event> {
     const builder = (res: any): Event => Event.fromJson(res);
     return NetworkHelper.create(
@@ -79,11 +85,12 @@ export class Event {
       {
         event_id: event_id,
         user_id: user_id,
-        bets: bets?.map((bet) => {
+        predictions: predictions.map((prediction) => {
           return {
-            id: bet.id,
-            object_id: bet.object_id,
-            place: bet.predicted_place,
+            id: prediction.id,
+            bet_id: prediction.bet_id,
+            object_id: prediction.object_id,
+            predicted_place: prediction.predicted_place,
           };
         }),
       } ?? {},

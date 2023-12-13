@@ -22,15 +22,16 @@ class Event:
         self.bets = bets
 
     def to_dict(self):
-        if len(self.bets) > 0 and self.bets[0] is None:
-            i = 0
+        bets = []
+        if len(self.bets) > 0:
+            bets = [b.to_dict() for b in self.bets] if self.bets else []
         return {
             "id": self.id,
             "name": self.name,
             "game_id": self.game_id,
             "event_type": self.event_type.to_dict(),
             "datetime": self.dt.strftime("%Y-%m-%d %H:%M:%S"),
-            "bets": [b.to_dict() for b in self.bets] if self.bets else []
+            "bets": bets
         }
 
     def save_to_db(self):
@@ -42,17 +43,11 @@ class Event:
             ])
         return success, self.id
 
-    def save_bets(self, user_id, bets):
-        if len(self.bets) > 0:
-            for bet in self.bets:
-                bet.delete()
-        bets = [Bet(user_id=user_id, event_id=self.id, predicted_place=b["place"], object_id=b["object_id"]) for b in bets]
-        if len(bets) != 5:
-            return False, None
-        for bet in bets:
-            if not bet.save_to_db():
-                return False, None
-        return True, self.id
+    def save_bet(self, user_id, predictions):
+        bet = Bet.get_by_event_id_user_id(self.id, user_id)
+        if not bet:
+            bet = Bet(user_id, self.id)
+        return bet.update_predictions(predictions), self.id
 
     @staticmethod
     def get_by_id(event_id):
@@ -67,7 +62,7 @@ class Event:
         sql = f"SELECT b.* FROM {db_manager.TABLE_BETS} b WHERE b.event_id = ?"
         bets_data = db_manager.query(sql, [event.id])
         if bets_data:
-            bets = [Bet.from_dict(b) for b in bets_data]
+            bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
             event.bets = bets
         return event
 

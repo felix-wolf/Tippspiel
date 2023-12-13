@@ -30,7 +30,7 @@ class Country(BaseModel):
 
     def save_to_db(self):
         sql = f"""
-            Insert OR IGNORE into {db_manager.TABLE_COUNTRIES} 
+            INSERT OR IGNORE INTO {db_manager.TABLE_COUNTRIES} 
             (code, name, flag)
             VALUES (?,?,?)
             """

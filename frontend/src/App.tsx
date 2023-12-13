@@ -6,6 +6,7 @@ import UserContextLayout from "./models/user/UserContext";
 import { Login } from "./components/domain/Login";
 import { HomePage } from "./pages/HomePage";
 import { PlaceBetPage } from "./pages/PlaceBetPage";
+import { ViewBetsPage } from "./pages/ViewBetsPage";
 
 /**
  * All available routes.
@@ -19,7 +20,8 @@ function AppRoutes() {
         <Route path={SiteRoutes.Login} element={<Login />} />
         <Route path={SiteRoutes.Home} element={<HomePage />} />
         <Route path={SiteRoutes.Game} element={<GamePage />} />
-        <Route path={SiteRoutes.Bet} element={<PlaceBetPage />} />
+        <Route path={SiteRoutes.PlaceBet} element={<PlaceBetPage />} />
+        <Route path={SiteRoutes.ViewBets} element={<ViewBetsPage />} />
       </Route>
     </Routes>
   );

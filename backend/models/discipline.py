@@ -46,7 +46,7 @@ class Discipline(BaseModel):
 
     def save_to_db(self):
         sql = f"""
-            Insert OR IGNORE into {db_manager.TABLE_DISCIPLINES} 
+            INSERT OR IGNORE INTO {db_manager.TABLE_DISCIPLINES} 
             (id, name)
             VALUES (?,?)
             """

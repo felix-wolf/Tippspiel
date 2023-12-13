@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Event } from "../../../models/Event";
 import TableList from "../../design/TableList";
 import { Button } from "../../design/Button";
 import styles from "./EventList.module.scss";
+import { Bet } from "../../../models/Bet";
+import { useCurrentUser } from "../../../models/user/UserContext";
 
 export type EventTimeType = "upcoming" | "past";
 
@@ -10,7 +12,8 @@ type EventListProps = {
   type: EventTimeType;
   events: Event[];
   placeholderWhenEmpty?: React.ReactNode;
-  onEventClicked?: (event_id: string) => void;
+  showUserBets?: (event_id: string) => void;
+  showAllBets?: (event_id: string) => void;
 };
 
 type EventListType = {
@@ -18,15 +21,19 @@ type EventListType = {
   name: string;
   datetime: string;
   betsButton: undefined;
-  hasBets: boolean;
+  userBet?: Bet;
+  type: EventTimeType;
 };
 
 export function EventList({
   type,
   placeholderWhenEmpty,
   events,
-  onEventClicked: _onEventClicked,
+  showUserBets: _showUserBets,
+  showAllBets: _showAllBets,
 }: EventListProps) {
+  const user = useCurrentUser();
+
   function dateToString(date: Date): string {
     return `${date.getDate()}.${date.getMonth()}.${date.getFullYear()} - ${getDoubleDigit(
       date.getHours().toString(),
@@ -37,6 +44,21 @@ export function EventList({
     if (digits.length == 2) return digits;
     return "0" + digits;
   }
+
+  const getTitle = useCallback(
+    (event: EventListType): string => {
+      if (type == "upcoming") {
+        if (event.userBet) {
+          return "bearbeiten";
+        } else {
+          return "machen";
+        }
+      } else {
+        return "ansehen";
+      }
+    },
+    [type, events],
+  );
 
   return (
     <>
@@ -53,24 +75,30 @@ export function EventList({
               name: item.name,
               datetime: dateToString(item.datetime),
               betsButton: undefined,
-              hasBets: item.bets?.length == 5,
+              userBet: item.bets.find((bet) => bet.user_id == user?.id),
+              type: item.datetime < new Date() ? "past" : "upcoming",
             };
           })}
-          headers={{ name: "Name", datetime: "Zeit", betsButton: "Action" }}
+          headers={{ name: "Name", datetime: "Zeit", betsButton: "Tipps..." }}
           customRenderers={{
-            betsButton: (it) => (
-              <div style={{ width: 100 }}>
-                <Button
-                  onClick={() => {
-                    if (_onEventClicked) _onEventClicked(it.id);
-                  }}
-                  type={it.hasBets ? "neutral" : "positive"}
-                  title={it.hasBets ? "Tipps bearbeiten" : "Tippen"}
-                  width={"flexible"}
-                  height={"flexible"}
-                />
-              </div>
-            ),
+            betsButton: (it) =>
+              (it.type == "upcoming" /* || it.hasBets*/ ||
+                it.type == "past") && (
+                <div style={{ width: 100 }}>
+                  <Button
+                    onClick={() => {
+                      if (it.type == "upcoming" && _showUserBets)
+                        _showUserBets(it.id);
+                      if (it.type == "past" && _showAllBets)
+                        _showAllBets(it.id);
+                    }}
+                    type={it.userBet ? "neutral" : "positive"}
+                    title={getTitle(it)}
+                    width={"flexible"}
+                    height={"flexible"}
+                  />
+                </div>
+              ),
           }}
         />
       )}

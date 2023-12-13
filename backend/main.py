@@ -170,14 +170,13 @@ def save_bets():
     if request.method == "POST":
         event_id = request.get_json().get("event_id", None)
         user_id = request.get_json().get("user_id", None)
-        bets = request.get_json().get("bets", None)
-        print(event_id, bets)
-        if not event_id or not bets:
+        predictions = request.get_json().get("predictions", None)
+        if not event_id or not predictions:
             return "Missing parameters", 400
         event = Event.get_by_id(event_id)
         if not event:
             return "Fehler...", 500
-        success, event_id = event.save_bets(user_id, bets)
+        success, event_id = event.save_bet(user_id, predictions)
         if success:
             return Event.get_by_id(event_id).to_dict()
         else:

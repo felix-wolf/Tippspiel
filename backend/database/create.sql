@@ -65,13 +65,20 @@ CREATE VIEW if not EXISTS VIEW_EVENTS AS
     WHERE e.game_id = g.id;
 
 
+CREATE TABLE if not EXISTS Predictions (
+    id TEXT PRIMARY KEY NOT NULL,
+    bet_id TEXT NOT NULL,
+    predicted_place NUMERIC NOT NULL,
+    object_id TEXT NOT NULL,
+    actual_place NUMERIC,
+    FOREIGN KEY(bet_id) REFERENCES Bets(id) ON DELETE CASCADE
+);
+
+
 CREATE TABLE if not EXISTS Bets (
     id TEXT PRIMARY KEY NOT NULL,
     event_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
-    predicted_place NUMERIC NOT NULL,
-    object_id TEXT NOT NULL,
-    actual_place NUMERIC,
     score NUMERIC,
     FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE

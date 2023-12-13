@@ -1,5 +1,5 @@
 import { SiteRoutes, useNavigateParams, usePathParams } from "../../SiteRoutes";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Game } from "../models/Game";
 import { EventCreator } from "../components/domain/EventCreator";
 import { EventList } from "../components/domain/lists/EventList";
@@ -73,9 +73,16 @@ export function GamePage() {
     [game_id],
   );
 
-  const onEventClicked = useCallback(
+  const showUserBets = useCallback(
     (event_id: string) => {
-      navigate(SiteRoutes.Bet, { game_id, event_id });
+      navigate(SiteRoutes.PlaceBet, { game_id, event_id });
+    },
+    [game_id],
+  );
+
+  const showAllBets = useCallback(
+    (event_id: string) => {
+      navigate(SiteRoutes.ViewBets, { game_id, event_id });
     },
     [game_id],
   );
@@ -100,7 +107,7 @@ export function GamePage() {
               />
             )
           }
-          onEventClicked={onEventClicked}
+          showUserBets={showUserBets}
         />
       </div>
       <div className={styles.listContainer}>
@@ -110,6 +117,7 @@ export function GamePage() {
           placeholderWhenEmpty={
             <div className={styles.empty_text}>Es gab noch keine...</div>
           }
+          showAllBets={showAllBets}
         />
       </div>
     </NavPage>

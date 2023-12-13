@@ -47,7 +47,7 @@ class Athlete(BaseModel):
 
     def save_to_db(self):
         sql = f"""
-            Insert OR IGNORE into {db_manager.TABLE_ATHLETES} 
+            INSERT OR IGNORE INTO {db_manager.TABLE_ATHLETES} 
             (id, first_name, last_name, country_code, gender, discipline)
             VALUES (?,?,?,?,?,?)
             """

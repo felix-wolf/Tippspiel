@@ -10,7 +10,7 @@ TABLE_USERS = "Users"
 TABLE_EVENTS = "Events"
 TABLE_EVENT_TYPES = "EventTypes"
 TABLE_BETS = "Bets"
-TABLE_PLACEMENTS = "Placements"
+TABLE_PREDICTIONS = "Predictions"
 TABLE_DISCIPLINES = "Disciplines"
 
 

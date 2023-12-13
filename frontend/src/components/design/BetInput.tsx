@@ -20,12 +20,13 @@ export function BetInput({
   onSelect: _onSelect,
   onClear: _onClear,
 }: BetInputProps) {
+  // @ts-ignore
   const handleOnSearch = (string: string, results: BetInputItem[]) => {
     // onSearch will have as the first callback parameter
     // the string searched and for the second the results.
     //console.log(string, results);
   };
-
+  // @ts-ignore
   const handleOnHover = (result: BetInputItem) => {
     // the item hovered
     //console.log("hover", result);
