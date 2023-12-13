@@ -1,13 +1,17 @@
 from backend.database import db_manager
 from backend.models.base_model import BaseModel
+import hashlib
 
 
 class Athlete(BaseModel):
 
-    def __init__(self, athlete_id, name, surname, country_code, gender, discipline, flag=None):
-        self.id = athlete_id
-        self.name = name
-        self.surname = surname
+    def __init__(self, athlete_id, first_name, last_name, country_code, gender, discipline, flag=None):
+        if athlete_id is None:
+            self.id = Athlete.generate_id(last_name, first_name, country_code)
+        else:
+            self.id = athlete_id
+        self.first_name = first_name
+        self.last_name = last_name
         self.country_code = country_code
         self.gender = gender
         self.discipline = discipline
@@ -16,8 +20,8 @@ class Athlete(BaseModel):
     def to_dict(self):
         return {
             "id": self.id,
-            "first_name": self.name,
-            "last_name": self.surname,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
             "country_code": self.country_code,
             "gender": self.gender,
             "discipline": self.discipline,
@@ -28,11 +32,17 @@ class Athlete(BaseModel):
     def from_dict(a_dict):
         if a_dict:
             flag = None
+            a_id = None
             if "flag" in a_dict:
                 flag = a_dict["flag"]
+            if "id" in a_dict:
+                a_id = a_dict["id"]
             try:
-                return Athlete(a_dict['id'], a_dict['first_name'], a_dict['last_name'], a_dict['country_code'],
-                               a_dict['gender'], a_dict['discipline'], flag)
+                return Athlete(
+                    athlete_id=a_id, first_name=a_dict['first_name'], last_name=a_dict['last_name'],
+                    country_code=a_dict['country_code'], gender=a_dict['gender'],
+                    discipline=a_dict['discipline'], flag=flag
+                )
             except KeyError as e:
                 print("Could not instantiate athlete with given values:", a_dict)
                 return None
@@ -52,15 +62,19 @@ class Athlete(BaseModel):
             VALUES (?,?,?,?,?,?)
             """
         success = db_manager.execute(sql, [
-            self.id, self.name, self.surname, self.country_code, self.gender, self.discipline
+            self.id, self.first_name, self.last_name, self.country_code, self.gender, self.discipline
         ])
         return success, self.id
 
     @staticmethod
     def load_into_db():
         # insert athletes
-        athletes = db_manager.load_csv("athletes.csv", generate_id=True)
+        athletes = db_manager.load_csv("athletes.csv", generate_id=False)
         athletes = [Athlete.from_dict(a) for a in athletes]
         for athlete in athletes:
             if not athlete.save_to_db():
                 print("Error saving athlete")
+
+    @staticmethod
+    def generate_id(last_name, first_name, country_code):
+        return hashlib.md5("".join([last_name, first_name, country_code]).encode('utf8')).hexdigest()

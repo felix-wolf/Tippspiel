@@ -60,7 +60,7 @@ CREATE TABLE if not EXISTS Events (
     FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
 );
 
-CREATE VIEW if not EXISTS VIEW_EVENTS AS
+CREATE VIEW if not EXISTS VIEW_Events AS
     SELECT e.*, g.discipline FROM Events e, Games g
     WHERE e.game_id = g.id;
 
@@ -71,6 +71,7 @@ CREATE TABLE if not EXISTS Predictions (
     predicted_place NUMERIC NOT NULL,
     object_id TEXT NOT NULL,
     actual_place NUMERIC,
+    score NUMERIC,
     FOREIGN KEY(bet_id) REFERENCES Bets(id) ON DELETE CASCADE
 );
 

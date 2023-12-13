@@ -1,10 +1,13 @@
 import hashlib
 from backend.database import db_manager
+from backend.models.athlete import Athlete
 
 
 class Prediction:
 
-    def __init__(self, bet_id: str, object_id: str, predicted_place: int, actual_place: int = None, prediction_id: str = None):
+    def __init__(
+            self, bet_id: str, object_id: str, predicted_place: int,
+            actual_place: int = None, prediction_id: str = None, score: int = 0):
         if prediction_id is None:
             self.id = hashlib.md5("".join([bet_id, object_id, str(predicted_place)]).encode('utf-8')).hexdigest()
         else:
@@ -13,6 +16,7 @@ class Prediction:
         self.predicted_place = predicted_place
         self.object_id = object_id
         self.actual_place = actual_place
+        self.score = score
 
     def delete(self):
         sql = f"""
@@ -22,13 +26,20 @@ class Prediction:
         success = db_manager.execute(sql, [self.id])
         return success, self.id
 
+    def set_actual_place(self, place):
+        self.actual_place = place
+        self.score = max(0, min(5, 5 - abs(self.actual_place - self.predicted_place)))
+        sql = f"UPDATE {db_manager.TABLE_PREDICTIONS} SET score = ?, actual_place = ? WHERE id = ?"
+        return db_manager.execute(sql, [self.score, self.actual_place, self.id])
+
     def to_dict(self):
         return {
             "id": self.id,
             "bet_id": self.bet_id,
             "predicted_place": self.predicted_place,
             "object_id": self.object_id,
-            "actual_place": self.actual_place
+            "actual_place": self.actual_place,
+            "score": self.score
         }
 
     @staticmethod
@@ -40,17 +51,23 @@ class Prediction:
         return [Prediction.from_dict(p) for p in predictions]
 
     @staticmethod
-    def from_dict(p_dict):
+    def from_dict(p_dict, bet_id=None):
         if p_dict:
             p_id = None
+            score = None
             if "id" in p_dict:
                 p_id = p_dict["id"]
+            if "score" in p_dict:
+                score = p_dict["score"]
+            if "bet_id" in p_dict:
+                bet_id = p_dict["bet_id"]
             try:
                 return Prediction(
                     prediction_id=p_id,
-                    bet_id=p_dict['bet_id'],
+                    bet_id=bet_id,
                     object_id=p_dict["object_id"],
-                    predicted_place=p_dict["predicted_place"]
+                    predicted_place=p_dict["predicted_place"],
+                    score=score
                 )
             except KeyError as e:
                 print("Could not instantiate bet with given values:", p_dict)
@@ -61,7 +78,8 @@ class Prediction:
 
 class Bet:
 
-    def __init__(self, user_id: str, event_id: str, predictions: [Prediction] = None, score: int = None, bet_id: str = None):
+    def __init__(self, user_id: str, event_id: str, predictions: [Prediction] = None, score: int = None,
+                 bet_id: str = None):
         if bet_id:
             self.id = bet_id
         else:
@@ -82,6 +100,26 @@ class Bet:
             "score": self.score
         }
 
+    def calc_score(self, results):
+        for pred in self.predictions:
+
+            object_ids = []
+            for r in results:
+                if "id" in r:
+                    object_ids.append(r["id"])
+                elif "last_name" in r and "first_name" in r and "country_code" in r:
+                    # this means we have athletes
+                    object_ids.append(Athlete.generate_id(r["last_name"], r["first_name"], r["country_code"]))
+
+            actual_place = float('inf')
+            if pred.object_id in object_ids:
+                actual_place = next((item["place"] for item in results if item["id"] == pred.object_id))
+            if not pred.set_actual_place(actual_place):
+                return False
+        self.score = sum([p.score for p in self.predictions])
+        sql = f"UPDATE {db_manager.TABLE_BETS} SET score = ? WHERE id = ?"
+        return db_manager.execute(sql, [self.score, self.id])
+
     def update_predictions(self, new_predictions):
         if len(new_predictions) != 5:
             return False, None
@@ -90,7 +128,7 @@ class Bet:
             for prediction in self.predictions:
                 prediction.delete()
 
-        predictions = [Prediction.from_dict(pred) for pred in new_predictions]
+        predictions = [Prediction.from_dict(pred, self.id) for pred in new_predictions]
         self.predictions = predictions
         return self.save_to_db()
 

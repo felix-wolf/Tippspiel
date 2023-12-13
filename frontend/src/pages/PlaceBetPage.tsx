@@ -132,6 +132,7 @@ export function PlaceBetPage() {
         index + 1,
         bet_item.id!,
         undefined,
+        undefined,
       );
     });
     if (predictions.length == 5 && user?.id) {

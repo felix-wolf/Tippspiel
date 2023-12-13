@@ -1,5 +1,9 @@
 import hashlib
+import io
 from datetime import datetime
+
+import pandas as pd
+from selenium import webdriver
 
 from backend.database import db_manager
 from backend.models.bet import Bet
@@ -8,7 +12,8 @@ from backend.models.event_type import EventType
 
 class Event:
 
-    def __init__(self, name: str, game_id: str, event_type: EventType, dt: datetime, event_id: str = None, bets: [Bet] = None):
+    def __init__(self, name: str, game_id: str, event_type: EventType, dt: datetime, event_id: str = None,
+                 bets: [Bet] = None):
         if bets is None:
             bets = []
         if event_id:
@@ -48,6 +53,30 @@ class Event:
         if not bet:
             bet = Bet(user_id, self.id)
         return bet.update_predictions(predictions), self.id
+
+    def process_url_for_result(self, url: str):
+        driver = webdriver.Chrome()
+        driver.implicitly_wait(30)
+        driver.get(url)
+        df = pd.read_html(io.StringIO(driver.find_element(by="id", value="thistable").get_attribute('outerHTML')))[0]
+        if self.event_type.betting_on == "countries":
+            df = df[["Rank", "Country", "Nation"]]
+            df = df[df["Country"].notnull()]
+            results = [dict(zip(["place", "object", "id"], result)) for result in df.values]
+            for bet in self.bets:
+                if not bet.calc_score(results):
+                    return False
+            return True
+
+        elif self.event_type.betting_on == "athletes":
+            df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
+            results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in df.values]
+            for bet in self.bets:
+                if not bet.calc_score(results):
+                    return False
+            return True
+        else:
+            raise RuntimeError("No implementation")
 
     @staticmethod
     def get_by_id(event_id):
@@ -101,4 +130,3 @@ class Event:
             return False, None
         event = Event(name=name, game_id=game_id, event_type=event_type, dt=dt)
         return event.save_to_db()
-

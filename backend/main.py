@@ -188,6 +188,20 @@ def save_bets():
             return "Fehler...", 500
 
 
+@app.route("/api/results", methods=["POST"])
+# @login_required
+def process_results():
+    if request.method == "POST":
+        event_id = request.get_json().get("event_id", None)
+        url = request.get_json().get("url", None)
+        if not event_id or not url:
+            return "Missing parameters", 400
+        success = Event.get_by_id(event_id).process_url_for_result(url)
+        if success:
+            return Event.get_by_id(event_id).to_dict()
+        else:
+            return "Feher...", 500
+
 
 def hash_password(pw):
     return hashlib.sha256(pw.encode('utf-8')).hexdigest()

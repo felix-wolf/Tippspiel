@@ -91,6 +91,7 @@ export class Event {
             bet_id: prediction.bet_id,
             object_id: prediction.object_id,
             predicted_place: prediction.predicted_place,
+            score: prediction.score,
           };
         }),
       } ?? {},
