@@ -69,7 +69,7 @@ def handle_user_request():
     if game_id:
         game = Game.get_by_id(game_id)
         return [p.to_dict() for p in game.players]
-    
+
     user_id = current_user.get_id()
     if user_id:
         return User.get_by_id(user_id).to_dict()

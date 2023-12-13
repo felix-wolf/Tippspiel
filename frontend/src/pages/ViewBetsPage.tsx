@@ -6,7 +6,6 @@ import { List } from "../components/design/List";
 import styles from "./ViewBetsPage.module.scss";
 import { Bet } from "../models/Bet";
 import { Game } from "../models/Game";
-import { User } from "../models/user/User";
 import { EventType } from "../models/user/EventType";
 import { BetInputItem } from "../components/design/BetInput";
 import { Country } from "../models/Country";
@@ -87,30 +86,27 @@ type BetItem = {
 export function ViewBetsPage() {
   const [event, setEvent] = useState<Event | undefined>(undefined);
   const { event_id, game_id } = usePathParams(SiteRoutes.ViewBets);
-  const [players, setPlayers] = useState<User[]>();
   const [items, setItems] = useState<BetItem[]>();
 
   useEffect(() => {
     Game.fetchOne(game_id)
       .then((game) => {
-        setPlayers(game.players);
         Event.fetchOne(event_id)
           .then((event) => {
             setEvent(event);
-            const i: BetItem[] = game.players.map((player) => {
+            const betsOfPlayers: BetItem[] = game.players.map((player) => {
               const playerBet = event.bets.find(
                 (bet) => bet.user_id == player.id,
               );
-              if (playerBet) {
-                console.log("found");
-                return {
-                  playerName: player.name,
-                  bet: playerBet,
-                };
-              }
+              return {
+                playerName: player.name,
+                bet: playerBet,
+              };
             });
             setItems(
-              i.sort((a, b) => (a.bet?.score ?? 0) - (b.bet?.score ?? 0)),
+              betsOfPlayers.sort(
+                (a, b) => (a.bet?.score ?? 0) - (b.bet?.score ?? 0),
+              ),
             );
           })
           .catch((error) => {

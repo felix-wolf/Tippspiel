@@ -6,13 +6,8 @@ export class Game {
   private readonly _id: string;
   private readonly _name: string;
   private readonly _players: User[];
-
   private readonly _creator?: User;
-
   private readonly _hasPassword: boolean = false;
-
-  private readonly _events: Event[];
-
   private readonly _discipline: Discipline;
 
   constructor(
@@ -22,18 +17,17 @@ export class Game {
     discipline: Discipline,
     creator?: User,
     hasPassword: boolean = false,
-    events: Event[] = [],
   ) {
     this._id = id;
     this._name = name;
     this._players = players;
     this._hasPassword = hasPassword;
     this._creator = creator;
-    this._events = events;
     this._discipline = discipline;
   }
 
   public static fromJson(json: any) {
+    console.log(json);
     return new Game(
       json["id"],
       json["name"],
@@ -41,8 +35,6 @@ export class Game {
       Discipline.fromJson(json["discipline"]),
       User.fromJson(json["creator"]),
       json["pw_set"],
-
-      json["_discipline"],
     );
   }
 
@@ -113,9 +105,5 @@ export class Game {
 
   get discipline(): Discipline {
     return this._discipline;
-  }
-
-  get events(): Event[] {
-    return this._events;
   }
 }

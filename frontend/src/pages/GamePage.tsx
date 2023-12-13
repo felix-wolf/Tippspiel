@@ -8,6 +8,7 @@ import { NavPage } from "./NavPage";
 import { Event } from "../models/Event";
 import { EventType } from "../models/user/EventType";
 import styles from "./GamePage.module.scss";
+import { ScoreLine } from "../components/domain/ScoreLine";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -89,6 +90,7 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
+      <ScoreLine game={game} events={pastEvents} />
       {isCreator && (
         <EventCreator
           onClick={onCreate}
