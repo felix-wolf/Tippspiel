@@ -39,7 +39,7 @@ export class User {
   }
 
   public static get_current_from_backend(): Promise<User> {
-    return NetworkHelper.execute("/api/current_user", User.fromJson);
+    return NetworkHelper.execute("/api/user", User.fromJson);
   }
 
   public get id(): string {

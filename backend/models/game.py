@@ -8,7 +8,7 @@ from backend.models.base_model import BaseModel
 
 class Game(BaseModel):
 
-    def __init__(self, name, pw_hash, creator: User, discipline: Discipline, game_id=None, players=None):
+    def __init__(self, name, pw_hash, creator: User, discipline: Discipline, game_id: str = None, players: [User] = None):
         if players is None:
             players = []
         if game_id:

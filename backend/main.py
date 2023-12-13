@@ -63,8 +63,13 @@ def logout():
     return {"message": "Logout successful"}
 
 
-@app.route('/api/current_user')
-def get_cur_user():
+@app.route('/api/user')
+def handle_user_request():
+    game_id = request.args.get("game_id", None)
+    if game_id:
+        game = Game.get_by_id(game_id)
+        return [p.to_dict() for p in game.players]
+    
     user_id = current_user.get_id()
     if user_id:
         return User.get_by_id(user_id).to_dict()

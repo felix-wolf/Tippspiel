@@ -33,7 +33,6 @@ export function PlaceBetPage() {
             setItems(items);
             const betOfUser =
               event?.bets?.find((bet) => bet.user_id == user?.id) ?? undefined;
-            console.log(betOfUser);
             setUserBet(betOfUser);
             loadPredictions(betOfUser, items);
           })
@@ -46,7 +45,6 @@ export function PlaceBetPage() {
 
   const loadPredictions = useCallback(
     (userBet: Bet | undefined, items: BetInputItem[]) => {
-      console.log(userBet);
       if (userBet && userBet.predictions.length == 5) {
         const selected = items.filter((item) => {
           return (

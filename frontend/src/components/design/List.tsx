@@ -7,13 +7,23 @@ type ListProps = {
   items: React.ReactNode[];
   emptyContent?: React.ReactNode;
   emptyText?: string;
+  max_height?: number;
 };
 
-export function List({ title, items, emptyContent, emptyText }: ListProps) {
+export function List({
+  title,
+  items,
+  emptyContent,
+  emptyText,
+  max_height = 200,
+}: ListProps) {
   return (
     <div className={styles.container}>
       <div className={styles.heading}>{title}</div>
-      <div className={cls(styles.list, items.length == 0 && styles.empty)}>
+      <div
+        style={{ maxHeight: max_height }}
+        className={cls(styles.list, items.length == 0 && styles.empty)}
+      >
         {items.length == 0 && emptyText && (
           <div className={styles.empty_text}>{emptyText}</div>
         )}

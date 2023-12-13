@@ -82,8 +82,7 @@ export function EventList({
           headers={{ name: "Name", datetime: "Zeit", betsButton: "Tipps..." }}
           customRenderers={{
             betsButton: (it) =>
-              (it.type == "upcoming" /* || it.hasBets*/ ||
-                it.type == "past") && (
+              (it.type == "upcoming" || it.userBet) && (
                 <div style={{ width: 100 }}>
                   <Button
                     onClick={() => {
