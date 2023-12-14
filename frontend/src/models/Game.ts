@@ -56,14 +56,14 @@ export class Game {
   public static create(
     name: string,
     discipline: string,
-    pw?: string,
+    password?: string,
   ): Promise<Game> {
     const builder = (res: any): Game => {
       return Game.fromJson(res);
     };
     return NetworkHelper.create<Game>("/api/game", builder, {
       name: name,
-      pw: pw,
+      password: password,
       discipline: discipline,
     });
   }

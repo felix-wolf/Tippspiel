@@ -3,10 +3,12 @@ import { TextField } from "../design/TextField";
 import { useState } from "react";
 import { Button } from "../design/Button";
 import { Game } from "../../models/Game";
+import { Shakable } from "../design/Shakable";
 
 type GameJoinerProps = {
   game: Game;
   onClose: () => void;
+  shaking?: boolean;
 
   onJoin: (password?: string) => void;
 };
@@ -15,8 +17,11 @@ export function GameJoiner({
   game,
   onClose: _onClose,
   onJoin: _onJoin,
+  shaking = false,
 }: GameJoinerProps) {
   const [password, setPassword] = useState("");
+
+  console.log(game);
 
   return (
     <div className={styles.container}>
@@ -28,12 +33,14 @@ export function GameJoiner({
         <div>Spieler: {game.players.length}</div>
         <div>Ersteller: {game.creator?.name}</div>
         {game.hasPassword && (
-          <TextField
-            placeholder={"password"}
-            onInput={(i) => {
-              setPassword(i);
-            }}
-          />
+          <Shakable shaking={shaking}>
+            <TextField
+              placeholder={"password"}
+              onInput={(i) => {
+                setPassword(i);
+              }}
+            />
+          </Shakable>
         )}
       </div>
       <div className={styles.buttonContainer}>

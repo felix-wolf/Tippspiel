@@ -14,7 +14,7 @@ export type BettingGameItemGame = {
 type BettingGameItemProps = {
   onGameSelect?: (id: string) => void;
   onCreate?: (name: string, password?: string, disciplineId?: string) => void;
-  onJoin?: (game_id: string, password?: string) => void;
+  onJoin?: (game_id: string, password?: string) => Promise<boolean>;
   item?: BettingGameItemGame;
   type: "real" | "add";
   joined?: boolean;
@@ -30,6 +30,7 @@ export function BettingGameItem({
 }: BettingGameItemProps) {
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [shaking, setShaking] = useState(false);
 
   const onPlaceholderClick = useCallback(() => {
     if (!creating) setCreating(true);
@@ -47,6 +48,18 @@ export function BettingGameItem({
     }
   }, [type, item, creating, joined, joining]);
 
+  const onJoinClicked = useCallback(
+    (password: string | undefined) => {
+      if (_onJoin && item?.game?.id) {
+        _onJoin(item.game.id, password).then((success) => {
+          setShaking(!success);
+          setTimeout(() => setShaking(false), 300);
+        });
+      }
+    },
+    [item],
+  );
+
   return (
     <>
       {type != "add" && (
@@ -63,13 +76,12 @@ export function BettingGameItem({
           {!joining && item?.game?.name}
           {joining && item?.game && (
             <GameJoiner
+              shaking={shaking}
               game={item?.game}
               onClose={() => {
                 setJoining(false);
               }}
-              onJoin={(password) => {
-                _onJoin && item?.game?.id && _onJoin(item.game.id, password);
-              }}
+              onJoin={onJoinClicked}
             />
           )}
         </div>

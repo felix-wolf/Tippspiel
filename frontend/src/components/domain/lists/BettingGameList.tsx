@@ -61,17 +61,25 @@ export function BettingGameList({
   );
 
   const onJoin = useCallback(
-    (game_id: string, password?: string) => {
-      let pw = "";
-      if (password) pw = `&pw=${password}`;
-      if (user?.id)
-        Game.join(user.id, game_id, pw)
-          .then((game) => {
-            useNavigate(SiteRoutes.Game, { game_id: game.id });
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+    (game_id: string, password?: string): Promise<boolean> => {
+      return new Promise((resolve, reject) => {
+        let pw = "";
+        if (password) pw = `&pw=${password}`;
+        if (user?.id)
+          Game.join(user.id, game_id, pw)
+            .then((game) => {
+              useNavigate(SiteRoutes.Game, { game_id: game.id });
+              resolve(true);
+            })
+            .catch((error) => {
+              if (error.text == "Passwort falsch") {
+                console.log("FALSCH");
+                resolve(false);
+              } else {
+                reject();
+              }
+            });
+      });
     },
     [user],
   );

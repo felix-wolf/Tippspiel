@@ -204,7 +204,8 @@ def process_results():
 
 
 def hash_password(pw):
-    return hashlib.sha256(pw.encode('utf-8')).hexdigest()
+    salt = "bbb2f42a59c563f9c518903aac422052"
+    return hashlib.sha256("".join([pw, salt]).encode('utf-8')).hexdigest()
 
 
 if __name__ == '__main__':
