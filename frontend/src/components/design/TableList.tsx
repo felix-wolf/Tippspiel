@@ -61,6 +61,7 @@ export interface ListProps<T extends ListElement> {
    *  A simple flag if the rows of the table should display an indicator image that they are clickable.
    */
   displayNextArrow?: boolean;
+  cellHeight?: "short" | "tall";
 }
 
 type PrimitiveType = string | number | boolean;
@@ -107,6 +108,7 @@ export default function TableList<T extends ListElement>({
   headers,
   displayNextArrow = true,
   items,
+  cellHeight = "tall",
 }: ListProps<T>) {
   const [scrolled, setScrolled] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -141,7 +143,10 @@ export default function TableList<T extends ListElement>({
 
             // TODO is `isPrimitiveValue` really the right condition? do we want to print booleans like that?
             return (
-              <td key={index}>
+              <td
+                className={cls(cellHeight == "short" && styles.tdShort)}
+                key={index}
+              >
                 {customRenderer?.(item) ??
                   (isPrimitiveType(value) ? value : "")}
               </td>
@@ -163,7 +168,12 @@ export default function TableList<T extends ListElement>({
   return (
     <div className={styles.scrollDivParent} ref={container}>
       <div className={styles.scrollDiv}>
-        <table className={styles.table}>
+        <table
+          className={cls(
+            styles.table,
+            cellHeight == "short" ? styles.tableShort : styles.tableTall,
+          )}
+        >
           {captionElement}
           {!captionElement && (
             <caption className={styles.caption}>{caption}</caption>

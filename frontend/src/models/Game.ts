@@ -27,7 +27,6 @@ export class Game {
   }
 
   public static fromJson(json: any) {
-    console.log(json);
     return new Game(
       json["id"],
       json["name"],

@@ -1,12 +1,12 @@
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
+  Legend,
   LinearScale,
-  PointElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { useCallback } from "react";
@@ -62,6 +62,33 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
         display: true,
         text: "Punktestand",
       },
+      tooltip: {
+        callbacks: {
+          title: function (tooltipItem: any) {
+            // Customize the title text (e.g., add 'Custom Title: ')
+            return "Eventname: " + tooltipItem[0].label;
+          },
+          label: function (tooltipItem: any) {
+            const scores = tooltipItem.dataset.data;
+            const latestScore = scores[tooltipItem.dataIndex];
+            const prevScore =
+              tooltipItem.dataIndex > 0 ? scores[tooltipItem.dataIndex - 1] : 0;
+            console.log(
+              typeof tooltipItem,
+              tooltipItem.dataIndex,
+              prevScore,
+              latestScore,
+            );
+            // Customize the label text (e.g., add 'Value: ')
+            return `${prevScore} + ${latestScore - prevScore} = ${latestScore}`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
     },
   };
 
@@ -79,9 +106,13 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
       game?.players.map((player) => {
         return {
           label: player.name,
-          data: events.map(
-            (e) => e.bets.find((b) => b.user_id == player.id)?.score ?? 0,
-          ),
+          data: events
+            .map((e) => e.bets.find((b) => b.user_id == player.id)?.score ?? 0)
+            .map((_, index, all) => {
+              return all
+                .slice(0, index + 1)
+                .reduce((acc, curr) => acc + curr, 0);
+            }),
           borderColor: `rgb(${
             colors[Number(`0x${player.id}`) % colors.length]
           })`,

@@ -71,6 +71,8 @@ class Event:
         elif self.event_type.betting_on == "athletes":
             df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
             results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in df.values]
+            for result in results:
+                result["id"] = db_manager.generate_id([result["last_name"], result["first_name"], result["country_code"]])
             for bet in self.bets:
                 if not bet.calc_score(results):
                     return False

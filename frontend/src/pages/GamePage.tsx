@@ -90,7 +90,7 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
-      <ScoreLine game={game} events={pastEvents} />
+      {pastEvents.length > 0 && <ScoreLine game={game} events={pastEvents} />}
       {isCreator && (
         <EventCreator
           onClick={onCreate}
@@ -102,12 +102,9 @@ export function GamePage() {
           events={upcomingEvents}
           type={"upcoming"}
           placeholderWhenEmpty={
-            isCreator && (
-              <EventCreator
-                onClick={onCreate}
-                types={game?.discipline.eventTypes ?? []}
-              />
-            )
+            <div className={styles.empty_text}>
+              Es sind noch keine Events eingetragen...
+            </div>
           }
           showUserBets={showUserBets}
         />

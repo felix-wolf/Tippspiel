@@ -50,7 +50,7 @@ export class NetworkHelper {
               resolve(builder(object));
             })
             .catch((error) => {
-              console.log("no or faulty json", error);
+              console.log("no or faulty json", error, url, res);
             });
         } else {
           res.text().then((error_text) => {

@@ -6,74 +6,53 @@ import { List } from "../components/design/List";
 import styles from "./ViewBetsPage.module.scss";
 import { Bet } from "../models/Bet";
 import { Game } from "../models/Game";
-import { EventType } from "../models/user/EventType";
-import { BetInputItem } from "../components/design/BetInput";
-import { Country } from "../models/Country";
-import { Athlete } from "../models/Athlete";
+import TableList from "../components/design/TableList";
 
 type BetItemProp = {
   playerName: string;
   bet: Bet | undefined;
-  eventType?: EventType;
 };
 
-function BetItem({ playerName, bet, eventType }: BetItemProp) {
-  const [predictionObjects, setPredictionObjects] = useState<BetInputItem[]>();
+type BetResultItem = {
+  tipp: string;
+  result: number;
+  score: number;
+};
+
+function BetItem({ playerName, bet }: BetItemProp) {
+  const [resultItems, setResultItems] = useState<BetResultItem[]>([]);
 
   useEffect(() => {
-    switch (eventType?.betting_on) {
-      case "countries":
-        Country.fetchAll()
-          .then((countries) => {
-            setPredictionObjects(
-              filterPredictionObjects(
-                countries.map((country) => country.toBetInputItem()),
-              ),
-            );
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-        break;
-      case "athletes": {
-        const desiredType = eventType.name == "men" ? "m" : "f";
-        Athlete.fetchAll()
-          .then((athletes) => {
-            const a = athletes.filter(
-              (athletes) => athletes.gender == desiredType,
-            );
-            setPredictionObjects(
-              filterPredictionObjects(
-                a.map((athlete) => athlete.toBetInputItem()),
-              ),
-            );
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      }
-    }
-  }, []);
-
-  function filterPredictionObjects(objects: BetInputItem[]): BetInputItem[] {
-    return objects.filter(
-      (object) =>
-        bet?.predictions.map((p) => p.object_id).indexOf(object.id ?? "") !==
-        -1,
+    setResultItems(
+      bet?.predictions.map((pred) => {
+        return {
+          tipp: `${pred.predicted_place ?? -1}: ${
+            pred.object_name ?? "unknown"
+          }`,
+          result: pred.actual_place ?? -1,
+          score: pred.score ?? 0,
+        };
+      }) ?? [],
     );
-  }
+  }, [bet]);
 
   return (
     <div className={styles.container}>
       <div className={styles.name}>{playerName}</div>
       <div className={styles.predictions}>
-        {predictionObjects?.map((prediction, index) => (
-          <div key={prediction.id}>
-            {index + 1}: {prediction.name}
-          </div>
-        ))}
+        <TableList
+          cellHeight={"short"}
+          items={resultItems}
+          headers={{
+            tipp: "Tipp",
+            result: "Ergebnis",
+            score: "Punkte",
+          }}
+          customRenderers={{}}
+          displayNextArrow={false}
+        />
       </div>
-      <div>Score: {bet?.score}</div>
+      <div className={styles.score}>Score: {bet?.score}</div>
     </div>
   );
 }
@@ -123,7 +102,6 @@ export function ViewBetsPage() {
         items={
           items?.map((bet, index) => (
             <BetItem
-              eventType={event?.type}
               key={`${bet}_${index}`}
               playerName={bet.playerName}
               bet={bet.bet}

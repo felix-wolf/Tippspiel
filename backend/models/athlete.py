@@ -1,13 +1,12 @@
 from backend.database import db_manager
 from backend.models.base_model import BaseModel
-import hashlib
 
 
 class Athlete(BaseModel):
 
     def __init__(self, athlete_id, first_name, last_name, country_code, gender, discipline, flag=None):
         if athlete_id is None:
-            self.id = Athlete.generate_id(last_name, first_name, country_code)
+            self.id = db_manager.generate_id([last_name, first_name, country_code])
         else:
             self.id = athlete_id
         self.first_name = first_name
@@ -74,7 +73,3 @@ class Athlete(BaseModel):
         for athlete in athletes:
             if not athlete.save_to_db():
                 print("Error saving athlete")
-
-    @staticmethod
-    def generate_id(last_name, first_name, country_code):
-        return hashlib.md5("".join([last_name, first_name, country_code]).encode('utf8')).hexdigest()

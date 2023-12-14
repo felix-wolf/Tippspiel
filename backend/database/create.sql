@@ -75,6 +75,21 @@ CREATE TABLE if not EXISTS Predictions (
     FOREIGN KEY(bet_id) REFERENCES Bets(id) ON DELETE CASCADE
 );
 
+CREATE VIEW if not EXISTS VIEW_Predictions AS
+    SELECT
+        p.*,
+        CASE
+            WHEN va.id IS NOT NULL THEN va.flag || '  ' || va.first_name || ' ' || va.last_name
+            WHEN c.code IS NOT NULL THEN c.flag || '  ' || c.name
+            ELSE 'unknown'
+        END AS 'object_name'
+    FROM
+        Predictions p
+    LEFT JOIN
+        VIEW_Athletes va ON p.object_id  = va.id
+    LEFT JOIN
+        Countries c ON p.object_id = c.code;
+
 
 CREATE TABLE if not EXISTS Bets (
     id TEXT PRIMARY KEY NOT NULL,

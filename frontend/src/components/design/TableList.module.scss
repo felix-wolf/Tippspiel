@@ -15,11 +15,18 @@
   border-radius: 50%;
 }
 
+.tableShort {
+  border-spacing: 0 5px;
+}
+
+.tableTall {
+  border-spacing: 0 15px;
+}
+
 .table {
   position: relative;
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 15px;
   border-radius: 16px;
 }
 
@@ -82,6 +89,10 @@ thead {
   composes: text-regular from global;
 
   opacity: 0 !important;
+}
+
+.tdShort {
+    height: 20px;
 }
 
 td {

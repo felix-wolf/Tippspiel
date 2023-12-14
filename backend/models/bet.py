@@ -1,12 +1,11 @@
 import hashlib
 from backend.database import db_manager
-from backend.models.athlete import Athlete
 
 
 class Prediction:
 
     def __init__(
-            self, bet_id: str, object_id: str, predicted_place: int,
+            self, bet_id: str, object_id: str, object_name: str, predicted_place: int,
             actual_place: int = None, prediction_id: str = None, score: int = 0):
         if prediction_id is None:
             self.id = hashlib.md5("".join([bet_id, object_id, str(predicted_place)]).encode('utf-8')).hexdigest()
@@ -15,6 +14,7 @@ class Prediction:
         self.bet_id = bet_id
         self.predicted_place = predicted_place
         self.object_id = object_id
+        self.object_name = object_name
         self.actual_place = actual_place
         self.score = score
 
@@ -27,6 +27,8 @@ class Prediction:
         return success, self.id
 
     def set_actual_place(self, place):
+        if type(place) == str:
+            place = int(place)
         self.actual_place = place
         self.score = max(0, min(5, 5 - abs(self.actual_place - self.predicted_place)))
         sql = f"UPDATE {db_manager.TABLE_PREDICTIONS} SET score = ?, actual_place = ? WHERE id = ?"
@@ -38,13 +40,14 @@ class Prediction:
             "bet_id": self.bet_id,
             "predicted_place": self.predicted_place,
             "object_id": self.object_id,
+            "object_name": self.object_name,
             "actual_place": self.actual_place,
             "score": self.score
         }
 
     @staticmethod
     def get_by_id(bet_id: str):
-        sql = f"SELECT p.* FROM {db_manager.TABLE_PREDICTIONS} p WHERE p.bet_id = ?"
+        sql = f"SELECT p.* FROM VIEW_{db_manager.TABLE_PREDICTIONS} p WHERE p.bet_id = ?"
         predictions = db_manager.query(sql, [bet_id])
         if not predictions:
             return []
@@ -55,18 +58,26 @@ class Prediction:
         if p_dict:
             p_id = None
             score = None
+            actual_place = None
+            object_name = None
             if "id" in p_dict:
                 p_id = p_dict["id"]
             if "score" in p_dict:
                 score = p_dict["score"]
             if "bet_id" in p_dict:
                 bet_id = p_dict["bet_id"]
+            if "actual_place" in p_dict:
+                actual_place = p_dict["actual_place"]
+            if "object_name" in p_dict:
+                object_name = p_dict["object_name"]
             try:
                 return Prediction(
                     prediction_id=p_id,
                     bet_id=bet_id,
                     object_id=p_dict["object_id"],
+                    object_name=object_name,
                     predicted_place=p_dict["predicted_place"],
+                    actual_place=actual_place,
                     score=score
                 )
             except KeyError as e:
@@ -102,16 +113,8 @@ class Bet:
 
     def calc_score(self, results):
         for pred in self.predictions:
-
-            object_ids = []
-            for r in results:
-                if "id" in r:
-                    object_ids.append(r["id"])
-                elif "last_name" in r and "first_name" in r and "country_code" in r:
-                    # this means we have athletes
-                    object_ids.append(Athlete.generate_id(r["last_name"], r["first_name"], r["country_code"]))
-
-            actual_place = float('inf')
+            object_ids = [r["id"] for r in results]
+            actual_place = 9999
             if pred.object_id in object_ids:
                 actual_place = next((item["place"] for item in results if item["id"] == pred.object_id))
             if not pred.set_actual_place(actual_place):

@@ -128,3 +128,7 @@ def load_csv(file_name, generate_id=False):
                 row['id'] = hashlib.md5(concat_string.encode('utf8')).hexdigest()
             values.append(row)
         return values
+
+
+def generate_id(field_array):
+    return hashlib.md5("".join(field_array).encode('utf8')).hexdigest()
