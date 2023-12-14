@@ -4,6 +4,7 @@
 *.db
 backend/database/tippspiel.db
 backend/database/*.db
+backend/config.py
 
 ### Flask ###
 instance/*

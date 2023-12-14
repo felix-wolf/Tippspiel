@@ -14,7 +14,8 @@ from models.discipline import Discipline
 from models.event_type import EventType
 
 app = Flask(__name__)
-app.secret_key = "1b98d3e890b6bd7213300e0a98e66856"
+app.config.from_pyfile('config.py')
+app.secret_key = app.config["SECRET_KEY"]
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -204,7 +205,7 @@ def process_results():
 
 
 def hash_password(pw):
-    salt = "bbb2f42a59c563f9c518903aac422052"
+    salt = app.config["SALT"]
     return hashlib.sha256("".join([pw, salt]).encode('utf-8')).hexdigest()
 
 
