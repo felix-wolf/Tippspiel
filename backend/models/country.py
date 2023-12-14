@@ -1,5 +1,5 @@
-from backend.database import db_manager
-from backend.models.base_model import BaseModel
+from database import db_manager
+from models.base_model import BaseModel
 
 class Country(BaseModel):
 

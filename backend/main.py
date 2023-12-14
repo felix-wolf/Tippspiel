@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Flask, request
 from flask_login import *
 
-from backend.database import db_manager
+from database import db_manager
 from models.user import User
 from models.athlete import Athlete
 from models.country import Country

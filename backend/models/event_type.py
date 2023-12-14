@@ -1,7 +1,7 @@
 import hashlib
 
-from backend.models.base_model import BaseModel
-from backend.database import db_manager
+from models.base_model import BaseModel
+from database import db_manager
 
 
 class EventType(BaseModel):

@@ -6,9 +6,9 @@ import pandas as pd
 from selenium import webdriver
 from selenium.common import NoSuchElementException
 
-from backend.database import db_manager
-from backend.models.bet import Bet
-from backend.models.event_type import EventType
+from database import db_manager
+from models.bet import Bet
+from models.event_type import EventType
 
 
 class Event:

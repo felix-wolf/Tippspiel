@@ -1,5 +1,5 @@
 import hashlib
-from backend.database import db_manager
+from database import db_manager
 
 
 class Prediction:

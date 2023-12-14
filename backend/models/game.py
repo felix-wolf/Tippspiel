@@ -1,9 +1,9 @@
 import hashlib
 
-from backend.database import db_manager
-from backend.models.discipline import Discipline
-from backend.models.user import User
-from backend.models.base_model import BaseModel
+from database import db_manager
+from models.discipline import Discipline
+from models.user import User
+from models.base_model import BaseModel
 
 
 class Game(BaseModel):

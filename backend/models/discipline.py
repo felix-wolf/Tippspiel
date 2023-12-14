@@ -1,6 +1,6 @@
-from backend.database import db_manager
-from backend.models.base_model import BaseModel
-from backend.models.event_type import EventType
+from database import db_manager
+from models.base_model import BaseModel
+from models.event_type import EventType
 
 
 class Discipline(BaseModel):
