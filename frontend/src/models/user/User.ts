@@ -17,7 +17,7 @@ export class User {
   }
 
   public static create(name: string, password: string): Promise<User> {
-    return NetworkHelper.create("/api/register", User.fromJson, {
+    return NetworkHelper.post("/api/register", User.fromJson, {
       name: name,
       password: password,
     });
@@ -32,7 +32,7 @@ export class User {
   }
 
   public static login(name: string, password: string): Promise<User> {
-    return NetworkHelper.create(`/api/login`, User.fromJson, {
+    return NetworkHelper.post(`/api/login`, User.fromJson, {
       name: name,
       password: password,
     });

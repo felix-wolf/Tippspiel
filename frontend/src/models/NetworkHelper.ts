@@ -13,7 +13,7 @@ export class NetworkHelper {
     return this.executeFetch(url, builder);
   }
 
-  public static create<Type>(
+  public static post<Type>(
     url: string,
     builder: (object: any) => Type,
     body: Object,

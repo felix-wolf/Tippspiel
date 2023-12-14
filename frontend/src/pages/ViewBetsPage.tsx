@@ -1,12 +1,14 @@
 import { SiteRoutes, usePathParams } from "../../SiteRoutes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Event } from "../models/Event";
 import { NavPage } from "./NavPage";
 import { List } from "../components/design/List";
 import styles from "./ViewBetsPage.module.scss";
-import { Bet } from "../models/Bet";
+import { Bet, Prediction } from "../models/Bet";
 import { Game } from "../models/Game";
 import TableList from "../components/design/TableList";
+import { useCurrentUser } from "../models/user/UserContext";
+import { ResultUploader } from "../components/domain/ResultUploader";
 
 type BetItemProp = {
   playerName: string;
@@ -39,19 +41,17 @@ function BetItem({ playerName, bet }: BetItemProp) {
   return (
     <div className={styles.container}>
       <div className={styles.name}>{playerName}</div>
-      <div className={styles.predictions}>
-        <TableList
-          cellHeight={"short"}
-          items={resultItems}
-          headers={{
-            tipp: "Tipp",
-            result: "Ergebnis",
-            score: "Punkte",
-          }}
-          customRenderers={{}}
-          displayNextArrow={false}
-        />
-      </div>
+      <TableList
+        cellHeight={"short"}
+        items={resultItems}
+        headers={{
+          tipp: "Tipp",
+          result: "Ergebnis",
+          score: "Punkte",
+        }}
+        customRenderers={{}}
+        displayNextArrow={false}
+      />
       <div className={styles.score}>Score: {bet?.score}</div>
     </div>
   );
@@ -64,29 +64,45 @@ type BetItem = {
 
 export function ViewBetsPage() {
   const [event, setEvent] = useState<Event | undefined>(undefined);
+  const [game, setGame] = useState<Game>();
   const { event_id, game_id } = usePathParams(SiteRoutes.ViewBets);
   const [items, setItems] = useState<BetItem[]>();
+  const [isCreator, setIsCreator] = useState(false);
+  const [resultsUploaded, setResultsUploaded] = useState(false);
+  const user = useCurrentUser();
+
+  useEffect(() => {
+    const predictionsWithResults: Prediction[] =
+      event?.bets
+        .map((bet) => bet.predictions)
+        .reduce((acc, curr) => acc.concat(curr))
+        .filter((pred) => pred.actual_place != undefined) ?? [];
+    setResultsUploaded(predictionsWithResults.length > 0);
+  }, [event]);
+
+  const processEvent = useCallback((event: Event, game: Game | undefined) => {
+    setEvent(event);
+    const betsOfPlayers: BetItem[] =
+      game?.players.map((player) => {
+        const playerBet = event.bets.find((bet) => bet.user_id == player.id);
+        return {
+          playerName: player.name,
+          bet: playerBet,
+        };
+      }) ?? [];
+    setItems(
+      betsOfPlayers.sort((a, b) => (a.bet?.score ?? 0) - (b.bet?.score ?? 0)),
+    );
+  }, []);
 
   useEffect(() => {
     Game.fetchOne(game_id)
       .then((game) => {
+        setGame(game);
+        setIsCreator(game.creator?.id == user?.id);
         Event.fetchOne(event_id)
           .then((event) => {
-            setEvent(event);
-            const betsOfPlayers: BetItem[] = game.players.map((player) => {
-              const playerBet = event.bets.find(
-                (bet) => bet.user_id == player.id,
-              );
-              return {
-                playerName: player.name,
-                bet: playerBet,
-              };
-            });
-            setItems(
-              betsOfPlayers.sort(
-                (a, b) => (a.bet?.score ?? 0) - (b.bet?.score ?? 0),
-              ),
-            );
+            processEvent(event, game);
           })
           .catch((error) => {
             console.log("error fetching event", error);
@@ -97,8 +113,16 @@ export function ViewBetsPage() {
 
   return (
     <NavPage title={"Tipps von Event: " + event?.name}>
+      {isCreator && (
+        <ResultUploader
+          resultsUploaded={resultsUploaded}
+          event={event}
+          onEventUpdated={(e) => processEvent(e, game)}
+        />
+      )}
       <List
         title={"Tipps"}
+        displayBorder={false}
         items={
           items?.map((bet, index) => (
             <BetItem
@@ -108,7 +132,7 @@ export function ViewBetsPage() {
             />
           )) ?? []
         }
-        max_height={600}
+        max_height={6000}
       />
     </NavPage>
   );

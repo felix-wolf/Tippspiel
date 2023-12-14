@@ -79,7 +79,7 @@ export class Event {
     predictions: Predictions,
   ): Promise<Event> {
     const builder = (res: any): Event => Event.fromJson(res);
-    return NetworkHelper.create(
+    return NetworkHelper.post(
       "/api/event/save_bets",
       builder,
       {
@@ -105,6 +105,16 @@ export class Event {
     return NetworkHelper.fetchAll(`/api/event?game_id=${game_id}`, builder);
   }
 
+  public processUrlForResults(url: string): Promise<Event> {
+    const builder = (res: any): Event => {
+      return Event.fromJson(res);
+    };
+    return NetworkHelper.post(`/api/results`, builder, {
+      url: url,
+      event_id: this._id,
+    });
+  }
+
   public static create(
     name: string,
     game_id: string,
@@ -120,7 +130,7 @@ export class Event {
     const builder = (res: any): Event => {
       return Event.fromJson(res);
     };
-    return NetworkHelper.create<Event>("/api/event", builder, {
+    return NetworkHelper.post<Event>("/api/event", builder, {
       name: name,
       game_id: game_id,
       type: type.id,

@@ -10,6 +10,7 @@ type ButtonProps = {
   isEnabled?: boolean;
   width?: "fixed" | "flexible";
   height?: "fixed" | "flexible";
+  icon?: string;
 };
 
 export function Button({
@@ -20,6 +21,7 @@ export function Button({
   isEnabled = true,
   width = "fixed",
   height = "fixed",
+  icon,
 }: ButtonProps) {
   const onClick = useCallback(() => {
     if (isEnabled) {
@@ -43,7 +45,10 @@ export function Button({
       )}
       onClick={onClick}
     >
-      {title}
+      <div className={styles.container}>
+        {icon && <img className={styles.icon} src={icon} />}
+        {title}
+      </div>
     </button>
   );
 }

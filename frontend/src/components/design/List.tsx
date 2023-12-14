@@ -8,6 +8,7 @@ type ListProps = {
   emptyContent?: React.ReactNode;
   emptyText?: string;
   max_height?: number;
+  displayBorder?: boolean;
 };
 
 export function List({
@@ -16,13 +17,18 @@ export function List({
   emptyContent,
   emptyText,
   max_height = 200,
+  displayBorder = true,
 }: ListProps) {
   return (
     <div className={styles.container}>
       <div className={styles.heading}>{title}</div>
       <div
         style={{ maxHeight: max_height }}
-        className={cls(styles.list, items.length == 0 && styles.empty)}
+        className={cls(
+          styles.list,
+          items.length == 0 && styles.empty,
+          displayBorder && styles.border,
+        )}
       >
         {items.length == 0 && emptyText && (
           <div className={styles.empty_text}>{emptyText}</div>

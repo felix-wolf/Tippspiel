@@ -104,20 +104,3 @@ export function EventList({
     </>
   );
 }
-/*
-
-      <List
-        title={type == "upcoming" ? "Anstehende Events" : "Vergangene Events"}
-        items={events.map((event) => (
-          <EventItem
-            key={event.id}
-            hasBets={event.bets !== undefined && event.bets.length == 5}
-            event={event}
-            type={type}
-            onEventClicked={_onEventClicked}
-          />
-        ))}
-        emptyText={emptyButton ? undefined : "Es gab noch keine..."}
-        emptyContent={events.length == 0 && emptyButton}
-      />
- */

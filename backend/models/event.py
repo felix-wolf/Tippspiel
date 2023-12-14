@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 
 from backend.database import db_manager
 from backend.models.bet import Bet
@@ -58,7 +59,14 @@ class Event:
         driver = webdriver.Chrome()
         driver.implicitly_wait(30)
         driver.get(url)
-        df = pd.read_html(io.StringIO(driver.find_element(by="id", value="thistable").get_attribute('outerHTML')))[0]
+        df = None
+        try:
+            html = io.StringIO(driver.find_element(by="id", value="thistable").get_attribute('outerHTML'))
+            df = pd.read_html(html)[0]
+        except NoSuchElementException as exc:
+            return False
+        if df is None:
+            return False
         if self.event_type.betting_on == "countries":
             df = df[["Rank", "Country", "Nation"]]
             df = df[df["Country"].notnull()]
@@ -70,9 +78,11 @@ class Event:
 
         elif self.event_type.betting_on == "athletes":
             df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
-            results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in df.values]
+            results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in
+                       df.values]
             for result in results:
-                result["id"] = db_manager.generate_id([result["last_name"], result["first_name"], result["country_code"]])
+                result["id"] = db_manager.generate_id(
+                    [result["last_name"], result["first_name"], result["country_code"]])
             for bet in self.bets:
                 if not bet.calc_score(results):
                     return False

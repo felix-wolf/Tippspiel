@@ -61,7 +61,7 @@ export class Game {
     const builder = (res: any): Game => {
       return Game.fromJson(res);
     };
-    return NetworkHelper.create<Game>("/api/game", builder, {
+    return NetworkHelper.post<Game>("/api/game", builder, {
       name: name,
       password: password,
       discipline: discipline,

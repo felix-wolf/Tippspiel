@@ -21,6 +21,9 @@
   flex-flow: wrap;
   overflow: scroll;
   grid-gap: var(--grid-s);
+}
+
+.border {
   border: 2px solid var(--bg-secondary);
   border-radius: var(--corner-s);
 }
