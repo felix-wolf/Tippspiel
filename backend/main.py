@@ -13,6 +13,18 @@ from models.event import Event
 from models.discipline import Discipline
 from models.event_type import EventType
 
+
+def start_api():
+    db_manager.start()
+    Country.load_into_db()
+    Discipline.load_into_db()
+    Athlete.load_into_db()
+    EventType.load_into_db()
+    print("db initialized")
+    app.run(debug=True)
+
+
+start_api()
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 app.secret_key = app.config["SECRET_KEY"]
@@ -207,16 +219,6 @@ def process_results():
 def hash_password(pw):
     salt = app.config["SALT"]
     return hashlib.sha256("".join([pw, salt]).encode('utf-8')).hexdigest()
-
-
-def start_api():
-    db_manager.start()
-    Country.load_into_db()
-    Discipline.load_into_db()
-    Athlete.load_into_db()
-    EventType.load_into_db()
-    print("db started")
-    app.run(debug=True)
 
 
 if __name__ == '__main__':
