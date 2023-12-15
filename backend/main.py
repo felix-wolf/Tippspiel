@@ -209,7 +209,7 @@ def hash_password(pw):
     return hashlib.sha256("".join([pw, salt]).encode('utf-8')).hexdigest()
 
 
-if __name__ == '__main__':
+def start_api():
     db_manager.start()
     Country.load_into_db()
     Discipline.load_into_db()
@@ -217,3 +217,7 @@ if __name__ == '__main__':
     EventType.load_into_db()
     print("db started")
     app.run(debug=True)
+
+
+if __name__ == '__main__':
+    start_api()
