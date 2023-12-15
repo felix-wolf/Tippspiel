@@ -7,7 +7,7 @@ import styles from "./EventCreator.module.scss";
 import { EventType } from "../../models/user/EventType";
 
 type EventCreatorProps = {
-  onClick: (type: EventType, name: string, datetime: Date) => void;
+  onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
   types: EventType[] | undefined;
 };
 
@@ -28,7 +28,11 @@ export function EventCreator({ onClick: _onClick, types }: EventCreatorProps) {
     if (type) {
       const d = date;
       d.setHours(Number(time.split(":")[0]), Number(time.split(":")[1]), 0, 0);
-      _onClick(type, name, d);
+      _onClick(type, name, d)
+        .then((success) => {
+          if (success) setCreating(false);
+        })
+        .catch((error) => console.log(error));
     }
   }, [type, time, date, name]);
 

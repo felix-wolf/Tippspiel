@@ -62,14 +62,18 @@ export function GamePage() {
   }, [game_id]);
 
   const onCreate = useCallback(
-    (type: EventType, name: string, datetime: Date) => {
-      Event.create(name, game_id, type, datetime)
-        .then((_) => {
-          fetchEvents();
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+    (type: EventType, name: string, datetime: Date): Promise<boolean> => {
+      return new Promise((resolve, reject) => {
+        Event.create(name, game_id, type, datetime)
+          .then((_) => {
+            fetchEvents();
+            resolve(true);
+          })
+          .catch((error) => {
+            reject();
+            console.log(error);
+          });
+      });
     },
     [game_id],
   );
