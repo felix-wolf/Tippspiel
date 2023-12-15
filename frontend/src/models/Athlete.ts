@@ -52,19 +52,20 @@ export class Athlete {
     };
   }
 
+  public static fromJson(json: any): Athlete {
+    return new Athlete(
+      json["id"],
+      json["first_name"],
+      json["last_name"],
+      json["country_code"],
+      json["gender"],
+      json["flag"],
+    );
+  }
+
   public static fetchAll() {
     const builder = (res: any): Athlete[] => {
-      return res.map(
-        (r: any) =>
-          new Athlete(
-            r["id"],
-            r["first_name"],
-            r["last_name"],
-            r["country_code"],
-            r["gender"],
-            r["flag"],
-          ),
-      );
+      return res.map((r: any) => Athlete.fromJson(r));
     };
     return NetworkHelper.fetchAll("/api/athletes", builder);
   }

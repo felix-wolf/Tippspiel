@@ -77,7 +77,7 @@ export function Login() {
         }, 5000);
       })
       .catch((error) => {
-        setError(error);
+        setError(error.text);
         setTimeout(() => setError(null), error_timeout);
       });
   }, [name, password]);

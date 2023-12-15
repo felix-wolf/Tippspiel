@@ -21,8 +21,6 @@ export function GameJoiner({
 }: GameJoinerProps) {
   const [password, setPassword] = useState("");
 
-  console.log(game);
-
   return (
     <div className={styles.container}>
       <div className={styles.column}>

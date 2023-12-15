@@ -69,8 +69,10 @@ export class Event {
   }
 
   public static fetchOne(event_id: string): Promise<Event> {
-    const builder = (res: any): Event => Event.fromJson(res);
-    return NetworkHelper.fetchOne(`/api/event?event_id=${event_id}`, builder);
+    return NetworkHelper.fetchOne(
+      `/api/event?event_id=${event_id}`,
+      Event.fromJson,
+    );
   }
 
   public static saveBets(
@@ -78,10 +80,9 @@ export class Event {
     user_id: string,
     predictions: Predictions,
   ): Promise<Event> {
-    const builder = (res: any): Event => Event.fromJson(res);
     return NetworkHelper.post(
       "/api/event/save_bets",
-      builder,
+      Event.fromJson,
       {
         event_id: event_id,
         user_id: user_id,
@@ -106,10 +107,7 @@ export class Event {
   }
 
   public processUrlForResults(url: string): Promise<Event> {
-    const builder = (res: any): Event => {
-      return Event.fromJson(res);
-    };
-    return NetworkHelper.post(`/api/results`, builder, {
+    return NetworkHelper.post(`/api/results`, Event.fromJson, {
       url: url,
       event_id: this._id,
     });
@@ -127,10 +125,7 @@ export class Event {
       day: "numeric",
     };
     const date_string = datetime.toLocaleTimeString("de-DE", options);
-    const builder = (res: any): Event => {
-      return Event.fromJson(res);
-    };
-    return NetworkHelper.post<Event>("/api/event", builder, {
+    return NetworkHelper.post<Event>("/api/event", Event.fromJson, {
       name: name,
       game_id: game_id,
       type: type.id,

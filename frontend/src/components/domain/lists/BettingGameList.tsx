@@ -73,7 +73,6 @@ export function BettingGameList({
             })
             .catch((error) => {
               if (error.text == "Passwort falsch") {
-                console.log("FALSCH");
                 resolve(false);
               } else {
                 reject();

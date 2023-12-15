@@ -73,12 +73,6 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
             const latestScore = scores[tooltipItem.dataIndex];
             const prevScore =
               tooltipItem.dataIndex > 0 ? scores[tooltipItem.dataIndex - 1] : 0;
-            console.log(
-              typeof tooltipItem,
-              tooltipItem.dataIndex,
-              prevScore,
-              latestScore,
-            );
             // Customize the label text (e.g., add 'Value: ')
             return `${prevScore} + ${latestScore - prevScore} = ${latestScore}`;
           },

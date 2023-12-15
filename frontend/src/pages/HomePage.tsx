@@ -27,13 +27,11 @@ export function HomePage() {
   }, [user]);
 
   return (
-    /*<MenuPage>*/
     <div className={styles.container}>
       <h3>Hallo {user?.name}!</h3>
       <BettingGameList user={user} show_games={"user"} />
       <BettingGameList user={user} show_games={"other"} />
       <Button onClick={logoutClick} title={"Logout"} type={"negative"} />
     </div>
-    /*</MenuPage>*/
   );
 }
