@@ -92,7 +92,6 @@ export function Login() {
 
   return (
     <>
-      <input style={{ background: "coral" }} />
       <div className={styles.status}>
         Version: {import.meta.env.VITE_APP_VERSION} - Connected to backend:{" "}
         {backendStatus}

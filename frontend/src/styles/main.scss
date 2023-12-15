@@ -1,3 +1,5 @@
+
+
 :root {
   --grid-xs: 5px;
   --grid-s: 10px;
@@ -163,4 +165,8 @@ body {
 
 h1, h2, a, button, input {
   all: unset;
+}
+
+input, textarea {
+  -webkit-user-select: text;
 }
