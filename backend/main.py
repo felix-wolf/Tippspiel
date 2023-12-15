@@ -21,7 +21,6 @@ def start_api():
     Athlete.load_into_db()
     EventType.load_into_db()
     print("db initialized")
-    app.run(debug=True)
 
 
 start_api()

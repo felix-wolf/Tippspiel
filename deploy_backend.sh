@@ -8,4 +8,4 @@ cd backend
 python3 -m pipenv install
 
 # run server in pipenv
-python3 -m pipenv run gunicorn --bind 0.0.0.0:5000 main:start_api
+python3 -m pipenv run nohup gunicorn --bind 0.0.0.0:5000 main:app 2>&1 >~/gunicorn.log &
