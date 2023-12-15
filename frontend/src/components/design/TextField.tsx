@@ -1,6 +1,7 @@
 import styles from "./TextField.module.scss";
 import React, {
   useCallback,
+  useId,
   useImperativeHandle,
   useRef,
   useState,
@@ -10,7 +11,6 @@ type TextFieldProps = {
   type?: "text" | "password";
   placeholder: string;
   onInput: (input: string) => void;
-  initial?: string;
 };
 
 export type TextFieldHandle = {
@@ -26,16 +26,18 @@ export type TextFieldHandle = {
 
 export const TextField = React.forwardRef<TextFieldHandle, TextFieldProps>(
   function TextField(
-    { type = "text", placeholder, onInput: _onInput, initial }: TextFieldProps,
+    { type = "text", placeholder, onInput: _onInput }: TextFieldProps,
     ref,
   ) {
-    const [value, setValue] = useState<string>(initial ?? "");
+    const [value, setValue] = useState<string>("");
     const input = useRef<HTMLInputElement>(null);
     useImperativeHandle(
       ref,
       () => ({ value, focus: () => input.current?.focus() }),
       [value],
     );
+    const id = useId();
+
     const onInput = useCallback(() => {
       let newValue = input.current?.value ?? "";
       setValue(newValue);
@@ -44,13 +46,13 @@ export const TextField = React.forwardRef<TextFieldHandle, TextFieldProps>(
 
     return (
       <input
-        className={styles.textfield}
+        id={id}
+        className={styles.textField}
+        type={type}
         ref={input}
-        title={initial}
+        value={value}
         onInput={onInput}
         placeholder={placeholder}
-        type={type}
-        value={value}
       />
     );
   },
