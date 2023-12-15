@@ -47,11 +47,11 @@ def login():
         name = request.get_json().get("name")
         pw = request.get_json().get("password")
         if not name or not pw:
-            return "Name und/oder Passwort fehlt", 400
+            return "Name und/oder Passwort fehlt!", 400
         pw_hash = hash_password(pw)
         user_object = User.get_by_credentials(name, pw_hash)
         if not user_object:
-            return "Name oder Password falsch", 404
+            return "Name oder Password falsch!", 404
         login_user(user_object, remember=True)
         return user_object.to_dict()
 
@@ -221,4 +221,4 @@ def hash_password(pw):
 
 
 if __name__ == '__main__':
-    start_api()
+    app.run(debug=True)
