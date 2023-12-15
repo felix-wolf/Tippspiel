@@ -1,4 +1,4 @@
-.textfield {
+.textField {
   padding: 0 var(--grid-m);
   width: 100%;
   color: var(--fg-primary);
@@ -12,7 +12,6 @@
   &::placeholder {
     color: var(--fg-primary_light);
   }
-
 
   transition: filter 0.2s ease, background-color 0.2s ease;
 
