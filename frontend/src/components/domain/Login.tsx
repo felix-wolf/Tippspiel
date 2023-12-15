@@ -9,6 +9,7 @@ import ReactConfetti from "react-confetti";
 import { useCurrentUser, useLogin } from "../../models/user/UserContext";
 import { User } from "../../models/user/User";
 import { SiteRoutes, useNavigateParams } from "../../../SiteRoutes";
+import { NetworkHelper } from "../../models/NetworkHelper";
 
 type Mode = "login" | "register";
 
@@ -23,12 +24,24 @@ export function Login() {
   const [passwordShake, setPasswordShake] = useState(false);
   const [confetti, setConfetti] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [backendStatus, setBackendStatus] = useState("No");
 
   useEffect(() => {
     const u = useCurrentUser();
     if (u) {
       navigate(SiteRoutes.Home, {});
     }
+  }, []);
+
+  useEffect(() => {
+    NetworkHelper.getStatus()
+      .then((_) => {
+        setBackendStatus("Yes");
+      })
+      .catch((error) => {
+        console.log(error);
+        setBackendStatus("No");
+      });
   }, []);
 
   const onDisabledClick = useCallback(() => {
@@ -79,6 +92,10 @@ export function Login() {
 
   return (
     <>
+      <div className={styles.status}>
+        Version: {import.meta.env.VITE_APP_VERSION} - Connected to backend:{" "}
+        {backendStatus}
+      </div>
       {confetti && (
         <ReactConfetti
           colors={["#1D3557", "#457B9D"]}

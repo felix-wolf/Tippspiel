@@ -1,4 +1,14 @@
+type status = {
+  status: string;
+};
 export class NetworkHelper {
+  public static getStatus(): Promise<status> {
+    const builder = (object: any): status => {
+      return { status: object["Time"] };
+    };
+    return this.executeFetch("/api/status", builder);
+  }
+
   public static fetchOne<Type>(
     url: string,
     builder: (object: any) => Type,
