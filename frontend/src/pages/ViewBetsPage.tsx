@@ -41,18 +41,22 @@ function BetItem({ playerName, bet }: BetItemProp) {
   return (
     <div className={styles.container}>
       <div className={styles.name}>{playerName}</div>
-      <TableList
-        cellHeight={"short"}
-        items={resultItems}
-        headers={{
-          tipp: "Tipp",
-          result: "Ergebnis",
-          score: "Punkte",
-        }}
-        customRenderers={{}}
-        displayNextArrow={false}
-      />
-      <div className={styles.score}>Score: {bet?.score}</div>
+      {resultItems.length > 0 && (
+        <TableList
+          cellHeight={"short"}
+          items={resultItems}
+          headers={{
+            tipp: "Tipp",
+            result: "Ergebnis",
+            score: "Punkte",
+          }}
+          customRenderers={{}}
+          displayNextArrow={false}
+        />
+      )}
+      <div className={styles.score}>
+        Score: {bet?.score ?? "nicht getippt."}
+      </div>
     </div>
   );
 }
@@ -91,7 +95,7 @@ export function ViewBetsPage() {
         };
       }) ?? [];
     setItems(
-      betsOfPlayers.sort((a, b) => (a.bet?.score ?? 0) - (b.bet?.score ?? 0)),
+      betsOfPlayers.sort((a, b) => (b.bet?.score ?? 0) - (a.bet?.score ?? 0)),
     );
   }, []);
 
