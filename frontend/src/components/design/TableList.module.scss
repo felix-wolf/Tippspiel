@@ -46,7 +46,7 @@ thead {
   width: 100%;
   position: sticky;
   top: calc(-1 * var(--grid-m));
-  z-index: 2;
+  z-index: 1;
 
   &:before {
     display: block;

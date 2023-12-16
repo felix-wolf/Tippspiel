@@ -22,8 +22,9 @@ export function DateTimePicker({
   const [date, setDate] = useState(initialDate ?? new Date());
   return (
     <>
-      <div className={styles.date}>
+      <div className={styles.container}>
         <DatePicker
+          wrapperClassName={styles.date}
           dateFormat={"dd.MM.yyyy"}
           locale={"de"}
           selected={date}
