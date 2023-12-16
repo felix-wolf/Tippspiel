@@ -4,6 +4,7 @@ import { TextField } from "../design/TextField";
 import styles from "./URLResultUploader.module.scss";
 import { Event } from "../../models/Event";
 import { Shakable } from "../design/Shakable";
+import { ManualResultUploader } from "./ManualResultUploader";
 
 type ResultUploaderProps = {
   resultsUploaded: boolean;
@@ -22,6 +23,7 @@ export function URLResultUploader({
   const [url, setUrl] = useState("");
   const [shaking, setShaking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [numberOfErrors, setNumberOfErrors] = useState(0);
 
   const uploadResults = useCallback(() => {
     if (event) {
@@ -34,12 +36,13 @@ export function URLResultUploader({
           _onEventUpdated(event);
         })
         .catch((_) => {
+          setNumberOfErrors(numberOfErrors + 1);
           setIsProcessing(false);
           setShaking(true);
           setTimeout(() => setShaking(false), 300);
         });
     }
-  }, [url, event]);
+  }, [url, event, numberOfErrors]);
 
   return (
     <div>
@@ -72,7 +75,10 @@ export function URLResultUploader({
             </div>
             <div className={styles.narrow}>
               <Button
-                onClick={() => setIsUploading(false)}
+                onClick={() => {
+                  setIsUploading(false);
+                  setNumberOfErrors(0);
+                }}
                 title={"Abbrechen"}
                 type={"negative"}
                 width={"flexible"}
@@ -80,6 +86,13 @@ export function URLResultUploader({
             </div>
           </div>
         </form>
+      )}
+      {numberOfErrors > 2 && (
+        <ManualResultUploader
+          event={event}
+          onEventUpdated={_onEventUpdated}
+          resultsUploaded={resultsUploaded}
+        />
       )}
     </div>
   );

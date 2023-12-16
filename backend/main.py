@@ -201,23 +201,30 @@ def save_bets():
 
 
 @app.route("/api/results", methods=["POST"])
-# @login_required
+@login_required
 def process_results():
     if request.method == "POST":
         event_id = request.get_json().get("event_id", None)
-        url = request.get_json().get("url", None)
-        if not event_id or not url:
-            return "Missing parameters", 400
         event = Event.get_by_id(event_id)
         if not event:
             return "Event nicht gefunden", 400
-        # check if discipline allows url updates and if url matches result_url
-        discipline = Discipline.get_by_id(event.event_type.discipline_id)
-        if not discipline:
-            return "Fehler...", 500
-        if not discipline.validate_result_url(url):
-            return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
-        success, error = event.process_url_for_result(url)
+        url = request.get_json().get("url", None)
+        results = request.get_json().get("results", None)
+        if url:
+            # check if discipline allows url updates and if url matches result_url
+            discipline = Discipline.get_by_id(event.event_type.discipline_id)
+            if not discipline:
+                return "Fehler...", 500
+            if not discipline.validate_result_url(url):
+                return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
+            results, error = event.process_url_for_result(url)
+            if error:
+                return error, 500
+
+        if not results:
+            return "Missing parameters", 400
+
+        success, error = event.process_results(results)
         if success:
             return Event.get_by_id(event_id).to_dict()
         else:

@@ -59,9 +59,14 @@ class Event:
         driver = chrome_manager.configure_driver()
         driver.implicitly_wait(30)
         driver.get(url)
-        results, error = self.preprocess_results_for_discipline(driver)
-        if error:
-            return False, error
+        return self.preprocess_results_for_discipline(driver)
+
+    def process_results(self, results):
+        """
+        Process results by comparing predicted with actual places, calculating score and saving to database.
+        :param results: list of dicts with AT LEAST "id" as object_id and "place" as actual_place
+        :return: True and None if successful, False and error string if error
+        """
         for bet in self.bets:
             if not bet.calc_score(results):
                 return False, "Ergebnisse konnten nicht gespeichert werden"

@@ -107,8 +107,17 @@ export class Event {
   }
 
   public processUrlForResults(url: string): Promise<Event> {
-    return NetworkHelper.post(`/api/results`, Event.fromJson, {
+    return NetworkHelper.post("/api/results", Event.fromJson, {
       url: url,
+      event_id: this._id,
+    });
+  }
+
+  public processManualResults(results: Prediction[]): Promise<Event> {
+    return NetworkHelper.post("/api/results", Event.fromJson, {
+      results: results.map((pred) => {
+        return { place: pred.predicted_place, id: pred.object_id };
+      }),
       event_id: this._id,
     });
   }
@@ -125,7 +134,6 @@ export class Event {
       day: "numeric",
     };
     const date_string = datetime.toLocaleTimeString("de-DE", options);
-    console.log(date_string);
     return NetworkHelper.post<Event>("/api/event", Event.fromJson, {
       name: name,
       game_id: game_id,

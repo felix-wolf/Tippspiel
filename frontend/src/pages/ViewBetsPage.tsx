@@ -9,6 +9,7 @@ import { Game } from "../models/Game";
 import TableList from "../components/design/TableList";
 import { useCurrentUser } from "../models/user/UserContext";
 import { URLResultUploader } from "../components/domain/URLResultUploader";
+import { ManualResultUploader } from "../components/domain/ManualResultUploader";
 
 type BetItemProp = {
   playerName: string;
@@ -125,6 +126,8 @@ export function ViewBetsPage() {
           onEventUpdated={(e) => processEvent(e, game)}
         />
       )}
+      {isCreator && !game?.discipline?.resultUrl && (
+        <ManualResultUploader
           resultsUploaded={resultsUploaded}
           event={event}
           onEventUpdated={(e) => processEvent(e, game)}
