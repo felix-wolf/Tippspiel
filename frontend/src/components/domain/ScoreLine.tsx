@@ -60,6 +60,10 @@ const colors: number[][] = [
 ];
 
 export function ScoreLine({ game, events }: ScoreLineProps) {
+  const getNumFromId = useCallback((id: string) => {
+    return Number("0x" + id.slice(id.length - 5, id.length));
+  }, []);
+
   const options = {
     responsive: true,
     plugins: {
@@ -116,10 +120,10 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
                 .reduce((acc, curr) => acc + curr, 0);
             }),
           borderColor: `rgb(${
-            colors[Number(`0x${player.id}`) % colors.length]
+            colors[getNumFromId(player.id) % colors.length]
           })`,
           backgroundColor: `rgb(${
-            colors[Number(`0x${player.id}`) % colors.length]
+            colors[getNumFromId(player.id) % colors.length]
           }, 0.5)`,
         };
       }) ?? []
