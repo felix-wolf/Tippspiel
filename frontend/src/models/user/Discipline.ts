@@ -4,12 +4,19 @@ import { EventType } from "./EventType";
 export class Discipline {
   private readonly _id: string;
   private readonly _name: string;
-  private readonly _event_types: EventType[];
+  private readonly _eventTypes: EventType[];
+  private readonly _resultUrl: string | undefined;
 
-  constructor(id: string, name: string, eventTypes: EventType[]) {
+  constructor(
+    id: string,
+    name: string,
+    eventTypes: EventType[],
+    resultUrl: string | undefined,
+  ) {
     this._id = id;
     this._name = name;
-    this._event_types = eventTypes;
+    this._eventTypes = eventTypes;
+    this._resultUrl = resultUrl;
   }
 
   get id(): string {
@@ -21,7 +28,11 @@ export class Discipline {
   }
 
   get eventTypes(): EventType[] {
-    return this._event_types;
+    return this._eventTypes;
+  }
+
+  get resultUrl(): string | undefined {
+    return this._resultUrl;
   }
 
   public static fromJson(json: any) {
@@ -31,6 +42,7 @@ export class Discipline {
       json["event_types"].map((e_type_data: any) =>
         EventType.fromJson(e_type_data),
       ),
+      json["result_url"],
     );
   }
 
