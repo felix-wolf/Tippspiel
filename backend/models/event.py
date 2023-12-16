@@ -3,10 +3,10 @@ import io
 from datetime import datetime
 
 import pandas as pd
-from selenium import webdriver
 from selenium.common import NoSuchElementException
 
 from database import db_manager
+from database import chrome_manager
 from models.bet import Bet
 from models.event_type import EventType
 
@@ -56,7 +56,7 @@ class Event:
         return bet.update_predictions(predictions), self.id
 
     def process_url_for_result(self, url: str):
-        driver = webdriver.Chrome()
+        driver = chrome_manager.configure_driver()
         driver.implicitly_wait(30)
         driver.get(url)
         df = None
