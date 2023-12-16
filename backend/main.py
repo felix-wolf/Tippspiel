@@ -208,11 +208,20 @@ def process_results():
         url = request.get_json().get("url", None)
         if not event_id or not url:
             return "Missing parameters", 400
-        success = Event.get_by_id(event_id).process_url_for_result(url)
+        event = Event.get_by_id(event_id)
+        if not event:
+            return "Event nicht gefunden", 400
+        # check if discipline allows url updates and if url matches result_url
+        discipline = Discipline.get_by_id(event.event_type.discipline_id)
+        if not discipline:
+            return "Fehler...", 500
+        if not discipline.validate_result_url(url):
+            return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
+        success, error = event.process_url_for_result(url)
         if success:
             return Event.get_by_id(event_id).to_dict()
         else:
-            return "Feher...", 500
+            return error, 500
 
 
 def hash_password(pw):

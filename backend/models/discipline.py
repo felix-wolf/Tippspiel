@@ -5,23 +5,34 @@ from models.event_type import EventType
 
 class Discipline(BaseModel):
 
-    def __init__(self, discipline_id: str, name: str, event_types: [EventType]):
+    def __init__(self, discipline_id: str, name: str, event_types: [EventType], result_url: str = None):
         self.id = discipline_id
         self.name = name
         self.event_types = event_types
+        self.result_url = result_url
 
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
-            "event_types": [e.to_dict() for e in self.event_types]
+            "event_types": [e.to_dict() for e in self.event_types],
+            "result_url": self.result_url
         }
+
+    def validate_result_url(self, url):
+        return self.result_url is not None and self.result_url in url
 
     @staticmethod
     def from_dict(a_dict, event_types):
+        url = None
+        if "result_url" in a_dict:
+            url = a_dict["result_url"]
         if a_dict:
             try:
-                return Discipline(discipline_id=a_dict['id'], name=a_dict['name'], event_types=event_types)
+                return Discipline(
+                    discipline_id=a_dict['id'], name=a_dict['name'],
+                    event_types=event_types, result_url=url
+                )
             except KeyError as e:
                 print("Could not instantiate discipline with given values:", a_dict)
                 return None
@@ -47,10 +58,10 @@ class Discipline(BaseModel):
     def save_to_db(self):
         sql = f"""
             INSERT OR IGNORE INTO {db_manager.TABLE_DISCIPLINES} 
-            (id, name)
-            VALUES (?,?)
+            (id, name, result_url)
+            VALUES (?,?,?)
             """
-        success = db_manager.execute(sql, [self.id, self.name])
+        success = db_manager.execute(sql, [self.id, self.name, self.result_url])
         return success, self.id
 
     @staticmethod

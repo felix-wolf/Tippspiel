@@ -59,36 +59,46 @@ class Event:
         driver = chrome_manager.configure_driver()
         driver.implicitly_wait(30)
         driver.get(url)
-        df = None
-        try:
-            html = io.StringIO(driver.find_element(by="id", value="thistable").get_attribute('outerHTML'))
-            df = pd.read_html(html)[0]
-        except NoSuchElementException as exc:
-            return False
-        if df is None:
-            return False
-        if self.event_type.betting_on == "countries":
-            df = df[["Rank", "Country", "Nation"]]
-            df = df[df["Country"].notnull()]
-            results = [dict(zip(["place", "object", "id"], result)) for result in df.values]
-            for bet in self.bets:
-                if not bet.calc_score(results):
-                    return False
-            return True
+        results, error = self.preprocess_results_for_discipline(driver)
+        if error:
+            return False, error
+        for bet in self.bets:
+            if not bet.calc_score(results):
+                return False, "Ergebnisse konnten nicht gespeichert werden"
+        return True, None
 
-        elif self.event_type.betting_on == "athletes":
-            df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
-            results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in
-                       df.values]
-            for result in results:
-                result["id"] = db_manager.generate_id(
-                    [result["last_name"], result["first_name"], result["country_code"]])
-            for bet in self.bets:
-                if not bet.calc_score(results):
-                    return False
-            return True
+    def preprocess_results_for_discipline(self, driver):
+        if self.event_type.discipline_id == "biathlon":
+            try:
+                html = io.StringIO(driver.find_element(by="id", value="thistable").get_attribute('outerHTML'))
+                df = pd.read_html(html)[0]
+
+                if self.event_type.betting_on == "countries":
+                    if "Rank" not in df or "Country" not in df or "Nation" not in df:
+                        return [], "Webseite enthält nicht die erwarteten Daten"
+                    df = df[["Rank", "Country", "Nation"]]
+                    df = df[df["Country"].notnull()]
+                    results = [dict(zip(["place", "object", "id"], result)) for result in df.values]
+                    return results, None
+
+                elif self.event_type.betting_on == "athletes":
+                    if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
+                        return [], "Webseite enthält nicht die erwarteten Daten"
+                    df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
+                    results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in
+                               df.values]
+                    for result in results:
+                        result["id"] = db_manager.generate_id(
+                            [result["last_name"], result["first_name"], result["country_code"]])
+                    return results, None
+
+                else:
+                    return [], "Wettobjekt nicht bekannt"
+
+            except NoSuchElementException as exc:
+                return [], "Fehler beim Parsen der Webseite"
         else:
-            raise RuntimeError("No implementation")
+            return [], "Disziplin nicht auswertbar"
 
     @staticmethod
     def get_by_id(event_id):
