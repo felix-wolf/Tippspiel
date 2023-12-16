@@ -125,6 +125,7 @@ export class Event {
       day: "numeric",
     };
     const date_string = datetime.toLocaleTimeString("de-DE", options);
+    console.log(date_string);
     return NetworkHelper.post<Event>("/api/event", Event.fromJson, {
       name: name,
       game_id: game_id,

@@ -35,7 +35,10 @@ export function EventList({
   const user = useCurrentUser();
 
   function dateToString(date: Date): string {
-    return `${date.getDate()}.${date.getMonth()}.${date.getFullYear()} - ${getDoubleDigit(
+    console.log(date, date.getMonth());
+    return `${getDoubleDigit(date.getDate().toString())}.${getDoubleDigit(
+      (date.getMonth() + 1).toString(),
+    )}.${date.getFullYear()} - ${getDoubleDigit(
       date.getHours().toString(),
     )}:${getDoubleDigit(date.getMinutes().toString())}`;
   }

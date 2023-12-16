@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,16 +11,19 @@
   },
   "dependencies": {
     "chart.js": "^4.4.1",
+    "date-fns": "^2.30.0",
     "fuse.js": "^7.0.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-confetti": "^6.1.0",
+    "react-datepicker": "^4.24.0",
     "react-dom": "^18.2.0",
     "react-pro-sidebar": "^1.1.0-alpha.1",
     "react-router-dom": "^6.4.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
+    "@types/react-datepicker": "^4.19.4",
     "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",

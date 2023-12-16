@@ -1,5 +1,10 @@
-import { FormEvent } from "react";
+import { useState } from "react";
+import DatePicker, { registerLocale } from "react-datepicker";
+import de from "date-fns/locale/de"; // the locale you want
+import "react-datepicker/dist/react-datepicker.css";
 import styles from "./DateTimePicker.module.scss";
+
+registerLocale("de", de);
 
 type DateTimePickerProps = {
   onTimeSet: (time: string) => void;
@@ -12,21 +17,24 @@ export function DateTimePicker({
   onDateSet: _onDateSet,
   onTimeSet: _onTimeSet,
   initialTime,
+  initialDate,
 }: DateTimePickerProps) {
+  const [date, setDate] = useState(initialDate ?? new Date());
   return (
     <>
-      <input
-        className={styles.date}
-        type={"date"}
-        placeholder={"yyyy-mm-dd"}
-        onChange={(event: FormEvent<HTMLInputElement>) => {
-          const target: HTMLInputElement = event.target as HTMLInputElement;
-          const d = target.valueAsDate;
-          if (d) {
-            _onDateSet(d);
-          }
-        }}
-      />
+      <div className={styles.date}>
+        <DatePicker
+          dateFormat={"dd.MM.yyyy"}
+          locale={"de"}
+          selected={date}
+          onChange={(i) => {
+            if (i) {
+              setDate(i);
+              _onDateSet(i);
+            }
+          }}
+        />
+      </div>
       <input
         type={"time"}
         onChange={(ev) => _onTimeSet(ev.target.value)}
