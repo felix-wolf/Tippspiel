@@ -4,6 +4,9 @@ git pull
 # change dirs
 cd frontend
 
+# install packages
+sudo npm install
+
 # get new build
 sudo npm run build
 
