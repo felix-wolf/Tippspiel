@@ -6,6 +6,7 @@ type BetInputProps = {
   items: BetInputItem[];
   onSelect: (item: BetInputItem, place: number) => void;
   onClear: () => void;
+  totalNumOfInputs: number;
 };
 
 export type BetInputItem = {
@@ -19,6 +20,7 @@ export function BetInput({
   items,
   onSelect: _onSelect,
   onClear: _onClear,
+  totalNumOfInputs,
 }: BetInputProps) {
   // @ts-ignore
   const handleOnSearch = (string: string, results: BetInputItem[]) => {
@@ -63,7 +65,7 @@ export function BetInput({
         onFocus={handleOnFocus}
         formatResult={formatResult}
         placeholder={"Platz " + place}
-        z_index={5 - place}
+        z_index={totalNumOfInputs - place}
         onClear={handleOnClear}
         inputSearchString={prev_selected?.name ?? ""}
       />

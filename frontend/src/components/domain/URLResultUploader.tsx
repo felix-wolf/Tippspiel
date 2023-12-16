@@ -19,7 +19,7 @@ export function URLResultUploader({
   resultUrl,
   onEventUpdated: _onEventUpdated,
 }: ResultUploaderProps) {
-  const [isUploading, setIsUploading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [url, setUrl] = useState("");
   const [shaking, setShaking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -31,8 +31,7 @@ export function URLResultUploader({
       event
         .processUrlForResults(url)
         .then((event) => {
-          setIsProcessing(false);
-          setIsUploading(false);
+          reset();
           _onEventUpdated(event);
         })
         .catch((_) => {
@@ -44,16 +43,22 @@ export function URLResultUploader({
     }
   }, [url, event, numberOfErrors]);
 
+  function reset() {
+    setIsProcessing(false);
+    setExpanded(false);
+    setNumberOfErrors(0);
+  }
+
   return (
     <div>
-      {!isUploading && (
+      {!expanded && (
         <Button
-          onClick={() => setIsUploading(true)}
+          onClick={() => setExpanded(true)}
           title={"Ergebnis-URL angeben"}
           type={resultsUploaded ? "neutral" : "positive"}
         />
       )}
-      {isUploading && (
+      {expanded && (
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -76,7 +81,7 @@ export function URLResultUploader({
             <div className={styles.narrow}>
               <Button
                 onClick={() => {
-                  setIsUploading(false);
+                  setExpanded(false);
                   setNumberOfErrors(0);
                 }}
                 title={"Abbrechen"}
@@ -90,7 +95,10 @@ export function URLResultUploader({
       {numberOfErrors > 2 && (
         <ManualResultUploader
           event={event}
-          onEventUpdated={_onEventUpdated}
+          onEventUpdated={(e) => {
+            reset();
+            _onEventUpdated(e);
+          }}
           resultsUploaded={resultsUploaded}
         />
       )}

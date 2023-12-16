@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bet, Prediction } from "../../models/Bet";
 import { BetInput, BetInputItem } from "../design/BetInput";
-import styles from "../../pages/PlaceBetPage.module.scss";
+import styles from "./BetPlacer.module.scss";
 import { Button } from "../design/Button";
 import { Event } from "../../models/Event";
 import { EventType } from "../../models/user/EventType";
@@ -29,6 +29,7 @@ export function BetPlacer({
   const [completed, setCompleted] = useState(false);
   const [items, setItems] = useState<BetInputItem[]>([]);
   const [userBet, setUserBet] = useState<Bet | undefined>(undefined);
+  const selectionsNeeded = tryLoadExistingBet ? 5 : 10;
 
   useEffect(() => {
     loadData(event.type)
@@ -87,19 +88,17 @@ export function BetPlacer({
       setPlacedPredictions(selected);
       calcCompleted(selected);
     } else {
-      const new_bets = [
-        { id: undefined, name: "" },
-        { id: undefined, name: "" },
-        { id: undefined, name: "" },
-        { id: undefined, name: "" },
-        { id: undefined, name: "" },
-      ];
+      const new_bets = new Array(selectionsNeeded)
+        .fill(0)
+        .map((_): BetInputItem => {
+          return { id: undefined, name: "" };
+        });
       setPlacedPredictions(new_bets);
     }
   }
 
   function calcCompleted(bets: BetInputItem[]) {
-    setCompleted(bets.filter((bet) => bet.id).length == 5);
+    setCompleted(bets.filter((bet) => bet.id).length == selectionsNeeded);
   }
 
   const onSelectItem = useCallback(
@@ -143,17 +142,19 @@ export function BetPlacer({
           key={`${index} ${item.id} ${item.name}`}
           place={index + 1}
           items={items}
+          totalNumOfInputs={selectionsNeeded}
           prev_selected={item}
           onSelect={onSelectItem}
           onClear={() => setCompleted(false)}
         />
       ))}
       {placedPredictions.length == 0 &&
-        Array.from({ length: 5 }).map((_, index) => (
+        Array.from({ length: selectionsNeeded }).map((_, index) => (
           <BetInput
             key={index}
             place={index + 1}
             items={items}
+            totalNumOfInputs={selectionsNeeded}
             onSelect={onSelectItem}
             onClear={() => setCompleted(false)}
           />
