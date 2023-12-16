@@ -30,10 +30,8 @@ type ScoreLineProps = {
 
 const colors: number[][] = [
   [255, 99, 71], // - Tomato
-  [176, 224, 230], // - PowderBlue
   [144, 238, 144], // - LightGreen
   [255, 192, 203], // - Pink
-  [173, 216, 230], // - LightBlue
   [255, 228, 196], // - Bisque
   [255, 165, 0], // - Orange
   [255, 105, 180], // - HotPink
@@ -49,6 +47,16 @@ const colors: number[][] = [
   [70, 130, 180], // - SteelBlue
   [255, 69, 0], // - Red-Orange
   [0, 255, 0], // - LimeGreen
+  [0, 0, 128], // - Navy;
+  [255, 165, 0], // - DarkOrange;
+  [128, 0, 128], // - Purple;
+  [0, 255, 255], // - Aqua;
+  [255, 69, 0], // - Tomato - Red;
+  [70, 130, 90], // - OliveDrab;
+  [255, 140, 0], // - DarkOrange;
+  [0, 128, 0], // - Green;
+  [255, 99, 71], // - Tomato;
+  [128, 128, 128], // - Gray;
 ];
 
 export function ScoreLine({ game, events }: ScoreLineProps) {
