@@ -1,4 +1,5 @@
 import { FormEvent } from "react";
+import styles from "./DateTimePicker.module.scss";
 
 type DateTimePickerProps = {
   onTimeSet: (time: string) => void;
@@ -11,11 +12,11 @@ export function DateTimePicker({
   onDateSet: _onDateSet,
   onTimeSet: _onTimeSet,
   initialTime,
-  initialDate,
 }: DateTimePickerProps) {
   return (
     <>
       <input
+        className={styles.date}
         type={"date"}
         placeholder={"yyyy-mm-dd"}
         onChange={(event: FormEvent<HTMLInputElement>) => {
