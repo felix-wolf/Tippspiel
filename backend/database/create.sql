@@ -6,11 +6,6 @@ CREATE TABLE if not EXISTS Countries (
 
 );
 
-CREATE TABLE if not EXISTS Disciplines (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL
-);
-
 CREATE TABLE if not EXISTS Athletes (
      id TEXT PRIMARY KEY NOT NULL,
      first_name TEXT NOT NULL,
@@ -25,6 +20,20 @@ CREATE TABLE if not EXISTS Athletes (
 CREATE VIEW if not EXISTS VIEW_Athletes AS
     SELECT a.*, c.flag FROM Athletes a, Countries c
     WHERE a.country_code = c.code;
+
+
+CREATE TABLE if not EXISTS Users (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT UNIQUE NOT NULL,
+    pw_hash TEXT NOT NULL
+);
+
+
+CREATE TABLE if not EXISTS Disciplines (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    result_url TEXT
+);
 
 CREATE TABLE if not EXISTS Games (
     id TEXT PRIMARY KEY NOT NULL,
@@ -65,6 +74,16 @@ CREATE VIEW if not EXISTS VIEW_Events AS
     WHERE e.game_id = g.id;
 
 
+CREATE TABLE if not EXISTS Bets (
+    id TEXT PRIMARY KEY NOT NULL,
+    event_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    score NUMERIC,
+    FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
+);
+
+
 CREATE TABLE if not EXISTS Predictions (
     id TEXT PRIMARY KEY NOT NULL,
     bet_id TEXT NOT NULL,
@@ -89,19 +108,3 @@ CREATE VIEW if not EXISTS VIEW_Predictions AS
         VIEW_Athletes va ON p.object_id  = va.id
     LEFT JOIN
         Countries c ON p.object_id = c.code;
-
-
-CREATE TABLE if not EXISTS Bets (
-    id TEXT PRIMARY KEY NOT NULL,
-    event_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    score NUMERIC,
-    FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE,
-    FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
-);
-
-CREATE TABLE if not EXISTS Users (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT UNIQUE NOT NULL,
-    pw_hash TEXT NOT NULL
-);
