@@ -1,6 +1,7 @@
 from selenium import webdriver
 import os
 import platform
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 # configures the driver by getting the executable etc.
