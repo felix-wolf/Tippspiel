@@ -8,7 +8,7 @@ import { Bet, Prediction } from "../models/Bet";
 import { Game } from "../models/Game";
 import TableList from "../components/design/TableList";
 import { useCurrentUser } from "../models/user/UserContext";
-import { ResultUploader } from "../components/domain/ResultUploader";
+import { URLResultUploader } from "../components/domain/URLResultUploader";
 
 type BetItemProp = {
   playerName: string;
@@ -117,8 +117,14 @@ export function ViewBetsPage() {
 
   return (
     <NavPage title={"Tipps von Event: " + event?.name}>
-      {isCreator && (
-        <ResultUploader
+      {isCreator && game?.discipline?.resultUrl && (
+        <URLResultUploader
+          resultUrl={game.discipline.resultUrl}
+          resultsUploaded={resultsUploaded}
+          event={event}
+          onEventUpdated={(e) => processEvent(e, game)}
+        />
+      )}
           resultsUploaded={resultsUploaded}
           event={event}
           onEventUpdated={(e) => processEvent(e, game)}

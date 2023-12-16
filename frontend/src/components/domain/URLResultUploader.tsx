@@ -1,20 +1,21 @@
 import { Button } from "../design/Button";
 import { useCallback, useState } from "react";
 import { TextField } from "../design/TextField";
-import styles from "./ResultUploader.module.scss";
+import styles from "./URLResultUploader.module.scss";
 import { Event } from "../../models/Event";
 import { Shakable } from "../design/Shakable";
 
 type ResultUploaderProps = {
   resultsUploaded: boolean;
   event: Event | undefined;
-
+  resultUrl: string;
   onEventUpdated: (event: Event) => void;
 };
 
-export function ResultUploader({
+export function URLResultUploader({
   resultsUploaded,
   event,
+  resultUrl,
   onEventUpdated: _onEventUpdated,
 }: ResultUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
@@ -32,11 +33,10 @@ export function ResultUploader({
           setIsUploading(false);
           _onEventUpdated(event);
         })
-        .catch((error) => {
+        .catch((_) => {
           setIsProcessing(false);
           setShaking(true);
           setTimeout(() => setShaking(false), 300);
-          console.log(error);
         });
     }
   }, [url, event]);
@@ -58,7 +58,7 @@ export function ResultUploader({
           className={styles.container}
         >
           <Shakable shaking={shaking}>
-            <TextField placeholder={"URL"} onInput={(i) => setUrl(i)} />
+            <TextField placeholder={resultUrl} onInput={(i) => setUrl(i)} />
           </Shakable>
           <div className={styles.row}>
             <div className={styles.wide}>
