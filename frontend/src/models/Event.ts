@@ -30,7 +30,7 @@ export class Event {
     this._game_id = game_id;
     this._eventType = type;
     this._bets = bets;
-    this._datetime = new Date(Date.parse(datetime));
+    this._datetime = new Date(Date.parse(datetime.replace(/-/g, "/")));
   }
 
   get id(): string {
