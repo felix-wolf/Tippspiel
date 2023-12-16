@@ -17,7 +17,7 @@ export function DateTimePicker({
     <>
       <input
         type={"date"}
-        placeholder={initialDate?.toDateString()}
+        placeholder={"yyyy-mm-dd"}
         onChange={(event: FormEvent<HTMLInputElement>) => {
           const target: HTMLInputElement = event.target as HTMLInputElement;
           const d = target.valueAsDate;
