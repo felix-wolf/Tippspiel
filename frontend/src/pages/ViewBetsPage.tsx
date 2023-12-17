@@ -18,8 +18,8 @@ type BetItemProp = {
 
 type BetResultItem = {
   tipp: string;
-  result: number;
-  score: number;
+  result: number | undefined;
+  score: number | undefined;
 };
 
 function BetItem({ playerName, bet }: BetItemProp) {
@@ -32,12 +32,22 @@ function BetItem({ playerName, bet }: BetItemProp) {
           tipp: `${pred.predicted_place ?? -1}: ${
             pred.object_name ?? "unknown"
           }`,
-          result: pred.actual_place ?? -1,
-          score: pred.score ?? 0,
+          result: pred.actual_place,
+          score: pred.score,
         };
       }) ?? [],
     );
   }, [bet]);
+
+  function getScoreText(bet: Bet | undefined) {
+    if (!bet) {
+      return "nicht getippt";
+    }
+    if (bet?.hasPredictions() && !bet.hasResults()) {
+      return "Ergebnis ausstehend";
+    }
+    return bet.score;
+  }
 
   return (
     <div className={styles.container}>
@@ -48,16 +58,14 @@ function BetItem({ playerName, bet }: BetItemProp) {
           items={resultItems}
           headers={{
             tipp: "Tipp",
-            result: "Ergebnis",
-            score: "Punkte",
+            result: bet?.hasResults() ? "Ergebnis" : "",
+            score: bet?.hasResults() ? "Punkte" : "",
           }}
           customRenderers={{}}
           displayNextArrow={false}
         />
       )}
-      <div className={styles.score}>
-        Score: {bet?.score ?? "nicht getippt."}
-      </div>
+      <div className={styles.score}>Score: {getScoreText(bet)}</div>
     </div>
   );
 }
