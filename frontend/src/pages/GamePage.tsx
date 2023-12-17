@@ -94,7 +94,9 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
-      {pastEvents.length > 0 && <ScoreLine game={game} events={pastEvents} />}
+      {pastEvents.length > 0 && (
+        <ScoreLine game={game} events={[...pastEvents]} />
+      )}
       {isCreator && (
         <EventCreator
           onClick={onCreate}
