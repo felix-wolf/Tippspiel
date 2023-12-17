@@ -17,6 +17,9 @@ export function PlaceBetPage() {
     Event.fetchOne(event_id)
       .then((event) => {
         setEvent(event);
+        if (event.datetime < new Date()) {
+          navigate(-1);
+        }
       })
       .catch((error) => {
         console.log("error fetching event", error);
