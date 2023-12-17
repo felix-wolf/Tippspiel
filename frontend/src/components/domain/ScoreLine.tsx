@@ -64,6 +64,10 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
     return Number("0x" + id.slice(id.length - 5, id.length));
   }, []);
 
+  const sortedEvents = events.sort(
+    (a, b) => a.datetime.getTime() - b.datetime.getTime(),
+  );
+
   const options = {
     responsive: true,
     plugins: {
@@ -99,8 +103,8 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
   };
 
   const buildLabels = useCallback((): string[] => {
-    return events.filter((e) => e.hasResults()).map((e) => e.name) ?? [];
-  }, [events]);
+    return sortedEvents.filter((e) => e.hasResults()).map((e) => e.name) ?? [];
+  }, [sortedEvents]);
 
   const buildDatasets = useCallback((): {
     label: string;
@@ -112,7 +116,7 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
       game?.players.map((player) => {
         return {
           label: player.name,
-          data: events
+          data: sortedEvents
             .filter((e) => e.hasResults())
             .map((e) => e.bets.find((b) => b.user_id == player.id)?.score ?? 0)
             .map((_, index, all) => {
@@ -129,7 +133,7 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
         };
       }) ?? []
     );
-  }, [game, events]);
+  }, [game, sortedEvents]);
 
   return (
     <Line
