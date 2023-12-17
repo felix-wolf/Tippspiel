@@ -42,7 +42,7 @@ export function GamePage() {
       .then((events) => {
         const past = events
           .filter((event) => event.datetime < new Date())
-          .sort(sortEvents);
+          .sort((a, b) => sortEvents(a, b) * -1);
         const upcoming = events
           .filter(
             (event) => !past.find((past_event) => past_event.id == event.id),
