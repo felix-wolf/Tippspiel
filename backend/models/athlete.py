@@ -1,6 +1,6 @@
 from database import db_manager
 from models.base_model import BaseModel
-from backend import utils
+import utils
 
 
 class Athlete(BaseModel):

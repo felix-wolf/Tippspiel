@@ -9,7 +9,7 @@ from database import db_manager
 from database import chrome_manager
 from models.bet import Bet
 from models.event_type import EventType
-from backend import utils
+import utils
 
 
 class Event:

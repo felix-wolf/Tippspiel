@@ -2,7 +2,7 @@ import hashlib
 
 from database import db_manager
 import sys
-from backend import utils
+import utils
 
 sys.path.append("..")
 
