@@ -9,6 +9,7 @@ from database import db_manager
 from database import chrome_manager
 from models.bet import Bet
 from models.event_type import EventType
+from backend import utils
 
 
 class Event:
@@ -93,7 +94,7 @@ class Event:
                     results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in
                                df.values]
                     for result in results:
-                        result["id"] = db_manager.generate_id(
+                        result["id"] = utils.generate_id(
                             [result["last_name"], result["first_name"], result["country_code"]])
                     return results, None
 

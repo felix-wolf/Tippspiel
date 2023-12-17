@@ -29,8 +29,9 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
           console.log("USER CURRENTLY NOT NULL, ALREADY LOGGED IN?");
         User.login(name, password)
           .then((user) => {
+            console.log(user);
             setCurrent(user);
-            localStorage.setItem("user", user.toJson());
+            user.saveToStorage();
             resolve();
           })
           .catch((error) => {
@@ -57,7 +58,7 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
       ?.logout()
       .then()
       .catch((error) => console.log("ERROR logging out", error));
-    localStorage.removeItem("user");
+    User.removeFromStorage();
     setCurrent(null);
   }, []);
 
@@ -83,12 +84,7 @@ export function useIsLoggedIn(): boolean {
  * Hook to retrieve the current user. Throws an error if no user is logged in.
  */
 export function useCurrentUser(): User | undefined {
-  const storageUser = localStorage.getItem("user");
-  if (storageUser) {
-    const user = User.fromJson(JSON.parse(storageUser));
-    if (user) return user;
-  }
-  return undefined;
+  return User.loadFromStorage() ?? undefined;
 }
 
 /**

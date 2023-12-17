@@ -28,42 +28,7 @@ type ScoreLineProps = {
   events: Event[];
 };
 
-const colors: number[][] = [
-  [255, 99, 71], // - Tomato
-  [144, 238, 144], // - LightGreen
-  [255, 192, 203], // - Pink
-  [255, 228, 196], // - Bisque
-  [255, 165, 0], // - Orange
-  [255, 105, 180], // - HotPink
-  [0, 128, 128], // - Teal
-  [255, 20, 147], // - DeepPink
-  [0, 191, 255], // - DeepSkyBlue
-  [255, 215, 0], // - Gold
-  [139, 69, 19], // - SaddleBrown
-  [152, 251, 152], // - PaleGreen
-  [218, 112, 214], // - Orchid
-  [255, 0, 255], // - Magenta
-  [0, 255, 127], // - SpringGreen
-  [70, 130, 180], // - SteelBlue
-  [255, 69, 0], // - Red-Orange
-  [0, 255, 0], // - LimeGreen
-  [0, 0, 128], // - Navy;
-  [255, 165, 0], // - DarkOrange;
-  [128, 0, 128], // - Purple;
-  [0, 255, 255], // - Aqua;
-  [255, 69, 0], // - Tomato - Red;
-  [70, 130, 90], // - OliveDrab;
-  [255, 140, 0], // - DarkOrange;
-  [0, 128, 0], // - Green;
-  [255, 99, 71], // - Tomato;
-  [128, 128, 128], // - Gray;
-];
-
 export function ScoreLine({ game, events }: ScoreLineProps) {
-  const getNumFromId = useCallback((id: string) => {
-    return Number("0x" + id.slice(id.length - 5, id.length));
-  }, []);
-
   const sortedEvents = events.sort(
     (a, b) => a.datetime.getTime() - b.datetime.getTime(),
   );
@@ -124,12 +89,8 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
                 .slice(0, index + 1)
                 .reduce((acc, curr) => acc + curr, 0);
             }),
-          borderColor: `rgb(${
-            colors[getNumFromId(player.id) % colors.length]
-          })`,
-          backgroundColor: `rgb(${
-            colors[getNumFromId(player.id) % colors.length]
-          }, 0.5)`,
+          borderColor: player.color,
+          backgroundColor: player.color + "80",
         };
       }) ?? []
     );

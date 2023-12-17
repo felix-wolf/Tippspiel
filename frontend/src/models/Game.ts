@@ -30,7 +30,7 @@ export class Game {
     return new Game(
       json["id"],
       json["name"],
-      json["players"],
+      json["players"].map((j: any) => User.fromJson(j)),
       Discipline.fromJson(json["discipline"]),
       User.fromJson(json["creator"]),
       json["pw_set"],

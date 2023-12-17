@@ -9,6 +9,7 @@ import { Event } from "../models/Event";
 import { EventType } from "../models/user/EventType";
 import styles from "./GamePage.module.scss";
 import { ScoreLine } from "../components/domain/ScoreLine";
+import { ColorUpdater } from "../components/domain/ColorUpdater";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -17,14 +18,14 @@ export function GamePage() {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [isCreator, setIsCreator] = useState(false);
+  const user = useCurrentUser();
 
   useEffect(() => {
-    const u = useCurrentUser();
-    if (!u) {
+    if (!user) {
       navigate(SiteRoutes.Login, {});
     }
-    setIsCreator(game?.creator?.id == u?.id);
-  }, [game]);
+    setIsCreator(game?.creator?.id == user?.id);
+  }, [user, game]);
 
   const fetchGame = useCallback(() => {
     Game.fetchOne(game_id)
@@ -33,9 +34,6 @@ export function GamePage() {
       })
       .catch((error) => console.log(error));
   }, [game_id]);
-
-  const sortEvents = (date_a: Event, date_b: Event): number =>
-    date_a.datetime.getTime() - date_b.datetime.getTime();
 
   const fetchEvents = useCallback(() => {
     Event.fetchAll(game_id)
@@ -59,7 +57,10 @@ export function GamePage() {
   useEffect(() => {
     fetchGame();
     fetchEvents();
-  }, [game_id]);
+  }, []);
+
+  const sortEvents = (date_a: Event, date_b: Event): number =>
+    date_a.datetime.getTime() - date_b.datetime.getTime();
 
   const onCreate = useCallback(
     (type: EventType, name: string, datetime: Date): Promise<boolean> => {
@@ -94,8 +95,17 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
-      {pastEvents.length > 0 && (
-        <ScoreLine game={game} events={[...pastEvents]} />
+      {pastEvents.length > 0 && user && (
+        <>
+          <ScoreLine game={game} events={[...pastEvents]} />
+          <ColorUpdater
+            user={user}
+            onUpdated={() => {
+              fetchGame();
+              fetchEvents();
+            }}
+          />
+        </>
       )}
       {isCreator && (
         <EventCreator

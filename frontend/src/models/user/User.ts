@@ -1,19 +1,24 @@
 import { NetworkHelper } from "../NetworkHelper";
+import { Utils } from "../../utils";
 
 /**
  * A user of the system.
  */
 export class User {
-  private readonly _id: string;
-  private _name: string;
+  private static storageKey = "user";
 
-  constructor(id: string, name: string) {
+  private readonly _id: string;
+  private readonly _name: string;
+  private readonly _color: string | undefined;
+
+  constructor(id: string, name: string, color: string | undefined) {
     this._id = id;
     this._name = name;
+    this._color = color;
   }
 
   public static fromJson(d: any): User {
-    return new User(d["id"], d["name"]);
+    return new User(d["id"], d["name"], d["color"]);
   }
 
   public static create(name: string, password: string): Promise<User> {
@@ -28,7 +33,7 @@ export class User {
   }
 
   public toJson(): string {
-    return `{"id": "${this._id}", "name": "${this.name}"}`; //JSON.stringify(this);
+    return `{"id": "${this._id}", "name": "${this.name}", "color": "${this.color}"}`;
   }
 
   public static login(name: string, password: string): Promise<User> {
@@ -42,6 +47,30 @@ export class User {
     return NetworkHelper.execute("/api/user", User.fromJson);
   }
 
+  public static updateColor(userId: string, color: string): Promise<User> {
+    return NetworkHelper.post("/api/user", User.fromJson, {
+      user_id: userId,
+      color: color,
+    });
+  }
+
+  public saveToStorage() {
+    localStorage.setItem(User.storageKey, this.toJson());
+  }
+
+  public static loadFromStorage(): User | null {
+    const storageString = localStorage.getItem(User.storageKey);
+    if (storageString) {
+      const user = User.fromJson(JSON.parse(storageString));
+      if (user) return user;
+    }
+    return null;
+  }
+
+  public static removeFromStorage() {
+    localStorage.removeItem(User.storageKey);
+  }
+
   public get id(): string {
     return this._id;
   }
@@ -50,7 +79,7 @@ export class User {
     return this._name;
   }
 
-  public set name(value: string) {
-    this._name = value;
+  public get color(): string {
+    return this._color ?? Utils.getColorFromId(this.id);
   }
 }

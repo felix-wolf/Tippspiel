@@ -1,12 +1,13 @@
 from database import db_manager
 from models.base_model import BaseModel
+from backend import utils
 
 
 class Athlete(BaseModel):
 
     def __init__(self, athlete_id, first_name, last_name, country_code, gender, discipline, flag=None):
         if athlete_id is None:
-            self.id = db_manager.generate_id([last_name, first_name, country_code])
+            self.id = utils.generate_id([last_name, first_name, country_code])
         else:
             self.id = athlete_id
         self.first_name = first_name

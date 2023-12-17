@@ -25,7 +25,8 @@ CREATE VIEW if not EXISTS VIEW_Athletes AS
 CREATE TABLE if not EXISTS Users (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT UNIQUE NOT NULL,
-    pw_hash TEXT NOT NULL
+    pw_hash TEXT NOT NULL,
+    color TEXT
 );
 
 
