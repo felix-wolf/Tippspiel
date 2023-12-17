@@ -84,6 +84,17 @@ export class Bet {
     this._score = score;
   }
 
+  public hasPredictions(): boolean {
+    return this._predictions.length > 0;
+  }
+
+  public hasResults(): boolean {
+    return (
+      this._predictions.filter((pred) => pred.actual_place != undefined)
+        .length > 0 || this._score != undefined
+    );
+  }
+
   get user_id(): string {
     return this._user_id;
   }

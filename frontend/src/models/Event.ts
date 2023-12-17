@@ -33,6 +33,10 @@ export class Event {
     this._datetime = new Date(Date.parse(datetime.replace(/-/g, "/")));
   }
 
+  public hasResults(): boolean {
+    return this.bets.some((bet) => bet.hasResults());
+  }
+
   get id(): string {
     return this._id;
   }

@@ -99,7 +99,7 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
   };
 
   const buildLabels = useCallback((): string[] => {
-    return events.map((e) => e.name) ?? [];
+    return events.filter((e) => e.hasResults()).map((e) => e.name) ?? [];
   }, [events]);
 
   const buildDatasets = useCallback((): {
@@ -113,6 +113,7 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
         return {
           label: player.name,
           data: events
+            .filter((e) => e.hasResults())
             .map((e) => e.bets.find((b) => b.user_id == player.id)?.score ?? 0)
             .map((_, index, all) => {
               return all
