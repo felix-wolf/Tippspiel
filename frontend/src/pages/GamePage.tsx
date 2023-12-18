@@ -10,6 +10,8 @@ import { EventType } from "../models/user/EventType";
 import styles from "./GamePage.module.scss";
 import { ScoreLine } from "../components/domain/ScoreLine";
 import { ColorUpdater } from "../components/domain/ColorUpdater";
+import { Toggler } from "../components/design/Toggler";
+import { ScoreList } from "../components/domain/lists/ScoreList";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -95,14 +97,27 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
-      {pastEvents.length > 0 && user && (
+      {pastEvents.length > 0 && user && game && (
         <>
-          <ScoreLine game={game} events={[...pastEvents]} />
-          <ColorUpdater
-            user={user}
-            onUpdated={() => {
-              fetchGame();
-              fetchEvents();
+          <Toggler
+            left={{
+              name: "Graph",
+              component: (
+                <>
+                  <ScoreLine game={game} events={[...pastEvents]} />
+                  <ColorUpdater
+                    user={user}
+                    onUpdated={() => {
+                      fetchGame();
+                      fetchEvents();
+                    }}
+                  />
+                </>
+              ),
+            }}
+            right={{
+              name: "Tabelle",
+              component: <ScoreList game={game} events={pastEvents} />,
             }}
           />
         </>

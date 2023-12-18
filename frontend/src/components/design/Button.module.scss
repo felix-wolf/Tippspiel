@@ -19,7 +19,6 @@
   cursor: pointer;
   width: var(--width-m);
   height: var(--height-s);
-  border-radius: var(--corner-s);
   text-align: center;
 }
 
@@ -54,4 +53,20 @@
 
 .disabled {
   filter: opacity(0.2) saturate(0.1);
+}
+
+.topRight {
+  border-top-right-radius: var(--corner-s);
+}
+
+.bottomRight {
+  border-bottom-right-radius: var(--corner-s);
+}
+
+.bottomLeft {
+  border-bottom-left-radius: var(--corner-s);
+}
+
+.topLeft {
+  border-top-left-radius: var(--corner-s);
 }

@@ -11,6 +11,7 @@ type ButtonProps = {
   width?: "fixed" | "flexible";
   height?: "fixed" | "flexible";
   icon?: string;
+  rounded?: boolean[];
 };
 
 export function Button({
@@ -22,6 +23,7 @@ export function Button({
   width = "fixed",
   height = "fixed",
   icon,
+  rounded = [true, true, true, true],
 }: ButtonProps) {
   const onClick = useCallback(() => {
     if (isEnabled) {
@@ -42,6 +44,10 @@ export function Button({
         height == "flexible" && styles.flexible_height,
         isEnabled && styles.enabled,
         !isEnabled && styles.disabled,
+        rounded[0] && styles.topRight,
+        rounded[1] && styles.bottomRight,
+        rounded[2] && styles.bottomLeft,
+        rounded[3] && styles.topLeft,
       )}
       onClick={onClick}
     >

@@ -1,0 +1,16 @@
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  grid-gap: 20px;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+
+}
+
+.button {
+  width: 100px;
+}
