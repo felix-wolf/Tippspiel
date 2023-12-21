@@ -1,6 +1,7 @@
 from database import db_manager
 from models.base_model import BaseModel
 import utils
+from backend import chrome_manager
 
 
 class Athlete(BaseModel):
@@ -16,6 +17,17 @@ class Athlete(BaseModel):
         self.gender = gender
         self.discipline = discipline
         self.flag = flag
+
+    def __eq__(self, other):
+        if isinstance(other, Athlete):
+            return (self.id == other.id) and \
+                (self.first_name == other.first_name) and \
+                (self.last_name == other.last_name)
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.id)
 
     def to_dict(self):
         return {
@@ -44,7 +56,7 @@ class Athlete(BaseModel):
                     discipline=a_dict['discipline'], flag=flag
                 )
             except KeyError as e:
-                print("Could not instantiate athlete with given values:", a_dict)
+                print("Could not instantiate athlete with given values:", a_dict, e)
                 return None
         else:
             return None
@@ -68,9 +80,27 @@ class Athlete(BaseModel):
 
     @staticmethod
     def load_into_db():
-        # insert athletes
+        # insert athletes from csv
         athletes = db_manager.load_csv("athletes.csv", generate_id=False)
         athletes = [Athlete.from_dict(a) for a in athletes]
+
+        # insert athletes from world cup standing
+        athlete_url_objects = db_manager.load_csv("athlete_urls.csv", generate_id=False)
+        for url_object in athlete_url_objects:
+            df = chrome_manager.read_table_into_df(
+                url=url_object["url"],
+                table_element_key=url_object['htmlKey'],
+                table_element_value=url_object['htmlValue']
+            )
+            url_object["lastNameColumn"] = url_object["lastNameColumn"].replace('$%$', '\xa0')
+            df = df[[url_object["firstNameColumn"], url_object["lastNameColumn"], url_object["countryColumn"]]]
+            results = [dict(zip(["first_name", "last_name", "country_code"], result)) for result in df.values]
+            for result in results:
+                result["gender"] = url_object["gender"]
+                result["discipline"] = url_object["discipline"]
+            athletes.extend([Athlete.from_dict(a) for a in results])
+            athletes = list(set(athletes))
+
         for athlete in athletes:
             if not athlete.save_to_db():
                 print("Error saving athlete")

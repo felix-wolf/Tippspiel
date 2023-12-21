@@ -1,12 +1,8 @@
 import hashlib
-import io
 from datetime import datetime
 
-import pandas as pd
-from selenium.common import NoSuchElementException
-
 from database import db_manager
-from database import chrome_manager
+from backend import chrome_manager
 from models.bet import Bet
 from models.event_type import EventType
 import utils
@@ -56,12 +52,6 @@ class Event:
             bet = Bet(user_id, self.id)
         return bet.update_predictions(predictions), self.id
 
-    def process_url_for_result(self, url: str):
-        driver = chrome_manager.configure_driver()
-        driver.implicitly_wait(30)
-        driver.get(url)
-        return self.preprocess_results_for_discipline(driver)
-
     def process_results(self, results):
         """
         Process results by comparing predicted with actual places, calculating score and saving to database.
@@ -73,36 +63,33 @@ class Event:
                 return False, "Ergebnisse konnten nicht gespeichert werden"
         return True, None
 
-    def preprocess_results_for_discipline(self, driver):
+    def preprocess_results_for_discipline(self, url):
         if self.event_type.discipline_id == "biathlon":
-            try:
-                html = io.StringIO(driver.find_element(by="id", value="thistable").get_attribute('outerHTML'))
-                df = pd.read_html(html)[0]
-
-                if self.event_type.betting_on == "countries":
-                    if "Rank" not in df or "Country" not in df or "Nation" not in df:
-                        return [], "Webseite enthält nicht die erwarteten Daten"
-                    df = df[["Rank", "Country", "Nation"]]
-                    df = df[df["Country"].notnull()]
-                    results = [dict(zip(["place", "object", "id"], result)) for result in df.values]
-                    return results, None
-
-                elif self.event_type.betting_on == "athletes":
-                    if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
-                        return [], "Webseite enthält nicht die erwarteten Daten"
-                    df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
-                    results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in
-                               df.values]
-                    for result in results:
-                        result["id"] = utils.generate_id(
-                            [result["last_name"], result["first_name"], result["country_code"]])
-                    return results, None
-
-                else:
-                    return [], "Wettobjekt nicht bekannt"
-
-            except NoSuchElementException as exc:
+            df = chrome_manager.read_table_into_df(url, "thistable")
+            if df is None:
                 return [], "Fehler beim Parsen der Webseite"
+
+            if self.event_type.betting_on == "countries":
+                if "Rank" not in df or "Country" not in df or "Nation" not in df:
+                    return [], "Webseite enthält nicht die erwarteten Daten"
+                df = df[["Rank", "Country", "Nation"]]
+                df = df[df["Country"].notnull()]
+                results = [dict(zip(["place", "object", "id"], result)) for result in df.values]
+                return results, None
+
+            elif self.event_type.betting_on == "athletes":
+                if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
+                    return [], "Webseite enthält nicht die erwarteten Daten"
+                df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
+                results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in
+                           df.values]
+                for result in results:
+                    result["id"] = utils.generate_id(
+                        [result["last_name"], result["first_name"], result["country_code"]])
+                return results, None
+
+            else:
+                return [], "Wettobjekt nicht bekannt"
         else:
             return [], "Disziplin nicht auswertbar"
 

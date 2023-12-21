@@ -1,0 +1,3 @@
+url;gender;discipline;htmlKey;htmlValue;firstNameColumn;lastNameColumn;countryColumn
+https://www.realbiathlon.com/scores.html?year=2024&gender=M&type=athletes&value=score&u25=false&droppedResults=score&newPoints=false&discipline=NonTeam&category=table&relative=total&limit=100;m;biathlon;id;thistable;Given Name;Family$%$Name;Nation
+https://www.realbiathlon.com/scores.html?year=2024&gender=W&type=athletes&value=score&u25=false&droppedResults=score&newPoints=false&discipline=NonTeam&category=table&relative=total&limit=100;f;biathlon;id;thistable;Given Name;Family$%$Name;Nation

@@ -80,7 +80,7 @@ def execute(sql, params=None, commit=True):
         return True
     except Exception as e:
         conn.close()
-        print(e)
+        print(e, sql, params)
         return False
 
 
