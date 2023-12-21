@@ -28,7 +28,7 @@ def configure_driver():
     service = Service(executable_path=driver_dir)
     if platform.system() == "Linux":
         print("is linux")
-        #options.add_argument('--headless')
+        options.add_argument('--headless')
         driver = webdriver.Chrome(service=service, options=options)
         return driver
     elif platform.system() == "Darwin":
