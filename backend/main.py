@@ -4,26 +4,13 @@ from datetime import datetime
 from flask import Flask, request
 from flask_login import *
 
-from database import db_manager
 from models.user import User
 from models.athlete import Athlete
 from models.country import Country
 from models.game import Game
 from models.event import Event
 from models.discipline import Discipline
-from models.event_type import EventType
 
-
-def start_api():
-    db_manager.start()
-    Country.load_into_db()
-    Discipline.load_into_db()
-    Athlete.load_into_db()
-    EventType.load_into_db()
-    print("db initialized")
-
-
-start_api()
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 app.secret_key = app.config["SECRET_KEY"]

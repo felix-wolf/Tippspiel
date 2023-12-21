@@ -1,7 +1,7 @@
 from database import db_manager
 from models.base_model import BaseModel
 import utils
-from backend import chrome_manager
+import chrome_manager
 
 
 class Athlete(BaseModel):
