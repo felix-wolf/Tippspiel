@@ -9,6 +9,8 @@ export class Athlete {
   private readonly _gender: string;
   private readonly _flag: string;
 
+  private readonly _discipline: string;
+
   constructor(
     id: string,
     first_name: string,
@@ -16,6 +18,7 @@ export class Athlete {
     country_code: string,
     gender: string,
     flag: string,
+    discipline: string,
   ) {
     this._id = id;
     this._first_name = first_name;
@@ -23,6 +26,7 @@ export class Athlete {
     this._country_code = country_code;
     this._gender = gender;
     this._flag = flag;
+    this._discipline = discipline;
   }
 
   get id(): string {
@@ -45,6 +49,10 @@ export class Athlete {
     return this._gender;
   }
 
+  get discipline(): string {
+    return this._discipline;
+  }
+
   public toBetInputItem(): BetInputItem {
     return {
       id: this.id,
@@ -60,6 +68,7 @@ export class Athlete {
       json["country_code"],
       json["gender"],
       json["flag"],
+      json["discipline"],
     );
   }
 

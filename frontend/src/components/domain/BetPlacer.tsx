@@ -60,7 +60,9 @@ export function BetPlacer({
           Athlete.fetchAll()
             .then((athletes) => {
               const a = athletes.filter(
-                (athletes) => athletes.gender == desiredType,
+                (athlete) =>
+                  athlete.gender == desiredType &&
+                  athlete.discipline == event.type.discipline_id,
               );
               resolve(a.map((athlete) => athlete.toBetInputItem()));
             })
