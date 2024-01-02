@@ -22,6 +22,7 @@ type EventListType = {
   datetime: string;
   betsButton: undefined;
   userBet?: Bet;
+  hasBets: boolean;
   type: EventTimeType;
 };
 
@@ -62,6 +63,14 @@ export function EventList({
     [type, events],
   );
 
+  function getButtonType(
+    event: EventListType,
+  ): "positive" | "negative" | "neutral" {
+    if (event.userBet) return "neutral";
+    if (event.hasBets && type == "past") return "neutral";
+    return "positive";
+  }
+
   return (
     <>
       <div className={styles.heading}>
@@ -78,13 +87,14 @@ export function EventList({
               datetime: dateToString(item.datetime),
               betsButton: undefined,
               userBet: item.bets.find((bet) => bet.user_id == user?.id),
+              hasBets: item.bets.length > 0,
               type: item.datetime < new Date() ? "past" : "upcoming",
             };
           })}
           headers={{ name: "Name", datetime: "Zeit", betsButton: "Tipps..." }}
           customRenderers={{
             betsButton: (it) =>
-              (it.type == "upcoming" || it.userBet) && (
+              (it.type == "upcoming" || it.hasBets) && (
                 <div style={{ width: 100 }}>
                   <Button
                     onClick={() => {
@@ -93,7 +103,7 @@ export function EventList({
                       if (it.type == "past" && _showAllBets)
                         _showAllBets(it.id);
                     }}
-                    type={it.userBet ? "neutral" : "positive"}
+                    type={getButtonType(it)}
                     title={getTitle(it)}
                     width={"flexible"}
                     height={"flexible"}
