@@ -108,7 +108,10 @@ export function ViewBetsPage() {
         if (a.bet && !b.bet) return -1; // one bet is not defined
         if (!a.bet && b.bet) return 1; // one bet is not defined
         if (!a.bet && !b.bet) return a.playerName.localeCompare(b.playerName); // both bets not defined
-        if (a.bet?.score == undefined && b.bet?.score == undefined)
+        if (
+          (a.bet?.score == undefined && b.bet?.score == undefined) ||
+          a.bet?.score == b.bet?.score
+        )
           // bets defined but not evaluated
           return a.playerName.localeCompare(b.playerName);
         return (b.bet?.score ?? 0) - (a.bet?.score ?? 0);
