@@ -46,7 +46,7 @@ function BetItem({ playerName, bet }: BetItemProp) {
     if (bet?.hasPredictions() && !bet.hasResults()) {
       return "Ergebnis ausstehend";
     }
-    return bet.score;
+    return `Score: ${bet.score}`;
   }
 
   return (
@@ -65,7 +65,7 @@ function BetItem({ playerName, bet }: BetItemProp) {
           displayNextArrow={false}
         />
       )}
-      <div className={styles.score}>Score: {getScoreText(bet)}</div>
+      <div className={styles.score}>{getScoreText(bet)}</div>
     </div>
   );
 }
@@ -104,7 +104,15 @@ export function ViewBetsPage() {
         };
       }) ?? [];
     setItems(
-      betsOfPlayers.sort((a, b) => (b.bet?.score ?? 0) - (a.bet?.score ?? 0)),
+      betsOfPlayers.sort((a, b) => {
+        if (a.bet && !b.bet) return -1; // one bet is not defined
+        if (!a.bet && b.bet) return 1; // one bet is not defined
+        if (!a.bet && !b.bet) return a.playerName.localeCompare(b.playerName); // both bets not defined
+        if (a.bet?.score == undefined && b.bet?.score == undefined)
+          // bets defined but not evaluated
+          return a.playerName.localeCompare(b.playerName);
+        return (b.bet?.score ?? 0) - (a.bet?.score ?? 0);
+      }),
     );
   }, []);
 
