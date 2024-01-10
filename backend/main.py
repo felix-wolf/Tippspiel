@@ -10,6 +10,7 @@ from models.country import Country
 from models.game import Game
 from models.event import Event
 from models.discipline import Discipline
+import chrome_manager
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -215,7 +216,7 @@ def process_results():
                 return "Fehler...", 500
             if not discipline.validate_result_url(url):
                 return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
-            results, error = event.preprocess_results_for_discipline(url)
+            results, error = event.preprocess_results_for_discipline(url, chrome_manager)
             if error:
                 return error, 500
 

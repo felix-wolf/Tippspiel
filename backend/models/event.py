@@ -2,7 +2,6 @@ import hashlib
 from datetime import datetime
 
 from database import db_manager
-from backend import chrome_manager
 from models.bet import Bet
 from models.event_type import EventType
 import utils
@@ -63,7 +62,7 @@ class Event:
                 return False, "Ergebnisse konnten nicht gespeichert werden"
         return True, None
 
-    def preprocess_results_for_discipline(self, url):
+    def preprocess_results_for_discipline(self, url, chrome_manager):
         if self.event_type.discipline_id == "biathlon":
             df = chrome_manager.read_table_into_df(url, "thistable")
             if df is None:
