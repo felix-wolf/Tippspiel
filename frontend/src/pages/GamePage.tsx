@@ -97,31 +97,35 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
-      {pastEvents.length > 0 && user && game && (
-        <>
-          <Toggler
-            left={{
-              name: "Graph",
-              component: (
-                <>
-                  <ScoreLine game={game} events={[...pastEvents]} />
-                  <ColorUpdater
-                    user={user}
-                    onUpdated={() => {
-                      fetchGame();
-                      fetchEvents();
-                    }}
-                  />
-                </>
-              ),
-            }}
-            right={{
-              name: "Tabelle",
-              component: <ScoreList game={game} events={pastEvents} />,
-            }}
-          />
-        </>
-      )}
+      <div className={styles.punkte}>
+        {pastEvents.length > 0 && user && game && (
+          <>
+            <Toggler
+              items={[
+                {
+                  name: "Graph",
+                  component: (
+                    <>
+                      <ColorUpdater
+                        user={user}
+                        onUpdated={() => {
+                          fetchGame();
+                          fetchEvents();
+                        }}
+                      />
+                      <ScoreLine game={game} events={[...pastEvents]} />
+                    </>
+                  ),
+                },
+                {
+                  name: "Tabelle",
+                  component: <ScoreList game={game} events={pastEvents} />,
+                },
+              ]}
+            />
+          </>
+        )}
+      </div>
       {isCreator && (
         <EventCreator
           onClick={onCreate}
