@@ -77,21 +77,11 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
   };
 
   const buildLabels = useCallback((): string[] => {
-    console.log(
-      sortedEvents.length - numEvents,
-      sortedEvents.length,
-      [startEventLabel]
-        .concat(
-          sortedEvents.filter((e) => e.hasResults()).map((e) => e.name) ?? [],
-        )
-        .slice(-numEvents),
-    );
-
     return [startEventLabel]
       .concat(
         sortedEvents.filter((e) => e.hasResults()).map((e) => e.name) ?? [],
       )
-      .slice(-numEvents);
+      .slice(-(numEvents + 1));
   }, [sortedEvents, numEvents]);
 
   const buildDatasets = useCallback((): {
@@ -117,7 +107,7 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
                     .reduce((acc, curr) => acc + curr, 0);
                 }),
             )
-            .slice(-numEvents),
+            .slice(-(numEvents + 1)), // add 1 for start event
           borderColor: player.color,
           backgroundColor: player.color + "80",
         };
