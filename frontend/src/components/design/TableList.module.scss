@@ -105,13 +105,13 @@ th, td {
   &:first-child {
     border-bottom-left-radius: var(--corner-s);
     border-top-left-radius: var(--corner-s);
-    padding-left: var(--grid-m);
+    padding-left: var(--grid-s);
   }
 
   &:last-child {
     border-bottom-right-radius: var(--corner-s);
     border-top-right-radius: var(--corner-s);
-    padding-right: var(--grid-m);
+    padding-right: var(--grid-s);
   }
 }
 
@@ -129,6 +129,12 @@ th, td {
   display: flex;
   flex: 1;
   flex-direction: column;
+}
+
+.alignRight {
+  text-align: right;
+  width: auto;
+  width: 50px;
 }
 
 
