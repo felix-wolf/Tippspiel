@@ -12,6 +12,7 @@ import { ScoreLine } from "../components/domain/ScoreLine";
 import { ColorUpdater } from "../components/domain/ColorUpdater";
 import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
+import { EventEditorModal } from "../components/domain/EventEditorModal";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -20,7 +21,9 @@ export function GamePage() {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [isCreator, setIsCreator] = useState(false);
+  const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
   const user = useCurrentUser();
+  const [editorKey, setEditorKey] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -81,6 +84,11 @@ export function GamePage() {
     [game_id],
   );
 
+  function onEditEvent(event_id: string) {
+    console.log("test", event_id);
+    setEventEditId(event_id);
+  }
+
   const showUserBets = useCallback(
     (event_id: string) => {
       navigate(SiteRoutes.PlaceBet, { game_id, event_id });
@@ -97,6 +105,20 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
+      <EventEditorModal
+        key={editorKey}
+        isOpened={eventEditId != undefined}
+        types={game?.discipline.eventTypes}
+        onEdited={() => {
+          setEventEditId(undefined);
+          fetchEvents();
+        }}
+        onCancel={() => {
+          setEventEditId(undefined);
+          setEditorKey(editorKey + 1);
+        }}
+        event={upcomingEvents.find((e) => e.id == eventEditId)}
+      />
       <div className={styles.punkte}>
         {pastEvents.length > 0 && user && game && (
           <>
@@ -142,6 +164,8 @@ export function GamePage() {
             </div>
           }
           showUserBets={showUserBets}
+          isCreator={isCreator}
+          onEdit={onEditEvent}
         />
       </div>
       <div className={styles.listContainer}>

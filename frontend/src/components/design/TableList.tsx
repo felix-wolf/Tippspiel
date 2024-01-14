@@ -62,6 +62,7 @@ export interface ListProps<T extends ListElement> {
    */
   displayNextArrow?: boolean;
   cellHeight?: "short" | "tall";
+  alignLastRight?: boolean;
 }
 
 type PrimitiveType = string | number | boolean;
@@ -109,6 +110,7 @@ export default function TableList<T extends ListElement>({
   displayNextArrow = true,
   items,
   cellHeight = "tall",
+  alignLastRight = false,
 }: ListProps<T>) {
   const [scrolled, setScrolled] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -144,7 +146,12 @@ export default function TableList<T extends ListElement>({
             // TODO is `isPrimitiveValue` really the right condition? do we want to print booleans like that?
             return (
               <td
-                className={cls(cellHeight == "short" && styles.tdShort)}
+                className={cls(
+                  cellHeight == "short" && styles.tdShort,
+                  index == Object.keys(headers).length - 1 &&
+                    alignLastRight &&
+                    styles.alignRight,
+                )}
                 key={index}
               >
                 {customRenderer?.(item) ??

@@ -145,4 +145,26 @@ export class Event {
       datetime: date_string,
     });
   }
+
+  public static update(
+    event_id: string,
+    name: string,
+    game_id: string,
+    type: EventType,
+    datetime: Date,
+  ): Promise<Event> {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    };
+    const date_string = datetime.toLocaleTimeString("de-DE", options);
+    return NetworkHelper.post<Event>("/api/event", Event.fromJson, {
+      event_id: event_id,
+      name: name,
+      game_id: game_id,
+      type: type.id,
+      datetime: date_string,
+    });
+  }
 }

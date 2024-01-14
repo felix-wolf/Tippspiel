@@ -11,6 +11,7 @@ type TextFieldProps = {
   type?: "text" | "password";
   placeholder: string;
   onInput: (input: string) => void;
+  initialValue?: string;
 };
 
 export type TextFieldHandle = {
@@ -26,10 +27,15 @@ export type TextFieldHandle = {
 
 export const TextField = React.forwardRef<TextFieldHandle, TextFieldProps>(
   function TextField(
-    { type = "text", placeholder, onInput: _onInput }: TextFieldProps,
+    {
+      type = "text",
+      placeholder,
+      onInput: _onInput,
+      initialValue = "",
+    }: TextFieldProps,
     ref,
   ) {
-    const [value, setValue] = useState<string>("");
+    const [value, setValue] = useState<string>(initialValue);
     const input = useRef<HTMLInputElement>(null);
     useImperativeHandle(
       ref,

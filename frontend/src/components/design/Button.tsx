@@ -6,7 +6,7 @@ type ButtonProps = {
   onClick: () => void;
   onDisabledClick?: () => void;
   title: string;
-  type?: "positive" | "negative" | "neutral";
+  type?: "positive" | "negative" | "neutral" | "clear";
   isEnabled?: boolean;
   width?: "fixed" | "flexible";
   height?: "fixed" | "flexible";

@@ -32,16 +32,24 @@ class Event:
             "name": self.name,
             "game_id": self.game_id,
             "event_type": self.event_type.to_dict(),
-            "datetime": self.dt.strftime("%Y-%m-%d %H:%M:%S"),
+            "datetime": Event.datetime_to_string(self.dt),
             "bets": bets
         }
+
+    @staticmethod
+    def datetime_to_string(dt):
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    @staticmethod
+    def string_to_datetime(dt_string):
+        return datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
 
     def save_to_db(self):
         sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime) VALUES (?,?,?,?,?)"
         success = db_manager.execute(
             sql, [
                 self.id, self.name, self.game_id,
-                self.event_type.id, self.dt.strftime("%Y-%m-%d %H:%M:%S")
+                self.event_type.id, Event.datetime_to_string(self.dt)
             ])
         return success, self.id
 
@@ -135,10 +143,35 @@ class Event:
             return [Event.get_by_id(e["id"]) for e in res]
         return []
 
+    def update(self, name: str, event_type_id: str, dt: datetime):
+        success = True
+        if name != self.name:
+            self.name = name
+        if event_type_id != self.event_type.id:
+            # delete all associated bets since event type was changed
+            bets = Bet.get_by_event_id(self.id)
+
+            for bet in bets:
+                deletion_successful = bet.delete()
+                if not deletion_successful:
+                    success = False
+            event_type = EventType.get_by_id(event_type_id)
+            self.event_type = event_type
+        if dt != self.dt:
+            self.dt = dt
+        if success:
+            sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
+                    name = ?,
+                    event_type_id = ?,
+                    datetime = ?
+                    WHERE id = ?
+                """
+            success = db_manager.execute(sql, [self.name, self.event_type.id, Event.datetime_to_string(self.dt), self.id])
+        return success
+
     @staticmethod
-    def create(name: str, game_id: str, event_type_id: str, dt: str):
+    def create(name: str, game_id: str, event_type_id: str, dt: datetime):
         # insert event
-        dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
         event_type = EventType.get_by_id(event_type_id)
         if not event_type:
             return False, None

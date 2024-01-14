@@ -146,6 +146,20 @@ class Bet:
         return Bet.from_dict(bet_data, predictions)
 
     @staticmethod
+    def get_by_event_id(event_id):
+        bets = []
+        sql = f"SELECT b.* FROM {db_manager.TABLE_BETS} b WHERE b.event_id = ? "
+        bets_data = db_manager.query(sql, [event_id])
+        if not bets_data or len(bets_data) == []:
+            return bets
+
+        for bet_data in bets_data:
+            # get predictions
+            predictions = Prediction.get_by_id(bet_data["id"])
+            bets.append(Bet.from_dict(bet_data, predictions))
+        return bets
+
+    @staticmethod
     def from_dict(bet_dict, predictions):
         if bet_dict:
             try:
@@ -185,3 +199,7 @@ class Bet:
             ]):
                 return False
         return success
+
+    def delete(self):
+        sql = f"DELETE FROM {db_manager.TABLE_BETS} WHERE event_id = ? "
+        return db_manager.execute(sql, [self.event_id])

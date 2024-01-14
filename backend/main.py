@@ -173,7 +173,12 @@ def handle_event_request():
         game_id = request.get_json().get("game_id")
         event_type = request.get_json().get("type")
         dt = request.get_json().get("datetime")
-        success, event_id = Event.create(name, game_id, event_type, dt)
+        dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
+        event_id = request.get_json().get("event_id")
+        if event_id:
+            success = Event.get_by_id(event_id).update(name, event_type, dt)
+        else:
+            success, event_id = Event.create(name, game_id, event_type, dt)
         if success:
             return Event.get_by_id(event_id).to_dict()
         else:

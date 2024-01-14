@@ -5,6 +5,8 @@ import { Button } from "../../design/Button";
 import styles from "./EventList.module.scss";
 import { Bet } from "../../../models/Bet";
 import { useCurrentUser } from "../../../models/user/UserContext";
+import edit from "../../../assets/icons/edit.svg";
+import { Utils } from "../../../utils";
 
 export type EventTimeType = "upcoming" | "past";
 
@@ -14,6 +16,8 @@ type EventListProps = {
   placeholderWhenEmpty?: React.ReactNode;
   showUserBets?: (event_id: string) => void;
   showAllBets?: (event_id: string) => void;
+  onEdit?: (event_id: string) => void;
+  isCreator?: boolean;
 };
 
 type EventListType = {
@@ -21,6 +25,7 @@ type EventListType = {
   name: string;
   datetime: string;
   betsButton: undefined;
+  editButton: undefined;
   userBet?: Bet;
   hasBets: boolean;
   type: EventTimeType;
@@ -32,15 +37,15 @@ export function EventList({
   events,
   showUserBets: _showUserBets,
   showAllBets: _showAllBets,
+  onEdit: _onEdit,
+  isCreator = false,
 }: EventListProps) {
   const user = useCurrentUser();
 
   function dateToString(date: Date): string {
     return `${getDoubleDigit(date.getDate().toString())}.${getDoubleDigit(
       (date.getMonth() + 1).toString(),
-    )}.${date.getFullYear()} - ${getDoubleDigit(
-      date.getHours().toString(),
-    )}:${getDoubleDigit(date.getMinutes().toString())}`;
+    )}.${date.getFullYear()} - ${Utils.getTimeString(date)}`;
   }
 
   function getDoubleDigit(digits: string): string {
@@ -79,6 +84,7 @@ export function EventList({
       {events.length == 0 && placeholderWhenEmpty}
       {events.length != 0 && (
         <TableList
+          alignLastRight={isCreator}
           displayNextArrow={false}
           items={events.map((item): EventListType => {
             return {
@@ -86,12 +92,18 @@ export function EventList({
               name: item.name,
               datetime: dateToString(item.datetime),
               betsButton: undefined,
+              editButton: undefined,
               userBet: item.bets.find((bet) => bet.user_id == user?.id),
               hasBets: item.bets.length > 0,
               type: item.datetime < new Date() ? "past" : "upcoming",
             };
           })}
-          headers={{ name: "Name", datetime: "Zeit", betsButton: "Tipps..." }}
+          headers={{
+            name: "Name",
+            datetime: "Zeit",
+            betsButton: "Tipps...",
+            editButton: "",
+          }}
           customRenderers={{
             betsButton: (it) =>
               (it.type == "upcoming" || it.hasBets) && (
@@ -107,6 +119,20 @@ export function EventList({
                     title={getTitle(it)}
                     width={"flexible"}
                     height={"flexible"}
+                  />
+                </div>
+              ),
+            editButton: (it) =>
+              (it.type == "upcoming" || isCreator) && (
+                <div className={styles.editContainer}>
+                  <Button
+                    type={"clear"}
+                    width={"flexible"}
+                    icon={edit}
+                    title={""}
+                    onClick={() => {
+                      if (_onEdit) _onEdit(it.id);
+                    }}
                   />
                 </div>
               ),

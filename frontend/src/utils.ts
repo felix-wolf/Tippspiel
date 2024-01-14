@@ -38,4 +38,16 @@ export class Utils {
     const num = Number("0x" + identifier);
     return `${Utils.colors[num % Utils.colors.length]}`;
   }
+
+  static getDoubleDigit(digits: string | number): string {
+    const d = digits.toString();
+    if (d.length == 2) return d;
+    return "0" + d;
+  }
+
+  public static getTimeString(datetime: Date): string {
+    const hours = this.getDoubleDigit(datetime.getHours());
+    const minutes = this.getDoubleDigit(datetime.getMinutes());
+    return `${hours}:${minutes}`;
+  }
 }
