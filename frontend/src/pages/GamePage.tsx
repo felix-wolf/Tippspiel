@@ -84,11 +84,6 @@ export function GamePage() {
     [game_id],
   );
 
-  function onEditEvent(event_id: string) {
-    console.log("test", event_id);
-    setEventEditId(event_id);
-  }
-
   const showUserBets = useCallback(
     (event_id: string) => {
       navigate(SiteRoutes.PlaceBet, { game_id, event_id });
@@ -165,7 +160,7 @@ export function GamePage() {
           }
           showUserBets={showUserBets}
           isCreator={isCreator}
-          onEdit={onEditEvent}
+          onEdit={(event_id) => setEventEditId(event_id)}
         />
       </div>
       <div className={styles.listContainer}>

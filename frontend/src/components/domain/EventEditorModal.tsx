@@ -3,6 +3,7 @@ import { DialogModal } from "../design/Dialog";
 import { EventType } from "../../models/user/EventType";
 import { Event } from "../../models/Event";
 import { useCallback } from "react";
+import styles from "./EventEditorModal.module.scss";
 
 type EventEditorModalProps = {
   isOpened: boolean;
@@ -46,8 +47,11 @@ export function EventEditorModal({
       title={"Event bearbeiten"}
       isOpened={isOpened}
       onClose={_onCancel}
-      style={{ height: 410 }}
+      style={{ height: 465 }}
     >
+      <div className={styles.warning}>
+        ACHTUNG: Ändern der Eventart löscht ALLE bereits platzierten Tipps!
+      </div>
       <EventCreator onClick={onCreate} types={types} event={event} />
     </DialogModal>
   );
