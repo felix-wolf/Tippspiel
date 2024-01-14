@@ -19,36 +19,36 @@ def confirm_with_user(user_id: str, event_id: str, objects: [], object_type: str
     print(f"User: {User.get_by_id(user_id).name}")
     for index, object_id in enumerate(objects):
         print(f"Platz {index + 1}: {getObjectName(object_type, object_id)}")
-    return input("Type YES to confirm") == "YES"
+    return input("Type YES to confirm: ") == "YES"
 
 
-event_id = "535160c3433a9a4fc2d5890a42e16cc8"
+event_id = "f02c2c3f7438e16e74c8817c4ef898d4"
 data = [
     # {"userId": "userId", "type": "c || a", "objects": ["id_1", "id_2", "id_3", "id_4", "id_5"]}
     {
         # luisa
-        "userId": "c70121869c3b3560d55ebadfbef2fe13",
-        "type": "c",
-        "objects": [
-            "NOR",
-            "GER",
-            "SWE",
-            "FRA",
-            "ITA"
-        ]
-    },
-    {
-        # ute
         "userId": "28ac3f81293bc9112f05bfb2b9dfb9cd",
-        "type": "c",
+        "type": "a",
         "objects": [
-            "NOR",
-            "FRA",
-            "GER",
-            "SWE",
-            "ITA"
+            "c5e52ac3c42b5ffa461ab553613bc62d",
+            "863a08de49b7cbe1ca04205d3f192a27",
+            "19029c339a2a8dd8c31e83a62ae07b5a",
+            "55098e927de05689d8ae8683c348b7ab",
+            "11c697c980013126bc5fd0edf9dc11a5"
         ]
     },
+    #{
+        # ute
+        #"userId": "28ac3f81293bc9112f05bfb2b9dfb9cd",
+        #"type": "c",
+        #"objects": [
+        #    "NOR",
+        #    "FRA",
+        #    "GER",
+        #    "SWE",
+        #    "ITA"
+        #]
+    #},
 ]
 
 if __name__ == '__main__':
