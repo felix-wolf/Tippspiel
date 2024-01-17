@@ -123,7 +123,8 @@ export function EventList({
                 </div>
               ),
             editButton: (it) =>
-              (it.type == "upcoming" || isCreator) && (
+              it.type == "upcoming" &&
+              isCreator && (
                 <div className={styles.editContainer}>
                   <Button
                     type={"clear"}
