@@ -78,7 +78,7 @@ CREATE TABLE if not EXISTS Results (
     FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
 );
 
-CREATE VIEW if not EXISTS VIEW_RESULTS AS
+CREATE VIEW if not EXISTS VIEW_Results AS
     SELECT
         r.*,
         CASE
