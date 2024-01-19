@@ -1,4 +1,4 @@
-import hashlib
+import utils
 
 from database import db_manager
 import sys
@@ -57,7 +57,7 @@ class User:
 
     @staticmethod
     def create(name, pw_hash):
-        user_id = hashlib.md5("".join([name, pw_hash]).encode('utf-8')).hexdigest()
+        user_id = utils.generate_id([name, pw_hash])
         color = utils.generateRandomHexColor()
         sql = f"INSERT INTO {db_manager.TABLE_USERS} (id, name, pw_hash, color) VALUES (?,?,?,?)"
         success = db_manager.execute(sql, [user_id, name, pw_hash, color])

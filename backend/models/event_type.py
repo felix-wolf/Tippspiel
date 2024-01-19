@@ -1,5 +1,4 @@
-import hashlib
-
+import utils
 from models.base_model import BaseModel
 from database import db_manager
 
@@ -10,7 +9,7 @@ class EventType(BaseModel):
         if event_type_id:
             self.id = event_type_id
         else:
-            self.id = hashlib.md5("".join([name, display_name, discipline_id, betting_on]).encode('utf-8')).hexdigest()
+            self.id = utils.generate_id([name, display_name, discipline_id, betting_on])
         self.name = name
         self.display_name = display_name
         self.discipline_id = discipline_id

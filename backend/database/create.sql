@@ -70,6 +70,29 @@ CREATE TABLE if not EXISTS Events (
     FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
 );
 
+CREATE TABLE if not EXISTS Results (
+    id TEXT PRIMARY KEY NOT NULL,
+    event_id NOT NULL,
+    place NUMERIC NOT NULL,
+    object_id TEXT NOT NULL,
+    FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
+);
+
+CREATE VIEW if not EXISTS VIEW_RESULTS AS
+    SELECT
+        r.*,
+        CASE
+            WHEN va.id IS NOT NULL THEN va.flag || '  ' || va.first_name || ' ' || va.last_name
+            WHEN c.code IS NOT NULL THEN c.flag || '  ' || c.name
+            ELSE 'unknown'
+        END AS 'object_name'
+    FROM
+        Results r
+    LEFT JOIN
+        VIEW_Athletes va ON r.object_id  = va.id
+    LEFT JOIN
+        Countries c ON r.object_id = c.code;
+
 CREATE VIEW if not EXISTS VIEW_Events AS
     SELECT e.*, g.discipline FROM Events e, Games g
     WHERE e.game_id = g.id;

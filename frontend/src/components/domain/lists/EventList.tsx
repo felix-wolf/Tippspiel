@@ -86,6 +86,7 @@ export function EventList({
         <TableList
           alignLastRight={isCreator}
           displayNextArrow={false}
+          maxHeight={300}
           items={events.map((item): EventListType => {
             return {
               id: item.id,

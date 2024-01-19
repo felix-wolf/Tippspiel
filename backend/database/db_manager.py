@@ -1,6 +1,6 @@
 import csv
-import hashlib
 import sqlite3
+import utils
 
 TABLE_ATHLETES = "Athletes"
 TABLE_GAMES = "Games"
@@ -12,6 +12,7 @@ TABLE_EVENT_TYPES = "EventTypes"
 TABLE_BETS = "Bets"
 TABLE_PREDICTIONS = "Predictions"
 TABLE_DISCIPLINES = "Disciplines"
+TABLE_RESULTS = "Results"
 
 
 def open_connection():
@@ -125,6 +126,6 @@ def load_csv(file_name, generate_id=False):
             if generate_id:
                 concat_string = "".join(row.values())
                 # generate ID
-                row['id'] = hashlib.md5(concat_string.encode('utf8')).hexdigest()
+                row['id'] = utils.generate_id([concat_string])
             values.append(row)
         return values

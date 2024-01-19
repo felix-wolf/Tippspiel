@@ -1,39 +1,47 @@
-import hashlib
 from datetime import datetime
 
 from database import db_manager
 from models.bet import Bet
 from models.event_type import EventType
+from models.result import Result
 import utils
 
 
 class Event:
 
     def __init__(self, name: str, game_id: str, event_type: EventType, dt: datetime, event_id: str = None,
-                 bets: [Bet] = None):
+                 bets: [Bet] = None, results: [Result] = None):
         if bets is None:
             bets = []
+        if results is None:
+            results = []
         if event_id:
             self.id = event_id
         else:
-            self.id = hashlib.md5("".join([name, game_id, event_type.id, str(dt)]).encode('utf-8')).hexdigest()
+            self.id = utils.generate_id([name, game_id, event_type.id, dt])
         self.name = name
         self.game_id = game_id
         self.event_type = event_type
         self.dt = dt
         self.bets = bets
+        self.results = results
 
     def to_dict(self):
         bets = []
         if len(self.bets) > 0:
-            bets = [b.to_dict() for b in self.bets] if self.bets else []
+            bets = [b.to_dict() for b in self.bets]
+        results = []
+        if len(self.results) > 0:
+            results = [r.to_dict() for r in self.results]
         return {
             "id": self.id,
             "name": self.name,
             "game_id": self.game_id,
             "event_type": self.event_type.to_dict(),
             "datetime": Event.datetime_to_string(self.dt),
-            "bets": bets
+            "bets": bets,
+            "results": results
+
         }
 
     @staticmethod
@@ -59,12 +67,20 @@ class Event:
             bet = Bet(user_id, self.id)
         return bet.update_predictions(predictions), self.id
 
-    def process_results(self, results):
+    def process_results(self, results: [Result]):
         """
         Process results by comparing predicted with actual places, calculating score and saving to database.
         :param results: list of dicts with AT LEAST "id" as object_id and "place" as actual_place
         :return: True and None if successful, False and error string if error
         """
+        # delete existing results
+        if not Result.delete_by_event_id(self.id):
+            return False, "Bestehende Ergebnisse konnten nicht gelöscht werden"
+        for result in results:
+            success, result_id = result.save_to_db()
+            if not success:
+                return False, "Ergebnisse konnten nicht gespeichert werden"
+
         for bet in self.bets:
             if not bet.calc_score(results):
                 return False, "Ergebnisse konnten nicht gespeichert werden"
@@ -81,18 +97,22 @@ class Event:
                     return [], "Webseite enthält nicht die erwarteten Daten"
                 df = df[["Rank", "Country", "Nation"]]
                 df = df[df["Country"].notnull()]
-                results = [dict(zip(["place", "object", "id"], result)) for result in df.values]
+                results = []
+                for r in df.values:
+                    r = Result(event_id=self.id, place=utils.validate_int(r[0]), object_id=r[2], object_name=r[1])
+                    results.append(r)
                 return results, None
 
             elif self.event_type.betting_on == "athletes":
                 if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
                     return [], "Webseite enthält nicht die erwarteten Daten"
                 df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
-                results = [dict(zip(["place", "last_name", "first_name", "country_code"], result)) for result in
-                           df.values]
-                for result in results:
-                    result["id"] = utils.generate_id(
-                        [result["last_name"], result["first_name"], result["country_code"]])
+                results = []
+                for r in df.values:
+                    a_id = utils.generate_id([r[1], r[2], r[3]])
+                    a_name = " ".join([r[2], r[1]])
+                    r = Result(event_id=self.id, place=utils.validate_int(r[0]), object_id=a_id, object_name=a_name)
+                    results.append(r)
                 return results, None
 
             else:
@@ -115,6 +135,9 @@ class Event:
         if bets_data:
             bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
             event.bets = bets
+        # get results
+        results = Result.get_by_event_id(event.id)
+        event.results = results
         return event
 
     @staticmethod

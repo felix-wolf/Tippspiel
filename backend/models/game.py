@@ -1,4 +1,4 @@
-import hashlib
+import utils
 
 from database import db_manager
 from models.discipline import Discipline
@@ -14,7 +14,7 @@ class Game(BaseModel):
         if game_id:
             self.id = game_id
         else:
-            self.id = hashlib.md5("".join([name, creator.id, str(pw_hash)]).encode('utf-8')).hexdigest()
+            self.id = utils.generate_id([name, creator.id, pw_hash])
         self.name = name
         self.pw_hash = pw_hash
         self.discipline = Discipline

@@ -1,4 +1,4 @@
-import hashlib
+import utils
 from database import db_manager
 
 
@@ -8,7 +8,7 @@ class Prediction:
             self, bet_id: str, object_id: str, object_name: str, predicted_place: int,
             actual_place: int = None, prediction_id: str = None, score: int = 0):
         if prediction_id is None:
-            self.id = hashlib.md5("".join([bet_id, object_id, str(predicted_place)]).encode('utf-8')).hexdigest()
+            self.id = utils.generate_id([bet_id, object_id, predicted_place])
         else:
             self.id = prediction_id
         self.bet_id = bet_id
@@ -94,7 +94,7 @@ class Bet:
         if bet_id:
             self.id = bet_id
         else:
-            self.id = hashlib.md5("".join([user_id, event_id]).encode('utf-8')).hexdigest()
+            self.id = utils.generate_id([user_id, event_id])
         if predictions is None:
             predictions = []
         self.user_id = user_id
@@ -113,10 +113,9 @@ class Bet:
 
     def calc_score(self, results):
         for pred in self.predictions:
-            object_ids = [r["id"] for r in results]
             actual_place = 9999
-            if pred.object_id in object_ids:
-                actual_place = next((item["place"] for item in results if item["id"] == pred.object_id))
+            if pred.object_id in [r.object_id for r in results]:
+                actual_place = next((item.place for item in results if item.object_id == pred.object_id))
             if not pred.set_actual_place(actual_place):
                 return False
         self.score = sum([p.score for p in self.predictions])

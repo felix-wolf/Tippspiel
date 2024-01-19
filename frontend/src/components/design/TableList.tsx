@@ -63,6 +63,7 @@ export interface ListProps<T extends ListElement> {
   displayNextArrow?: boolean;
   cellHeight?: "short" | "tall";
   alignLastRight?: boolean;
+  maxHeight?: number;
 }
 
 type PrimitiveType = string | number | boolean;
@@ -111,6 +112,7 @@ export default function TableList<T extends ListElement>({
   items,
   cellHeight = "tall",
   alignLastRight = false,
+  maxHeight = 99999,
 }: ListProps<T>) {
   const [scrolled, setScrolled] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -174,7 +176,7 @@ export default function TableList<T extends ListElement>({
 
   return (
     <div className={styles.scrollDivParent} ref={container}>
-      <div className={styles.scrollDiv}>
+      <div style={{ maxHeight: maxHeight }} className={styles.scrollDiv}>
         <table
           className={cls(
             styles.table,

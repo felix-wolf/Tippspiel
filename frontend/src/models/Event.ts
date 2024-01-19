@@ -1,6 +1,7 @@
 import { NetworkHelper } from "./NetworkHelper";
 import { Bet, Prediction } from "./Bet";
 import { EventType } from "./user/EventType";
+import { Result } from "./Result";
 
 export type Predictions = [
   Prediction,
@@ -17,6 +18,8 @@ export class Event {
   private readonly _eventType: EventType;
   private readonly _bets: Bet[];
   private readonly _datetime: Date;
+
+  private readonly _results: Result[];
   constructor(
     id: string,
     name: string,
@@ -24,12 +27,14 @@ export class Event {
     type: EventType,
     datetime: string,
     bets: Bet[],
+    results: Result[],
   ) {
     this._id = id;
     this._name = name;
     this._game_id = game_id;
     this._eventType = type;
     this._bets = bets;
+    this._results = results;
     this._datetime = new Date(Date.parse(datetime.replace(/-/g, "/")));
   }
 
@@ -57,6 +62,10 @@ export class Event {
     return this._bets;
   }
 
+  get results(): Result[] {
+    return this._results;
+  }
+
   get datetime(): Date {
     return this._datetime;
   }
@@ -69,6 +78,7 @@ export class Event {
       EventType.fromJson(json["event_type"]),
       json["datetime"],
       json["bets"].map((bet: any) => Bet.fromJson(bet)),
+      json["results"].map((result: any) => Result.fromJson(result)),
     );
   }
 

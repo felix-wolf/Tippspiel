@@ -1,0 +1,21 @@
+.container {
+  padding: 10px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  grid-gap: var(--grid-s);
+
+  border: solid 2px var(--fg-primary);
+  border-radius: var(--corner-s);
+}
+
+.name {
+  margin-top: 5px;
+  composes: text-subtitle from global;
+  text-align: center;
+}
+
+.score {
+  composes: text-subtitle from global;
+}
