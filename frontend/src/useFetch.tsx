@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useCache } from "./contexts/CacheContext";
 
-type useFetchProps = {
+type useFetchProps<T = any> = {
   key: string;
   initialEnabled?: boolean;
   cache: {
     enabled?: boolean;
     ttl?: number;
   };
-  fetchFunction: (args: any) => Promise<any>;
+  fetchFunction: (args: any) => Promise<T>;
   functionArgs?: any;
 };
 

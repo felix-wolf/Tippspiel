@@ -13,18 +13,59 @@ import { ColorUpdater } from "../components/domain/ColorUpdater";
 import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
 import { EventEditorModal } from "../components/domain/EventEditorModal";
+import useFetch from "../useFetch";
+import { PulseLoader } from "react-spinners";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
   const navigate = useNavigateParams();
-  const [game, setGame] = useState<Game | undefined>(undefined);
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [isCreator, setIsCreator] = useState(false);
   const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
   const user = useCurrentUser();
   const [editorKey, setEditorKey] = useState(0);
 
+  const sortEvents = (date_a: Event, date_b: Event): number =>
+    date_a.datetime.getTime() - date_b.datetime.getTime();
+
+  const gameFetchValues = useFetch<Game>({
+    key: `game${game_id}`,
+    fetchFunction: Game.fetchOne,
+    functionArgs: game_id,
+    cache: { enabled: true, ttl: 2 * 60 },
+  });
+
+  const eventsFetchValues = useFetch<Event[]>({
+    key: `events${game_id}`,
+    fetchFunction: Event.fetchAll,
+    functionArgs: game_id,
+    cache: { enabled: true, ttl: 2 * 60 },
+  });
+
+  const {
+    data: events,
+    refetch: refetchEvents,
+    loading: eventsLoading,
+  } = eventsFetchValues;
+
+  const {
+    data: game,
+    refetch: refetchGame,
+    loading: gameLoading,
+  } = gameFetchValues;
+
+  let upcomingEvents: Event[] = [];
+  let pastEvents: Event[] = [];
+
+  if (events) {
+    pastEvents = events
+      .filter((event) => event.datetime < new Date())
+      .sort((a, b) => sortEvents(a, b) * -1);
+    upcomingEvents = events
+      .filter(
+        (event) => !pastEvents?.find((past_event) => past_event.id == event.id),
+      )
+      .sort(sortEvents);
+  }
   useEffect(() => {
     if (!user) {
       navigate(SiteRoutes.Login, {});
@@ -32,47 +73,12 @@ export function GamePage() {
     setIsCreator(game?.creator?.id == user?.id);
   }, [user, game]);
 
-  const fetchGame = useCallback(() => {
-    Game.fetchOne(game_id)
-      .then((game) => {
-        setGame(game);
-      })
-      .catch((error) => console.log(error));
-  }, [game_id]);
-
-  const fetchEvents = useCallback(() => {
-    Event.fetchAll(game_id)
-      .then((events) => {
-        const past = events
-          .filter((event) => event.datetime < new Date())
-          .sort((a, b) => sortEvents(a, b) * -1);
-        const upcoming = events
-          .filter(
-            (event) => !past.find((past_event) => past_event.id == event.id),
-          )
-          .sort(sortEvents);
-        setPastEvents(past);
-        setUpcomingEvents(upcoming);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, [game_id]);
-
-  useEffect(() => {
-    fetchGame();
-    fetchEvents();
-  }, []);
-
-  const sortEvents = (date_a: Event, date_b: Event): number =>
-    date_a.datetime.getTime() - date_b.datetime.getTime();
-
   const onCreate = useCallback(
     (type: EventType, name: string, datetime: Date): Promise<boolean> => {
       return new Promise((resolve, reject) => {
         Event.create(name, game_id, type, datetime)
           .then((_) => {
-            fetchEvents();
+            refetchEvents(true);
             resolve(true);
           })
           .catch((error) => {
@@ -100,79 +106,89 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
-      <EventEditorModal
-        key={editorKey}
-        isOpened={eventEditId != undefined}
-        types={game?.discipline.eventTypes}
-        onEdited={() => {
-          setEventEditId(undefined);
-          fetchEvents();
-        }}
-        onCancel={() => {
-          setEventEditId(undefined);
-          setEditorKey(editorKey + 1);
-        }}
-        event={upcomingEvents.find((e) => e.id == eventEditId)}
-      />
-      <div className={styles.punkte}>
-        {pastEvents.length > 0 && user && game && (
-          <>
-            <Toggler
-              items={[
-                {
-                  name: "Graph",
-                  component: (
-                    <>
-                      <ColorUpdater
-                        user={user}
-                        onUpdated={() => {
-                          fetchGame();
-                          fetchEvents();
-                        }}
-                      />
-                      <ScoreLine game={game} events={[...pastEvents]} />
-                    </>
-                  ),
-                },
-                {
-                  name: "Tabelle",
-                  component: <ScoreList game={game} events={pastEvents} />,
-                },
-              ]}
-            />
-          </>
-        )}
-      </div>
+      {gameLoading && <PulseLoader />}
+      {!gameLoading && (
+        <>
+          <EventEditorModal
+            key={editorKey}
+            isOpened={eventEditId != undefined}
+            types={game?.discipline.eventTypes}
+            onEdited={() => {
+              setEventEditId(undefined);
+              refetchEvents(true);
+            }}
+            onCancel={() => {
+              setEventEditId(undefined);
+              setEditorKey(editorKey + 1);
+            }}
+            event={upcomingEvents.find((e) => e.id == eventEditId)}
+          />
+          <div className={styles.punkte}>
+            {pastEvents.length > 0 && user && game && (
+              <>
+                <Toggler
+                  items={[
+                    {
+                      name: "Graph",
+                      component: (
+                        <>
+                          <ColorUpdater
+                            user={user}
+                            onUpdated={() => {
+                              refetchGame(true);
+                              refetchEvents(true);
+                            }}
+                          />
+                          <ScoreLine game={game} events={[...pastEvents]} />
+                        </>
+                      ),
+                    },
+                    {
+                      name: "Tabelle",
+                      component: <ScoreList game={game} events={pastEvents} />,
+                    },
+                  ]}
+                />
+              </>
+            )}
+          </div>
+        </>
+      )}
       {isCreator && (
         <EventCreator
           onClick={onCreate}
           types={game?.discipline.eventTypes ?? []}
         />
       )}
-      <div className={styles.listContainer}>
-        <EventList
-          events={upcomingEvents}
-          type={"upcoming"}
-          placeholderWhenEmpty={
-            <div className={styles.empty_text}>
-              Es sind noch keine Events eingetragen...
-            </div>
-          }
-          showUserBets={showUserBets}
-          isCreator={isCreator}
-          onEdit={(event_id) => setEventEditId(event_id)}
-        />
-      </div>
-      <div className={styles.listContainer}>
-        <EventList
-          events={pastEvents}
-          type={"past"}
-          placeholderWhenEmpty={
-            <div className={styles.empty_text}>Es gab noch keine...</div>
-          }
-          showAllBets={showAllBets}
-        />
-      </div>
+      {eventsLoading && <PulseLoader />}
+      {!eventsLoading && (
+        <>
+          <div className={styles.listContainer}>
+            <EventList
+              events={upcomingEvents}
+              type={"upcoming"}
+              placeholderWhenEmpty={
+                <div className={styles.empty_text}>
+                  Es sind noch keine Events eingetragen...
+                </div>
+              }
+              showUserBets={showUserBets}
+              isCreator={isCreator}
+              onEdit={(event_id) => setEventEditId(event_id)}
+            />
+          </div>
+          <div className={styles.listContainer}>
+            <EventList
+              events={pastEvents}
+              type={"past"}
+              placeholderWhenEmpty={
+                <div className={styles.empty_text}>Es gab noch keine...</div>
+              }
+              showAllBets={showAllBets}
+            />
+          </div>
+        </>
+      )}
     </NavPage>
   );
 }

@@ -8,17 +8,23 @@ import { GamesContext } from "../contexts/GameContext";
 import { Game } from "../models/Game";
 import useFetch from "../useFetch";
 import { PulseLoader } from "react-spinners";
+import { useCache } from "../contexts/CacheContext";
 
 export function HomePage() {
   const logout = useLogout();
   const navigate = useNavigateParams();
   const user = useCurrentUser();
+  const { setCache } = useCache();
 
   const { loading, data } = useFetch({
     fetchFunction: Game.fetchAll,
     cache: { enabled: true, ttl: 60 * 2 },
     key: "games",
   });
+
+  if (data) {
+    data.forEach((game: Game) => setCache(`game${game.id}`, game, 2 * 60));
+  }
 
   const logoutClick = useCallback(() => {
     logout().then();
