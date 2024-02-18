@@ -16,7 +16,7 @@ export function HomePage() {
   const user = useCurrentUser();
   const { setCache } = useCache();
 
-  const { loading, data } = useFetch({
+  const { loading, data } = useFetch<Game[]>({
     fetchFunction: Game.fetchAll,
     cache: { enabled: true, ttl: 60 * 2 },
     key: "games",
