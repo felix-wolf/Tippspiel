@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { BettingGameItem, BettingGameItemGame } from "./BettingGameItem";
 import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes";
 import { User } from "../../../models/user/User";
 import { Game } from "../../../models/Game";
 import { List } from "../../design/List";
+import { GamesContext } from "../../../contexts/GameContext";
 
 type BettingGamesProps = {
   user?: User;
@@ -15,36 +16,35 @@ export function BettingGameList({
   show_games,
 }: BettingGamesProps) {
   const [games, setGames] = useState<BettingGameItemGame[]>([]);
-
+  const allGames = useContext(GamesContext);
   const useNavigate = useNavigateParams();
 
   useEffect(() => {
     if (user) {
-      Game.fetchAll()
-        .then((games) => {
-          const converted_games: BettingGameItemGame[] = games.map((game) => {
-            return { game: game, type: "real" };
-          });
-          const user_games = converted_games.filter((game) => {
-            return game?.game?.players.find((player) => player.id == user.id);
-          });
-          const other_games = converted_games.filter((game) => {
-            return !user_games.find(
-              (user_game) => user_game?.game?.id == game?.game?.id,
-            );
-          });
-          const add_item: BettingGameItemGame = {
-            type: "add",
-          };
+      const convertedGames: BettingGameItemGame[] | undefined = allGames?.map(
+        (game) => {
+          return { game: game, type: "real" };
+        },
+      );
+      let filteredGames = convertedGames?.filter((game) => {
+        return (
+          (show_games == "user" &&
+            game?.game?.players.find((player) => player.id == user.id)) ||
+          (show_games == "other" &&
+            !game?.game?.players.find((player) => player.id == user.id))
+        );
+      });
+      const add_item: BettingGameItemGame = {
+        type: "add",
+      };
 
-          let total_items = show_games == "user" ? user_games : other_games;
-          if (show_games == "user")
-            total_items = [add_item].concat(total_items);
-          setGames(total_items);
-        })
-        .catch((error) => console.log("ERROR IN PROMISE", error));
+      if (filteredGames) {
+        if (show_games == "user")
+          filteredGames = [add_item].concat(filteredGames);
+        setGames(filteredGames);
+      }
     }
-  }, [user]);
+  }, [user, allGames]);
 
   const onCreate = useCallback(
     (name: string, password?: string, discipline?: string) => {
