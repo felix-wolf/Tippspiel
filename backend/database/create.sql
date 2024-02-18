@@ -50,6 +50,8 @@ CREATE TABLE if not EXISTS GamePlayers (
     player_id NOT NULL,
     game_id NOT NULL,
     PRIMARY KEY (player_id, game_id)
+    FOREIGN KEY(player_id) REFERENCES Users(id) ON DELETE CASCADE
+    FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
 );
 
 CREATE TABLE if not EXISTS EventTypes (
