@@ -5,6 +5,7 @@
   justify-content: start;
   align-items: center;
   grid-gap: var(--grid-s);
+  min-width: 300px;
 
   border: solid 2px var(--fg-primary);
   border-radius: var(--corner-s);
