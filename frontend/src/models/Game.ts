@@ -37,6 +37,10 @@ export class Game {
     );
   }
 
+  public static buildCacheKey(gameId: string) {
+    return `game${gameId}`;
+  }
+
   public static fetchOne(id: string): Promise<Game> {
     return NetworkHelper.fetchOne(`/api/game?id=${id}`, Game.fromJson);
   }

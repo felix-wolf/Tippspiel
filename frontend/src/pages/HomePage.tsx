@@ -7,8 +7,8 @@ import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
 import { GamesContext } from "../contexts/GameContext";
 import { Game } from "../models/Game";
 import useFetch from "../useFetch";
-import { PulseLoader } from "react-spinners";
 import { useCache } from "../contexts/CacheContext";
+import Loader from "../components/design/Loader";
 
 export function HomePage() {
   const logout = useLogout();
@@ -23,7 +23,9 @@ export function HomePage() {
   });
 
   if (data) {
-    data.forEach((game: Game) => setCache(`game${game.id}`, game, 2 * 60));
+    data.forEach((game: Game) =>
+      setCache(Game.buildCacheKey(game.id), game, 2 * 60),
+    );
   }
 
   const logoutClick = useCallback(() => {
@@ -34,7 +36,7 @@ export function HomePage() {
   return (
     <div className={styles.container}>
       <h3>Hallo {user?.name}!</h3>
-      {loading && <PulseLoader />}
+      {loading && <Loader />}
       {!loading && (
         <GamesContext.Provider value={data}>
           <BettingGameList user={user} show_games={"user"} />

@@ -9,15 +9,40 @@ import { URLResultUploader } from "../components/domain/URLResultUploader";
 import { ManualResultUploader } from "../components/domain/ManualResultUploader";
 import { BetList } from "../components/domain/lists/BetList";
 import { ResultsList } from "../components/domain/lists/ResultsList";
+import useFetch from "../useFetch";
+import Loader from "../components/design/Loader";
 
 export function ViewBetsPage() {
-  const [event, setEvent] = useState<Event | undefined>(undefined);
-  const [game, setGame] = useState<Game>();
   const { event_id, game_id } = usePathParams(SiteRoutes.ViewBets);
-
-  const [isCreator, setIsCreator] = useState(false);
   const [resultsUploaded, setResultsUploaded] = useState(false);
   const user = useCurrentUser();
+
+  const gameFetchValues = useFetch<Game>({
+    key: Game.buildCacheKey(game_id),
+    fetchFunction: Game.fetchOne,
+    functionArgs: game_id,
+    cache: { enabled: true, ttl: 2 * 60 },
+  });
+
+  const eventFetchValues = useFetch<Event>({
+    key: Event.buildCacheKey(event_id),
+    fetchFunction: Event.fetchOne,
+    functionArgs: event_id,
+    cache: { enabled: true, ttl: 2 * 60 },
+  });
+
+  const { data: game } = gameFetchValues;
+
+  const {
+    data: event,
+    refetch: refetchEvent,
+    loading: eventLoading,
+  } = eventFetchValues;
+  let isCreator = false;
+
+  if (game) {
+    isCreator = game.creator?.id == user?.id;
+  }
 
   useEffect(() => {
     const predictionsWithResults: Prediction[] =
@@ -28,41 +53,30 @@ export function ViewBetsPage() {
     setResultsUploaded(predictionsWithResults.length > 0);
   }, [event]);
 
-  useEffect(() => {
-    Game.fetchOne(game_id)
-      .then((game) => {
-        setGame(game);
-        setIsCreator(game.creator?.id == user?.id);
-        Event.fetchOne(event_id)
-          .then((event) => {
-            setEvent(event);
-          })
-          .catch((error) => {
-            console.log("error fetching event", error);
-          });
-      })
-      .catch((error) => console.log(error));
-  }, [event_id, game_id]);
-
   return (
-    <NavPage title={"Tipps von Event: " + event?.name}>
-      {isCreator && game?.discipline?.resultUrl && (
-        <URLResultUploader
-          resultUrl={game.discipline.resultUrl}
-          resultsUploaded={resultsUploaded}
-          event={event}
-          onEventUpdated={(e) => setEvent(e)}
-        />
+    <>
+      {eventLoading && <Loader />}
+      {!eventLoading && (
+        <NavPage title={"Tipps von Event: " + event?.name}>
+          {isCreator && game?.discipline?.resultUrl && (
+            <URLResultUploader
+              resultUrl={game.discipline.resultUrl}
+              resultsUploaded={resultsUploaded}
+              event={event}
+              onEventUpdated={() => refetchEvent(true)}
+            />
+          )}
+          {isCreator && !game?.discipline?.resultUrl && (
+            <ManualResultUploader
+              resultsUploaded={resultsUploaded}
+              event={event}
+              onEventUpdated={() => refetchEvent(true)}
+            />
+          )}
+          {event && event.results.length != 0 && <ResultsList event={event} />}
+          {game && event && <BetList game={game} event={event} />}
+        </NavPage>
       )}
-      {isCreator && !game?.discipline?.resultUrl && (
-        <ManualResultUploader
-          resultsUploaded={resultsUploaded}
-          event={event}
-          onEventUpdated={(e) => setEvent(e)}
-        />
-      )}
-      {event && event.results.length != 0 && <ResultsList event={event} />}
-      {game && event && <BetList game={game} event={event} />}
-    </NavPage>
+    </>
   );
 }

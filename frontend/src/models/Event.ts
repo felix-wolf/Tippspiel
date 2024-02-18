@@ -70,6 +70,14 @@ export class Event {
     return this._datetime;
   }
 
+  public static buildCacheKey(eventId: string) {
+    return `event${eventId}`;
+  }
+
+  public static buildListCacheKey(gameId: string) {
+    return `events${gameId}`;
+  }
+
   public static fromJson(json: any) {
     return new Event(
       json["id"],

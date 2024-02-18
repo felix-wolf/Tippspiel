@@ -6,7 +6,7 @@ import { Prediction } from "../models/Bet";
 import { useNavigate } from "react-router-dom";
 import { BetPlacer } from "../components/domain/BetPlacer";
 import useFetch from "../useFetch";
-import { PulseLoader } from "react-spinners";
+import Loader from "../components/design/Loader";
 
 export function PlaceBetPage() {
   const { event_id } = usePathParams(SiteRoutes.PlaceBet);
@@ -14,7 +14,7 @@ export function PlaceBetPage() {
   const navigate = useNavigate();
 
   const { data, loading } = useFetch<Event>({
-    key: `event${event_id}`,
+    key: Event.buildCacheKey(event_id),
     cache: { enabled: true, ttl: 2 * 60 },
     fetchFunction: Event.fetchOne,
     functionArgs: event_id,
@@ -36,7 +36,7 @@ export function PlaceBetPage() {
 
   return (
     <>
-      {loading && <PulseLoader />}
+      {loading && <Loader />}
       {!loading && (
         <NavPage title={"TIPPEN FÜR: " + data?.name}>
           {data && <BetPlacer user={user} onSave={onSave} event={data} />}

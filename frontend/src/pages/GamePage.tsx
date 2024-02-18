@@ -14,8 +14,8 @@ import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
 import { EventEditorModal } from "../components/domain/EventEditorModal";
 import useFetch from "../useFetch";
-import { PulseLoader } from "react-spinners";
 import { useCache } from "../contexts/CacheContext";
+import Loader from "../components/design/Loader";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -30,14 +30,14 @@ export function GamePage() {
     date_a.datetime.getTime() - date_b.datetime.getTime();
 
   const gameFetchValues = useFetch<Game>({
-    key: `game${game_id}`,
+    key: Game.buildCacheKey(game_id),
     fetchFunction: Game.fetchOne,
     functionArgs: game_id,
     cache: { enabled: true, ttl: 2 * 60 },
   });
 
   const eventsFetchValues = useFetch<Event[]>({
-    key: `events${game_id}`,
+    key: Event.buildListCacheKey(game_id),
     fetchFunction: Event.fetchAll,
     functionArgs: game_id,
     cache: { enabled: true, ttl: 2 * 60 },
@@ -114,7 +114,7 @@ export function GamePage() {
 
   return (
     <NavPage title={game?.name}>
-      {gameLoading && <PulseLoader />}
+      {gameLoading && <Loader />}
       {!gameLoading && (
         <>
           <EventEditorModal
@@ -168,7 +168,7 @@ export function GamePage() {
           types={game?.discipline.eventTypes ?? []}
         />
       )}
-      {eventsLoading && <PulseLoader />}
+      {eventsLoading && <Loader />}
       {!eventsLoading && (
         <>
           <div className={styles.listContainer}>
