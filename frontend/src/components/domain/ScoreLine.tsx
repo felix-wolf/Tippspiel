@@ -53,7 +53,6 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
       tooltip: {
         callbacks: {
           title: function (tooltipItem: any) {
-            // Customize the title text (e.g., add 'Custom Title: ')
             return tooltipItem[0].label;
           },
           label: function (tooltipItem: any) {
@@ -81,7 +80,7 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
       .concat(
         sortedEvents.filter((e) => e.hasResults()).map((e) => e.name) ?? [],
       )
-      .slice(-(numEvents + 1));
+      .slice(-numEvents);
   }, [sortedEvents, numEvents]);
 
   const buildDatasets = useCallback((): {
@@ -107,7 +106,7 @@ export function ScoreLine({ game, events }: ScoreLineProps) {
                     .reduce((acc, curr) => acc + curr, 0);
                 }),
             )
-            .slice(-(numEvents + 1)), // add 1 for start event
+            .slice(-numEvents),
           borderColor: player.color,
           backgroundColor: player.color + "80",
         };
