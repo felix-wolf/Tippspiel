@@ -4,7 +4,7 @@ import { useCache } from "./contexts/CacheContext";
 type useFetchProps<T = any> = {
   key: string;
   initialEnabled?: boolean;
-  cache: {
+  cache?: {
     enabled?: boolean;
     ttl?: number;
   };
@@ -15,7 +15,7 @@ type useFetchProps<T = any> = {
 export default function useFetch<T = any>({
   key,
   initialEnabled = true,
-  cache,
+  cache = { enabled: true, ttl: 3 * 60 },
   fetchFunction,
   functionArgs = undefined,
 }: useFetchProps) {

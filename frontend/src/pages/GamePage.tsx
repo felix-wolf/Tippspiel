@@ -33,14 +33,12 @@ export function GamePage() {
     key: Game.buildCacheKey(game_id),
     fetchFunction: Game.fetchOne,
     functionArgs: game_id,
-    cache: { enabled: true, ttl: 2 * 60 },
   });
 
   const eventsFetchValues = useFetch<Event[]>({
     key: Event.buildListCacheKey(game_id),
     fetchFunction: Event.fetchAll,
     functionArgs: game_id,
-    cache: { enabled: true, ttl: 2 * 60 },
   });
 
   const {

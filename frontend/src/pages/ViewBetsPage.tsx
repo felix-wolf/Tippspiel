@@ -21,14 +21,12 @@ export function ViewBetsPage() {
     key: Game.buildCacheKey(game_id),
     fetchFunction: Game.fetchOne,
     functionArgs: game_id,
-    cache: { enabled: true, ttl: 2 * 60 },
   });
 
   const eventFetchValues = useFetch<Event>({
     key: Event.buildCacheKey(event_id),
     fetchFunction: Event.fetchOne,
     functionArgs: event_id,
-    cache: { enabled: true, ttl: 2 * 60 },
   });
 
   const { data: game } = gameFetchValues;
