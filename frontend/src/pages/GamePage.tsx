@@ -14,7 +14,6 @@ import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
 import { EventEditorModal } from "../components/domain/EventEditorModal";
 import useFetch from "../useFetch";
-import { useCache } from "../contexts/CacheContext";
 import Loader from "../components/design/Loader";
 
 export function GamePage() {
@@ -23,7 +22,6 @@ export function GamePage() {
   const [isCreator, setIsCreator] = useState(false);
   const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
   const user = useCurrentUser();
-  const { setCache } = useCache();
   const [editorKey, setEditorKey] = useState(0);
 
   const sortEvents = (date_a: Event, date_b: Event): number =>
@@ -66,11 +64,6 @@ export function GamePage() {
       )
       .sort(sortEvents);
   }
-
-  pastEvents
-    .slice(0, 3)
-    .concat(upcomingEvents.slice(0, 3))
-    .forEach((event) => setCache(`event${event.id}`, event, 2 * 60));
 
   useEffect(() => {
     if (!user) {

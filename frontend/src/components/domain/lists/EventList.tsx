@@ -3,7 +3,6 @@ import { Event } from "../../../models/Event";
 import TableList from "../../design/TableList";
 import { Button } from "../../design/Button";
 import styles from "./EventList.module.scss";
-import { Bet } from "../../../models/Bet";
 import { useCurrentUser } from "../../../models/user/UserContext";
 import edit from "../../../assets/icons/edit.svg";
 import { Utils } from "../../../utils";
@@ -26,7 +25,7 @@ type EventListType = {
   datetime: string;
   betsButton: undefined;
   editButton: undefined;
-  userBet?: Bet;
+  hasBetForUser: boolean;
   hasBets: boolean;
   type: EventTimeType;
 };
@@ -56,7 +55,7 @@ export function EventList({
   const getTitle = useCallback(
     (event: EventListType): string => {
       if (type == "upcoming") {
-        if (event.userBet) {
+        if (event.hasBetForUser) {
           return "bearbeiten";
         } else {
           return "machen";
@@ -71,7 +70,7 @@ export function EventList({
   function getButtonType(
     event: EventListType,
   ): "positive" | "negative" | "neutral" {
-    if (event.userBet) return "neutral";
+    if (event.hasBetForUser) return "neutral";
     if (event.hasBets && type == "past") return "neutral";
     return "positive";
   }
@@ -94,8 +93,10 @@ export function EventList({
               datetime: dateToString(item.datetime),
               betsButton: undefined,
               editButton: undefined,
-              userBet: item.bets.find((bet) => bet.user_id == user?.id),
-              hasBets: item.bets.length > 0,
+              hasBetForUser:
+                item.hasBetsForUsers().find((user_id) => user_id == user?.id) !=
+                undefined,
+              hasBets: item.hasBetsForUsers().length > 0,
               type: item.datetime < new Date() ? "past" : "upcoming",
             };
           })}

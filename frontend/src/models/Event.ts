@@ -18,7 +18,7 @@ export class Event {
   private readonly _eventType: EventType;
   private readonly _bets: Bet[];
   private readonly _datetime: Date;
-
+  private readonly _hasBetsForUsers: string[];
   private readonly _results: Result[];
   constructor(
     id: string,
@@ -28,6 +28,7 @@ export class Event {
     datetime: string,
     bets: Bet[],
     results: Result[],
+    hasBetsForUsers: string[],
   ) {
     this._id = id;
     this._name = name;
@@ -35,11 +36,16 @@ export class Event {
     this._eventType = type;
     this._bets = bets;
     this._results = results;
+    this._hasBetsForUsers = hasBetsForUsers;
     this._datetime = new Date(Date.parse(datetime.replace(/-/g, "/")));
   }
 
   public hasResults(): boolean {
     return this.bets.some((bet) => bet.hasResults());
+  }
+
+  public hasBetsForUsers(): string[] {
+    return this._hasBetsForUsers;
   }
 
   get id(): string {
@@ -79,6 +85,7 @@ export class Event {
   }
 
   public static fromJson(json: any) {
+    console.log(json);
     return new Event(
       json["id"],
       json["name"],
@@ -87,12 +94,13 @@ export class Event {
       json["datetime"],
       json["bets"].map((bet: any) => Bet.fromJson(bet)),
       json["results"].map((result: any) => Result.fromJson(result)),
+      json["has_bets_for_users"],
     );
   }
 
   public static fetchOne(event_id: string): Promise<Event> {
     return NetworkHelper.fetchOne(
-      `/api/event?event_id=${event_id}`,
+      `/api/event?event_id=${event_id}&full_object=1`,
       Event.fromJson,
     );
   }

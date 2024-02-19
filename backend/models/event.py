@@ -9,8 +9,8 @@ import utils
 
 class Event:
 
-    def __init__(self, name: str, game_id: str, event_type: EventType, dt: datetime, event_id: str = None,
-                 bets: [Bet] = None, results: [Result] = None):
+    def __init__(self, name: str, game_id: str, event_type: EventType, dt: datetime,
+                 event_id: str = None, bets: [Bet] = None, results: [Result] = None):
         if bets is None:
             bets = []
         if results is None:
@@ -19,6 +19,7 @@ class Event:
             self.id = event_id
         else:
             self.id = utils.generate_id([name, game_id, event_type.id, dt])
+        self.has_bets_for_users = []
         self.name = name
         self.game_id = game_id
         self.event_type = event_type
@@ -40,7 +41,8 @@ class Event:
             "event_type": self.event_type.to_dict(),
             "datetime": Event.datetime_to_string(self.dt),
             "bets": bets,
-            "results": results
+            "results": results,
+            "has_bets_for_users": self.has_bets_for_users
 
         }
 
@@ -121,7 +123,7 @@ class Event:
             return [], "Disziplin nicht auswertbar"
 
     @staticmethod
-    def get_by_id(event_id):
+    def get_by_id(event_id, get_full_object: bool = False):
         sql = f"SELECT e.* FROM VIEW_{db_manager.TABLE_EVENTS} e WHERE e.id = ?"
         event_data = db_manager.query_one(sql, [event_id])
         if not event_data:
@@ -131,13 +133,18 @@ class Event:
         event = Event.from_dict(event_data, event_type)
         # get bets
         sql = f"SELECT b.* FROM {db_manager.TABLE_BETS} b WHERE b.event_id = ?"
-        bets_data = db_manager.query(sql, [event.id])
-        if bets_data:
-            bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
-            event.bets = bets
-        # get results
-        results = Result.get_by_event_id(event.id)
-        event.results = results
+        bets = None
+        if event.dt < datetime.now():
+            bets_data = db_manager.query(sql, [event.id])
+            if bets_data:
+                bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
+                event.has_bets_for_users = [bet.user_id for bet in bets]
+        if get_full_object:
+            if bets:
+                event.bets = bets
+            # get results
+            results = Result.get_by_event_id(event.id)
+            event.results = results
         return event
 
     @staticmethod
@@ -145,9 +152,11 @@ class Event:
         if e_dict:
             try:
                 return Event(
-                    event_id=e_dict['id'], name=e_dict['name'],
-                    game_id=e_dict['game_id'], event_type=event_type,
-                    dt=datetime.strptime(e_dict['datetime'], "%Y-%m-%d %H:%M:%S")
+                    event_id=e_dict['id'],
+                    name=e_dict['name'],
+                    game_id=e_dict['game_id'],
+                    event_type=event_type,
+                    dt=datetime.strptime(e_dict['datetime'], "%Y-%m-%d %H:%M:%S"),
                 )
             except KeyError as e:
                 print("Could not instantiate event with given values:", e_dict, e)
@@ -156,14 +165,14 @@ class Event:
             return None
 
     @staticmethod
-    def get_all_by_game_id(game_id):
+    def get_all_by_game_id(game_id: str, get_full_objects: bool):
         sql = f"""
             SELECT e.* FROM {db_manager.TABLE_EVENTS} e
             WHERE e.game_id = ?
             """
         res = db_manager.query(sql, [game_id])
         if res:
-            return [Event.get_by_id(e["id"]) for e in res]
+            return [Event.get_by_id(e["id"], get_full_objects) for e in res]
         return []
 
     def update(self, name: str, event_type_id: str, dt: datetime):
@@ -189,7 +198,8 @@ class Event:
                     datetime = ?
                     WHERE id = ?
                 """
-            success = db_manager.execute(sql, [self.name, self.event_type.id, Event.datetime_to_string(self.dt), self.id])
+            success = db_manager.execute(sql,
+                                         [self.name, self.event_type.id, Event.datetime_to_string(self.dt), self.id])
         return success
 
     @staticmethod

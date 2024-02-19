@@ -159,10 +159,11 @@ def handle_event_request():
     if request.method == "GET":
         game_id = request.args.get("game_id")
         event_id = request.args.get("event_id")
+        full_object = bool(request.args.get("full_object", default=0))
         if game_id:
-            return [event.to_dict() for event in Event.get_all_by_game_id(game_id)]
+            return [event.to_dict() for event in Event.get_all_by_game_id(game_id, full_object)]
         if event_id:
-            return Event.get_by_id(event_id).to_dict()
+            return Event.get_by_id(event_id, full_object).to_dict()
         else:
             return "No game_id specified", 404
     elif request.method == "POST":
