@@ -29,7 +29,6 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
           console.log("USER CURRENTLY NOT NULL, ALREADY LOGGED IN?");
         User.login(name, password)
           .then((user) => {
-            console.log(user);
             setCurrent(user);
             user.saveToStorage();
             resolve();

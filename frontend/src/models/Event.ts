@@ -40,10 +40,6 @@ export class Event {
     this._datetime = new Date(Date.parse(datetime.replace(/-/g, "/")));
   }
 
-  public hasResults(): boolean {
-    return this.bets.some((bet) => bet.hasResults());
-  }
-
   public hasBetsForUsers(): string[] {
     return this._hasBetsForUsers;
   }
@@ -85,7 +81,6 @@ export class Event {
   }
 
   public static fromJson(json: any) {
-    console.log(json);
     return new Event(
       json["id"],
       json["name"],

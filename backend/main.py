@@ -10,6 +10,7 @@ from models.country import Country
 from models.game import Game
 from models.event import Event
 from models.discipline import Discipline
+from models.score_event import ScoreEvent
 import chrome_manager
 
 app = Flask(__name__)
@@ -235,6 +236,16 @@ def process_results():
         else:
             return error, 500
 
+
+@app.route("/api/scores", methods=["GET"])
+@login_required
+def handle_scores_request():
+    if request.method == "GET":
+        game_id = request.args.get("game_id", None)
+        if not game_id:
+            return "Game_id not specified", 400
+        score_events = ScoreEvent.get_all_by_game_id(game_id)
+        return [e.to_dict() for e in score_events]
 
 def hash_password(pw):
     salt = app.config["SALT"]

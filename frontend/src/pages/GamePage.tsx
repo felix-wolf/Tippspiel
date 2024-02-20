@@ -15,6 +15,7 @@ import { ScoreList } from "../components/domain/lists/ScoreList";
 import { EventEditorModal } from "../components/domain/EventEditorModal";
 import useFetch from "../useFetch";
 import Loader from "../components/design/Loader";
+import { EventScore } from "../models/EventScore";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -39,6 +40,12 @@ export function GamePage() {
     functionArgs: game_id,
   });
 
+  const scoreFetchValues = useFetch<EventScore[]>({
+    key: EventScore.buildCacheKey(game_id),
+    fetchFunction: EventScore.fetchAll,
+    functionArgs: game_id,
+  });
+
   const {
     data: events,
     refetch: refetchEvents,
@@ -50,6 +57,8 @@ export function GamePage() {
     refetch: refetchGame,
     loading: gameLoading,
   } = gameFetchValues;
+
+  const { data: scores } = scoreFetchValues;
 
   let upcomingEvents: Event[] = [];
   let pastEvents: Event[] = [];
@@ -123,7 +132,7 @@ export function GamePage() {
             event={upcomingEvents.find((e) => e.id == eventEditId)}
           />
           <div className={styles.punkte}>
-            {pastEvents.length > 0 && user && game && (
+            {pastEvents.length > 0 && user && game && scores && (
               <>
                 <Toggler
                   items={[
@@ -138,13 +147,13 @@ export function GamePage() {
                               refetchEvents(true);
                             }}
                           />
-                          <ScoreLine game={game} events={[...pastEvents]} />
+                          <ScoreLine game={game} scores={scores} />
                         </>
                       ),
                     },
                     {
                       name: "Tabelle",
-                      component: <ScoreList game={game} events={pastEvents} />,
+                      component: <ScoreList game={game} scores={scores} />,
                     },
                   ]}
                 />

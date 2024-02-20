@@ -1,8 +1,6 @@
 import TableList from "../../design/TableList";
 import { Game } from "../../../models/Game";
-import { Event } from "../../../models/Event";
-import { Bet } from "../../../models/Bet";
-import { User } from "../../../models/user/User";
+import { EventScore } from "../../../models/EventScore";
 
 type ScoreListItem = {
   place: number;
@@ -10,17 +8,13 @@ type ScoreListItem = {
   score: number;
 };
 
-type ScoreListProps = { game: Game; events: Event[] };
+type ScoreListProps = { game: Game; scores: EventScore[] };
 
-export function ScoreList({ game, events }: ScoreListProps) {
-  function getPlayerBet(player: User, bets: Bet[]): Bet | undefined {
-    return bets.find((bet) => bet.user_id == player.id);
-  }
-
+export function ScoreList({ game, scores }: ScoreListProps) {
   const items: ScoreListItem[] = game.players
     .map((player) => {
-      const score = events
-        .map((e) => getPlayerBet(player, e.bets)?.score ?? 0)
+      const score = scores
+        .map((e) => e.scores.get(player.id) ?? 0)
         .reduce((acc, curr) => (acc ?? 0) + (curr ?? 0));
       return { name: player.name, score: score };
     })
