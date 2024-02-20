@@ -134,11 +134,10 @@ class Event:
         # get bets
         sql = f"SELECT b.* FROM {db_manager.TABLE_BETS} b WHERE b.event_id = ?"
         bets = None
-        if event.dt < datetime.now():
-            bets_data = db_manager.query(sql, [event.id])
-            if bets_data:
-                bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
-                event.has_bets_for_users = [bet.user_id for bet in bets]
+        bets_data = db_manager.query(sql, [event.id])
+        if bets_data:
+            bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
+            event.has_bets_for_users = [bet.user_id for bet in bets]
         if get_full_object:
             if bets:
                 event.bets = bets
