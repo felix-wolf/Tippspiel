@@ -95,9 +95,14 @@ CREATE VIEW if not EXISTS VIEW_Results AS
     LEFT JOIN
         Countries c ON r.object_id = c.code;
 
+
 CREATE VIEW if not EXISTS VIEW_Events AS
-    SELECT e.*, g.discipline FROM Events e, Games g
-    WHERE e.game_id = g.id;
+    SELECT e.*, g.discipline, COUNT(b.id) > 0 as has_bets
+    FROM Events e
+    INNER JOIN Games g on e.game_id = g.id
+    LEFT JOIN Bets b ON e.id = b.event_id
+    GROUP BY e.id
+    ORDER BY e.datetime;
 
 
 CREATE TABLE if not EXISTS Bets (
