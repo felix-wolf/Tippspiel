@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { useCache } from "./contexts/CacheContext";
 
-type useFetchProps<T = any> = {
+type useFetchProps<T> = {
   key: string;
   initialEnabled?: boolean;
   cache?: {
     enabled?: boolean;
     ttl?: number;
   };
-  fetchFunction: (args: any) => Promise<T>;
-  functionArgs?: any;
+  func: (...args: any[]) => Promise<T>;
+  args: any[];
 };
 
-export default function useFetch<T = any>({
+export default function useFetch<T>({
   key,
   initialEnabled = true,
   cache = { enabled: true, ttl: 3 * 60 },
-  fetchFunction,
-  functionArgs = undefined,
-}: useFetchProps) {
+  func,
+  args,
+}: useFetchProps<T>) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<T | undefined>();
   const [error, setError] = useState<any>();
@@ -33,7 +33,7 @@ export default function useFetch<T = any>({
       setError(undefined);
       return;
     }
-    fetchFunction(functionArgs)
+    func(...args)
       .then((data) => {
         setData(data as T);
         if (cache?.enabled) setCache(key, data, cache.ttl);

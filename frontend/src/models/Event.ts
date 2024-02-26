@@ -124,11 +124,19 @@ export class Event {
     );
   }
 
-  public static fetchAll(game_id: string): Promise<Event[]> {
+  public static fetchAll(
+    game_id: string,
+    page: number,
+    past: boolean = false,
+  ): Promise<Event[]> {
     const builder = (res: any): Event[] => {
       return res.map((e: any) => Event.fromJson(e));
     };
-    return NetworkHelper.fetchAll(`/api/event?game_id=${game_id}`, builder);
+    let url = `/api/event?game_id=${game_id}&past=${past}`;
+    if (page) {
+      url += `&page=${page}`;
+    }
+    return NetworkHelper.fetchAll(url, builder);
   }
 
   public processUrlForResults(url: string): Promise<Event> {
@@ -180,7 +188,7 @@ export class Event {
       day: "numeric",
     };
     const date_string = datetime.toLocaleTimeString("de-DE", options);
-    return NetworkHelper.post<Event>("/api/event", Event.fromJson, {
+    return NetworkHelper.update<Event>("/api/event", Event.fromJson, {
       event_id: event_id,
       name: name,
       game_id: game_id,

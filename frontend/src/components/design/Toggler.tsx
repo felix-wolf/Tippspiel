@@ -2,15 +2,17 @@ import React, { useState } from "react";
 import { Button } from "./Button";
 import styles from "./Toggler.module.scss";
 
-type TogglerItem = {
+export type TogglerItem = {
   name: string;
   component?: React.ReactNode;
+  highlight?: boolean;
 };
 
 type TogglerProps = {
   height?: "normal" | "small";
   initialIndex?: number;
   items: TogglerItem[];
+  highlight?: boolean;
   didSelect?: (item: TogglerItem) => void;
 };
 
@@ -26,10 +28,12 @@ export function Toggler({
   height = "normal",
   initialIndex = 0,
   didSelect: _didSelect,
+  highlight = true,
 }: TogglerProps) {
   const [itemIndex, setItemIndex] = useState(initialIndex);
 
   function getCorners(index: number, length: number): boolean[] {
+    if (length == 1) return [true, true, true, true];
     if (index == 0) return [false, false, true, true];
     if (index == length - 1) return [true, true, false, false];
     return [false, false, false, false];
@@ -49,7 +53,13 @@ export function Toggler({
                 }
               }}
               title={item.name}
-              type={itemIndex == index ? "neutral" : "positive"}
+              type={
+                item.highlight == false
+                  ? "neutral"
+                  : highlight && itemIndex == index
+                    ? "neutral"
+                    : "positive"
+              }
               width={"flexible"}
               height={height == "small" ? "flexible" : "fixed"}
               rounded={getCorners(index, items.length)}

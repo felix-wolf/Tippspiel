@@ -39,6 +39,22 @@ export class NetworkHelper {
     return this.executeFetch(url, builder, b);
   }
 
+  public static update<Type>(
+    url: string,
+    builder: (object: any) => Type,
+    body: Object,
+  ): Promise<Type> {
+    const b: Object = {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    };
+    return this.executeFetch(url, builder, b);
+  }
+
   public static execute<Type>(
     url: string,
     builder: (object: any) => Type,

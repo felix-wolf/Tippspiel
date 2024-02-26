@@ -23,7 +23,6 @@ export function EventEditorModal({
   const onCreate = useCallback(
     (type: EventType, name: string, datetime: Date): Promise<boolean> => {
       return new Promise((resolve, reject) => {
-        console.log(event?.game_id);
         if (event?.game_id) {
           Event.update(event.id, name, event.game_id, type, datetime)
             .then((_) => {

@@ -154,35 +154,60 @@ def join_game():
     return "Tippspiel oder spieler konnte nicht gefunden werden!", 400
 
 
-@app.route("/api/event", methods=["GET", "POST"])
+@app.route("/api/event", methods=["GET", "POST", "PUT"])
 @login_required
 def handle_event_request():
+    """
+    Requests events from the database. Request can be GET for fetch, PUT for update and POST for create.
+    Events are sorted by their time.
+
+    GET
+    :url_param game_id - str:   OPTIONAL parameter of the game events belong to.
+                                Specify to get all events for single game
+    :url_param event_id - str:  OPTIONAL id of single event to fetch.
+                                Specify to get only single event
+    :url_param page - int:  OPTIONAL page number to fetch. Single Page holds 5 events.
+                            Specify to get only subset of events.
+
+    :return:
+    """
     if request.method == "GET":
         game_id = request.args.get("game_id")
         event_id = request.args.get("event_id")
-        full_object = bool(request.args.get("full_object", default=0))
+        page_num = request.args.get("page", type=int)
+        past = request.args.get("past") == "true"
+        full_object = request.args.get("full_object") == "true"
         if game_id:
-            return [event.to_dict() for event in Event.get_all_by_game_id(game_id, full_object)]
+            return [event.to_dict() for event in Event.get_all_by_game_id(game_id, full_object, page_num, past)]
         if event_id:
             return Event.get_by_id(event_id, full_object).to_dict()
         else:
             return "No game_id specified", 404
     elif request.method == "POST":
-        user_id = current_user.get_id()
-        if not user_id:
-            return "not logged in", 400
         name = request.get_json().get("name")
         game_id = request.get_json().get("game_id")
         event_type = request.get_json().get("type")
         dt = request.get_json().get("datetime")
+        if not name or not game_id or not event_type or not dt:
+            return "Required params not spefified", 500
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
-        event_id = request.get_json().get("event_id")
-        if event_id:
-            success = Event.get_by_id(event_id).update(name, event_type, dt)
-        else:
-            success, event_id = Event.create(name, game_id, event_type, dt)
+        success, event_id, event = Event.create(name, game_id, event_type, dt)
         if success:
-            return Event.get_by_id(event_id).to_dict()
+            return event.to_dict()
+        else:
+            return "Fehler...", 500
+    elif request.method == "PUT":
+        name = request.get_json().get("name")
+        game_id = request.get_json().get("game_id")
+        event_type = request.get_json().get("type")
+        dt = request.get_json().get("datetime")
+        event_id = request.get_json().get("event_id")
+        if not name or not game_id or not event_type or not dt or not event_id:
+            return "Required params not spefified", 500
+        dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
+        success, event = Event.get_by_id(event_id).update(name, event_type, dt)
+        if success:
+            return event.to_dict()
         else:
             return "Fehler...", 500
 
@@ -246,6 +271,7 @@ def handle_scores_request():
             return "Game_id not specified", 400
         score_events = ScoreEvent.get_all_by_game_id(game_id)
         return [e.to_dict() for e in score_events]
+
 
 def hash_password(pw):
     salt = app.config["SALT"]

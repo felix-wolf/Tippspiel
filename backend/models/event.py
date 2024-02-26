@@ -164,11 +164,14 @@ class Event:
             return None
 
     @staticmethod
-    def get_all_by_game_id(game_id: str, get_full_objects: bool):
+    def get_all_by_game_id(game_id: str, get_full_objects: bool, page: int = None, past: bool = False):
         sql = f"""
             SELECT e.* FROM {db_manager.TABLE_EVENTS} e
-            WHERE e.game_id = ?
+            WHERE e.game_id = ? and e.datetime {"<" if past else ">"} datetime('now')
+            ORDER BY e.datetime DESC
             """
+        if page:
+            sql += f"LIMIT {(page - 1) * 5}, {5}"
         res = db_manager.query(sql, [game_id])
         if res:
             return [Event.get_by_id(e["id"], get_full_objects) for e in res]
@@ -199,13 +202,14 @@ class Event:
                 """
             success = db_manager.execute(sql,
                                          [self.name, self.event_type.id, Event.datetime_to_string(self.dt), self.id])
-        return success
+        return success, self
 
     @staticmethod
     def create(name: str, game_id: str, event_type_id: str, dt: datetime):
         # insert event
         event_type = EventType.get_by_id(event_type_id)
         if not event_type:
-            return False, None
+            return False, None, None
         event = Event(name=name, game_id=game_id, event_type=event_type, dt=dt)
-        return event.save_to_db()
+        success, event_id = event.save_to_db()
+        return success, event_id, event

@@ -17,7 +17,8 @@ export function HomePage() {
   const { setCache } = useCache();
 
   const { loading, data } = useFetch<Game[]>({
-    fetchFunction: Game.fetchAll,
+    func: Game.fetchAll,
+    args: [],
     key: "games",
   });
 

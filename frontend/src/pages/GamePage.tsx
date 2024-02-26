@@ -12,7 +12,6 @@ import { ScoreLine } from "../components/domain/ScoreLine";
 import { ColorUpdater } from "../components/domain/ColorUpdater";
 import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
-import { EventEditorModal } from "../components/domain/EventEditorModal";
 import useFetch from "../useFetch";
 import Loader from "../components/design/Loader";
 import { EventScore } from "../models/EventScore";
@@ -21,36 +20,20 @@ export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
   const navigate = useNavigateParams();
   const [isCreator, setIsCreator] = useState(false);
-  const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
   const user = useCurrentUser();
-  const [editorKey, setEditorKey] = useState(0);
-
-  const sortEvents = (date_a: Event, date_b: Event): number =>
-    date_a.datetime.getTime() - date_b.datetime.getTime();
+  const [refetch, setRefetch] = useState(false);
 
   const gameFetchValues = useFetch<Game>({
     key: Game.buildCacheKey(game_id),
-    fetchFunction: Game.fetchOne,
-    functionArgs: game_id,
-  });
-
-  const eventsFetchValues = useFetch<Event[]>({
-    key: Event.buildListCacheKey(game_id),
-    fetchFunction: Event.fetchAll,
-    functionArgs: game_id,
+    func: Game.fetchOne,
+    args: [game_id],
   });
 
   const scoreFetchValues = useFetch<EventScore[]>({
     key: EventScore.buildCacheKey(game_id),
-    fetchFunction: EventScore.fetchAll,
-    functionArgs: game_id,
+    func: EventScore.fetchAll,
+    args: [game_id],
   });
-
-  const {
-    data: events,
-    refetch: refetchEvents,
-    loading: eventsLoading,
-  } = eventsFetchValues;
 
   const {
     data: game,
@@ -59,20 +42,6 @@ export function GamePage() {
   } = gameFetchValues;
 
   const { data: scores } = scoreFetchValues;
-
-  let upcomingEvents: Event[] = [];
-  let pastEvents: Event[] = [];
-
-  if (events) {
-    pastEvents = events
-      .filter((event) => event.datetime < new Date())
-      .sort((a, b) => sortEvents(a, b) * -1);
-    upcomingEvents = events
-      .filter(
-        (event) => !pastEvents?.find((past_event) => past_event.id == event.id),
-      )
-      .sort(sortEvents);
-  }
 
   useEffect(() => {
     if (!user) {
@@ -86,7 +55,9 @@ export function GamePage() {
       return new Promise((resolve, reject) => {
         Event.create(name, game_id, type, datetime)
           .then((_) => {
-            refetchEvents(true);
+            setRefetch(true);
+            setRefetch(false);
+            //refetchEvents(true);
             resolve(true);
           })
           .catch((error) => {
@@ -117,22 +88,8 @@ export function GamePage() {
       {gameLoading && <Loader />}
       {!gameLoading && (
         <>
-          <EventEditorModal
-            key={editorKey}
-            isOpened={eventEditId != undefined}
-            types={game?.discipline.eventTypes}
-            onEdited={() => {
-              setEventEditId(undefined);
-              refetchEvents(true);
-            }}
-            onCancel={() => {
-              setEventEditId(undefined);
-              setEditorKey(editorKey + 1);
-            }}
-            event={upcomingEvents.find((e) => e.id == eventEditId)}
-          />
           <div className={styles.punkte}>
-            {pastEvents.length > 0 && user && game && scores && (
+            {user && game && scores && (
               <>
                 <Toggler
                   items={[
@@ -144,7 +101,7 @@ export function GamePage() {
                             user={user}
                             onUpdated={() => {
                               refetchGame(true);
-                              refetchEvents(true);
+                              //refetchEvents(true);
                             }}
                           />
                           <ScoreLine game={game} scores={scores} />
@@ -168,12 +125,12 @@ export function GamePage() {
           types={game?.discipline.eventTypes ?? []}
         />
       )}
-      {eventsLoading && <Loader />}
-      {!eventsLoading && (
+      {game && (
         <>
           <div className={styles.listContainer}>
             <EventList
-              events={upcomingEvents}
+              game={game}
+              refresh={refetch}
               type={"upcoming"}
               placeholderWhenEmpty={
                 <div className={styles.empty_text}>
@@ -182,12 +139,12 @@ export function GamePage() {
               }
               showUserBets={showUserBets}
               isCreator={isCreator}
-              onEdit={(event_id) => setEventEditId(event_id)}
             />
           </div>
           <div className={styles.listContainer}>
             <EventList
-              events={pastEvents}
+              refresh={refetch}
+              game={game}
               type={"past"}
               placeholderWhenEmpty={
                 <div className={styles.empty_text}>Es gab noch keine...</div>
