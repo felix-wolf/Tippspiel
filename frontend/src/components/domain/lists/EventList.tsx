@@ -64,7 +64,7 @@ export function EventList({
     initialEnabled: false,
   });
 
-  const { data: events, refetch } = eventsFetchValues;
+  const { data: events, refetch, loading } = eventsFetchValues;
 
   if (refresh) refetch(true);
 
@@ -206,7 +206,7 @@ export function EventList({
                 ),
             }}
           />
-          {type == "past" && (
+          {type == "past" && !loading && (
             <Toggler
               highlight={false}
               items={getPageItems(currPage)}
