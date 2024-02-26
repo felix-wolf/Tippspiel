@@ -167,7 +167,7 @@ class Event:
     def get_all_by_game_id(game_id: str, get_full_objects: bool, page: int = None, past: bool = False):
         sql = f"""
             SELECT e.* FROM {db_manager.TABLE_EVENTS} e
-            WHERE e.game_id = ? and e.datetime {"<" if past else ">"} datetime('now')
+            WHERE e.game_id = ? and e.datetime {"<" if past else ">"} datetime('now', 'localtime')
             ORDER BY e.datetime DESC
             """
         if page:
