@@ -1,6 +1,7 @@
 from database import db_manager
 from models.base_model import BaseModel
 
+
 class Country(BaseModel):
 
     def __init__(self, code, name, flag):

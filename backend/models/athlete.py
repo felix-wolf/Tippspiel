@@ -67,6 +67,14 @@ class Athlete(BaseModel):
         res = db_manager.query(sql)
         return [Athlete.from_dict(a) for a in res]
 
+    @staticmethod
+    def find_by_id(athlete_id):
+        sql = f"SELECT * FROM {db_manager.TABLE_ATHLETES} a WHERE a.id = ?"
+        res = db_manager.query_one(sql, [athlete_id])
+        if not res:
+            return None
+        return Athlete.from_dict(res)
+
     def save_to_db(self):
         sql = f"""
             INSERT OR IGNORE INTO {db_manager.TABLE_ATHLETES} 

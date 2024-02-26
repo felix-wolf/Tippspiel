@@ -5,6 +5,7 @@ from models.bet import Bet
 from models.event_type import EventType
 from models.result import Result
 import utils
+from disciplines import biathlon
 
 
 class Event:
@@ -90,35 +91,8 @@ class Event:
 
     def preprocess_results_for_discipline(self, url, chrome_manager):
         if self.event_type.discipline_id == "biathlon":
-            df = chrome_manager.read_table_into_df(url, "thistable")
-            if df is None:
-                return [], "Fehler beim Parsen der Webseite"
-
-            if self.event_type.betting_on == "countries":
-                if "Rank" not in df or "Country" not in df or "Nation" not in df:
-                    return [], "Webseite enthält nicht die erwarteten Daten"
-                df = df[["Rank", "Country", "Nation"]]
-                df = df[df["Country"].notnull()]
-                results = []
-                for r in df.values:
-                    r = Result(event_id=self.id, place=utils.validate_int(r[0]), object_id=r[2], object_name=r[1])
-                    results.append(r)
-                return results, None
-
-            elif self.event_type.betting_on == "athletes":
-                if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
-                    return [], "Webseite enthält nicht die erwarteten Daten"
-                df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
-                results = []
-                for r in df.values:
-                    a_id = utils.generate_id([r[1], r[2], r[3]])
-                    a_name = " ".join([r[2], r[1]])
-                    r = Result(event_id=self.id, place=utils.validate_int(r[0]), object_id=a_id, object_name=a_name)
-                    results.append(r)
-                return results, None
-
-            else:
-                return [], "Wettobjekt nicht bekannt"
+            results, error = biathlon.preprocess_results(url, self, chrome_manager)
+            return results, error
         else:
             return [], "Disziplin nicht auswertbar"
 
