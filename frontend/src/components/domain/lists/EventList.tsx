@@ -10,6 +10,8 @@ import useFetch from "../../../useFetch";
 import { EventEditorModal } from "../EventEditorModal";
 import { Game } from "../../../models/Game";
 import { Toggler, TogglerItem } from "../../design/Toggler";
+import { EventCreator } from "../EventCreator";
+import { EventType } from "../../../models/user/EventType";
 
 export type EventTimeType = "upcoming" | "past";
 
@@ -31,7 +33,6 @@ type EventListProps = {
   showUserBets?: (event_id: string) => void;
   showAllBets?: (event_id: string) => void;
   isCreator?: boolean;
-  refresh: boolean;
 };
 
 export function EventList({
@@ -41,7 +42,6 @@ export function EventList({
   showUserBets: _showUserBets,
   showAllBets: _showAllBets,
   isCreator = false,
-  refresh,
 }: EventListProps) {
   const user = useCurrentUser();
   const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
@@ -58,15 +58,13 @@ export function EventList({
   }, [currPage]);
 
   const eventsFetchValues = useFetch<Event[]>({
-    key: Event.buildListCacheKey(game.id) + currPage,
+    key: Event.buildListCacheKey(game.id) + currPage + type,
     func: Event.fetchAll,
     args: fetchArgs,
     initialEnabled: false,
   });
 
   const { data: events, refetch, loading } = eventsFetchValues;
-
-  if (refresh) refetch(true);
 
   if (type == "upcoming")
     events?.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
@@ -96,6 +94,23 @@ export function EventList({
     }
     return items;
   }
+
+  const onCreate = useCallback(
+    (type: EventType, name: string, datetime: Date): Promise<boolean> => {
+      return new Promise((resolve, reject) => {
+        Event.create(name, game.id, type, datetime)
+          .then((_) => {
+            refetch(true);
+            resolve(true);
+          })
+          .catch((error) => {
+            reject();
+            console.log(error);
+          });
+      });
+    },
+    [game],
+  );
 
   function getDoubleDigit(digits: string): string {
     if (digits.length == 2) return digits;
@@ -127,6 +142,13 @@ export function EventList({
 
   return (
     <>
+      {" "}
+      {isCreator && (
+        <EventCreator
+          onClick={onCreate}
+          types={game?.discipline.eventTypes ?? []}
+        />
+      )}
       <EventEditorModal
         key={editorKey}
         isOpened={eventEditId != undefined}

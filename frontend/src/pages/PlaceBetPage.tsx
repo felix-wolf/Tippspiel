@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { BetPlacer } from "../components/domain/BetPlacer";
 import useFetch from "../useFetch";
 import Loader from "../components/design/Loader";
+import { useCache } from "../contexts/CacheContext";
 
 export function PlaceBetPage() {
-  const { event_id } = usePathParams(SiteRoutes.PlaceBet);
+  const { event_id, game_id } = usePathParams(SiteRoutes.PlaceBet);
   const user = useCurrentUser();
   const navigate = useNavigate();
-
+  const { deleteCache } = useCache();
   const { data, loading } = useFetch<Event>({
     key: Event.buildCacheKey(event_id),
     cache: { enabled: true, ttl: 2 * 60 },
@@ -28,6 +29,7 @@ export function PlaceBetPage() {
     if (predictions.length == 5 && user?.id) {
       Event.saveBets(event_id, user.id, predictions as Predictions)
         .then((_) => {
+          deleteCache(Event.buildListCacheKey(game_id) + "1upcoming");
           navigate(-1);
         })
         .catch((error) => console.log("error saving bets", error));
