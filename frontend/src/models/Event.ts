@@ -95,7 +95,7 @@ export class Event {
 
   public static fetchOne(event_id: string): Promise<Event> {
     return NetworkHelper.fetchOne(
-      `/api/event?event_id=${event_id}&full_object=1`,
+      `/api/event?event_id=${event_id}&full_object=true`,
       Event.fromJson,
     );
   }
