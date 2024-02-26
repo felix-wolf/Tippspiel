@@ -19,14 +19,14 @@ export function ViewBetsPage() {
 
   const gameFetchValues = useFetch<Game>({
     key: Game.buildCacheKey(game_id),
-    fetchFunction: Game.fetchOne,
-    functionArgs: game_id,
+    func: Game.fetchOne,
+    args: [game_id],
   });
 
   const eventFetchValues = useFetch<Event>({
     key: Event.buildCacheKey(event_id),
-    fetchFunction: Event.fetchOne,
-    functionArgs: event_id,
+    func: Event.fetchOne,
+    args: [event_id],
   });
 
   const { data: game } = gameFetchValues;

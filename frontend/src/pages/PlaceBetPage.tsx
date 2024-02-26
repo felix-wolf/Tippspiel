@@ -16,8 +16,8 @@ export function PlaceBetPage() {
   const { data, loading } = useFetch<Event>({
     key: Event.buildCacheKey(event_id),
     cache: { enabled: true, ttl: 2 * 60 },
-    fetchFunction: Event.fetchOne,
-    functionArgs: event_id,
+    func: Event.fetchOne,
+    args: [event_id],
   });
 
   if (data && data?.datetime < new Date()) {
