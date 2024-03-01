@@ -97,7 +97,7 @@ class Event:
             return [], "Disziplin nicht auswertbar"
 
     @staticmethod
-    def get_by_id(event_id, get_full_object: bool = False):
+    def get_by_id(event_id, get_full_object: bool = True):
         sql = f"SELECT e.* FROM VIEW_{db_manager.TABLE_EVENTS} e WHERE e.id = ?"
         event_data = db_manager.query_one(sql, [event_id])
         if not event_data:

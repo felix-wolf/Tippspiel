@@ -15,7 +15,7 @@ def getObjectName(object_type: str, object_id: str) -> str:
 
 def confirm_with_user(user_id: str, event_id: str, objects: [], object_type: str) -> bool:
     print("Are you sure you want to save this?")
-    print(f"Event: {Event.get_by_id(event_id).name}")
+    print(f"Event: {Event.get_by_id(event_id, get_full_object=False).name}")
     print(f"User: {User.get_by_id(user_id).name}")
     for index, object_id in enumerate(objects):
         print(f"Platz {index + 1}: {getObjectName(object_type, object_id)}")
