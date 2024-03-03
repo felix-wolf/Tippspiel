@@ -6,6 +6,7 @@ from models.event_type import EventType
 from models.result import Result
 import utils
 from disciplines import biathlon
+from zoneinfo import ZoneInfo
 
 
 class Event:
@@ -139,9 +140,10 @@ class Event:
 
     @staticmethod
     def get_all_by_game_id(game_id: str, get_full_objects: bool, page: int = None, past: bool = False):
+        now = datetime.now(ZoneInfo("Europe/Berlin"))
         sql = f"""
             SELECT e.* FROM {db_manager.TABLE_EVENTS} e
-            WHERE e.game_id = ? and e.datetime {"<" if past else ">"} datetime('now', 'localtime')
+            WHERE e.game_id = ? and e.datetime {"<" if past else ">"} {now.strftime("%Y-%m-%d %H:%M:%S")}
             ORDER BY e.datetime DESC
             """
         if page:
