@@ -143,7 +143,7 @@ class Event:
         now = datetime.now(ZoneInfo("Europe/Berlin"))
         sql = f"""
             SELECT e.* FROM {db_manager.TABLE_EVENTS} e
-            WHERE e.game_id = ? and e.datetime {"<" if past else ">"} {now.strftime("%Y-%m-%d %H:%M:%S")}
+            WHERE e.game_id = ? and e.datetime {"<" if past else ">"} '{now.strftime("%Y-%m-%d %H:%M:%S")}'
             ORDER BY e.datetime DESC
             """
         if page:
