@@ -123,7 +123,7 @@ export function EventList({
         if (event.hasBetForUser) {
           return "bearbeiten";
         } else {
-          return "machen";
+          return "platzieren";
         }
       } else {
         return "ansehen";
