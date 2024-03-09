@@ -70,6 +70,7 @@ class Event:
             event.bets = []
             return event
         event = event.getResults()
+        # check for unprocessed events
         unprocessed_bets = [bet for bet in event.bets if not bet.score]
         if len(unprocessed_bets) > 0 and event.results is not None:
             success, error = event.process_results(event.results)
@@ -153,7 +154,7 @@ class Event:
     def process_results(self, results: [Result]):
         """
         Process results by comparing predicted with actual places, calculating score and saving to database.
-        :param results: list of dicts with AT LEAST "id" as object_id and "place" as actual_place
+        :param results: list if result objects
         :return: True and None if successful, False and error string if error
         """
         # delete existing results
@@ -170,6 +171,7 @@ class Event:
         return True, None
 
     def preprocess_results_for_discipline(self, url, chrome_manager):
+        """Retrieves results from urls for disciplines where url result fetching is implemented"""
         if self.event_type.discipline_id == "biathlon":
             results, error = biathlon.preprocess_results(url, self, chrome_manager)
             return results, error
@@ -177,6 +179,7 @@ class Event:
             return [], "Disziplin nicht auswertbar"
 
     def update(self, name: str, event_type_id: str, dt: datetime):
+        """Update an event's information. If the type is changed, all bets are deleted :("""
         success = True
         if name != self.name:
             self.name = name
