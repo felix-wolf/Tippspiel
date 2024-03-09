@@ -72,7 +72,7 @@ class Event:
         event = event.getResults()
         # check for unprocessed events
         unprocessed_bets = [bet for bet in event.bets if not bet.score]
-        if len(unprocessed_bets) > 0 and event.results is not None:
+        if len(unprocessed_bets) > 0 and (event.results is not None or event.results != []):
             success, error = event.process_results(event.results)
             if not success:
                 return None
