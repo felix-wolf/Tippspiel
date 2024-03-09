@@ -5,7 +5,7 @@ from models.bet import Bet
 
 class ScoreEvent:
 
-    def __init__(self, id: str, game_id: str, name: str, dt: datetime, scores = []):
+    def __init__(self, id: str, game_id: str, name: str, dt: datetime, scores=[]):
         self.id = id
         self.game_id = game_id
         self.name = name

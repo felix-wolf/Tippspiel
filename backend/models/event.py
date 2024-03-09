@@ -55,48 +55,7 @@ class Event:
     @staticmethod
     def string_to_datetime(dt_string):
         return datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
-
-    def save_to_db(self):
-        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime) VALUES (?,?,?,?,?)"
-        success = db_manager.execute(
-            sql, [
-                self.id, self.name, self.game_id,
-                self.event_type.id, Event.datetime_to_string(self.dt)
-            ])
-        return success, self.id
-
-    def save_bet(self, user_id, predictions):
-        bet = Bet.get_by_event_id_user_id(self.id, user_id)
-        if not bet:
-            bet = Bet(user_id, self.id)
-        return bet.update_predictions(predictions), self.id
-
-    def process_results(self, results: [Result]):
-        """
-        Process results by comparing predicted with actual places, calculating score and saving to database.
-        :param results: list of dicts with AT LEAST "id" as object_id and "place" as actual_place
-        :return: True and None if successful, False and error string if error
-        """
-        # delete existing results
-        if not Result.delete_by_event_id(self.id):
-            return False, "Bestehende Ergebnisse konnten nicht gelöscht werden"
-        for result in results:
-            success, result_id = result.save_to_db()
-            if not success:
-                return False, "Ergebnisse konnten nicht gespeichert werden"
-
-        for bet in self.bets:
-            if not bet.calc_score(results):
-                return False, "Ergebnisse konnten nicht gespeichert werden"
-        return True, None
-
-    def preprocess_results_for_discipline(self, url, chrome_manager):
-        if self.event_type.discipline_id == "biathlon":
-            results, error = biathlon.preprocess_results(url, self, chrome_manager)
-            return results, error
-        else:
-            return [], "Disziplin nicht auswertbar"
-
+    
     @staticmethod
     def get_by_id(event_id, get_full_object: bool = True):
         sql = f"SELECT e.* FROM VIEW_{db_manager.TABLE_EVENTS} e WHERE e.id = ?"
@@ -106,19 +65,17 @@ class Event:
         # get event_type
         event_type = EventType.get_by_id(event_data["event_type_id"])
         event = Event.from_dict(event_data, event_type)
-        # get bets
-        sql = f"SELECT b.* FROM {db_manager.TABLE_BETS} b WHERE b.event_id = ?"
-        bets = None
-        bets_data = db_manager.query(sql, [event.id])
-        if bets_data:
-            bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
-            event.has_bets_for_users = [bet.user_id for bet in bets]
-        if get_full_object:
-            if bets:
-                event.bets = bets
-            # get results
-            results = Result.get_by_event_id(event.id)
-            event.results = results
+        event = event.getBets()
+        if not get_full_object:
+            event.bets = []
+            return event
+        event = event.getResults()
+        unprocessed_bets = [bet for bet in event.bets if not bet.score]
+        if len(unprocessed_bets) > 0 and event.results is not None:
+            success, error = event.process_results(event.results)
+            if not success:
+                return None
+            event = event.getBets()
         return event
 
     @staticmethod
@@ -153,6 +110,72 @@ class Event:
             return [Event.get_by_id(e["id"], get_full_objects) for e in res]
         return []
 
+    @staticmethod
+    def create(name: str, game_id: str, event_type_id: str, dt: datetime):
+        # insert event
+        event_type = EventType.get_by_id(event_type_id)
+        if not event_type:
+            return False, None, None
+        event = Event(name=name, game_id=game_id, event_type=event_type, dt=dt)
+        success, event_id = event.save_to_db()
+        return success, event_id, event
+
+    def save_to_db(self):
+        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime) VALUES (?,?,?,?,?)"
+        success = db_manager.execute(
+            sql, [
+                self.id, self.name, self.game_id,
+                self.event_type.id, Event.datetime_to_string(self.dt)
+            ])
+        return success, self.id
+
+    def save_bet(self, user_id, predictions):
+        bet = Bet.get_by_event_id_user_id(self.id, user_id)
+        if not bet:
+            bet = Bet(user_id, self.id)
+        return bet.update_predictions(predictions), self.id
+
+    def getResults(self):
+        # get results
+        results = Result.get_by_event_id(self.id)
+        self.results = results
+        return self
+
+    def getBets(self):
+        # get bets
+        sql = f"SELECT b.* FROM {db_manager.TABLE_BETS} b WHERE b.event_id = ?"
+        bets_data = db_manager.query(sql, [self.id])
+        if bets_data:
+            self.bets = [Bet.get_by_event_id_user_id(b["event_id"], b["user_id"]) for b in bets_data]
+            self.has_bets_for_users = [bet.user_id for bet in self.bets]
+        return self
+
+    def process_results(self, results: [Result]):
+        """
+        Process results by comparing predicted with actual places, calculating score and saving to database.
+        :param results: list of dicts with AT LEAST "id" as object_id and "place" as actual_place
+        :return: True and None if successful, False and error string if error
+        """
+        # delete existing results
+        if not Result.delete_by_event_id(self.id):
+            return False, "Bestehende Ergebnisse konnten nicht gelöscht werden"
+        for result in results:
+            success, result_id = result.save_to_db()
+            if not success:
+                return False, "Ergebnisse konnten nicht gespeichert werden"
+
+        for bet in self.bets:
+            if not bet.calc_score(results):
+                return False, "Ergebnisse konnten nicht gespeichert werden"
+        return True, None
+
+    def preprocess_results_for_discipline(self, url, chrome_manager):
+        if self.event_type.discipline_id == "biathlon":
+            results, error = biathlon.preprocess_results(url, self, chrome_manager)
+            return results, error
+        else:
+            return [], "Disziplin nicht auswertbar"
+
     def update(self, name: str, event_type_id: str, dt: datetime):
         success = True
         if name != self.name:
@@ -179,13 +202,3 @@ class Event:
             success = db_manager.execute(sql,
                                          [self.name, self.event_type.id, Event.datetime_to_string(self.dt), self.id])
         return success, self
-
-    @staticmethod
-    def create(name: str, game_id: str, event_type_id: str, dt: datetime):
-        # insert event
-        event_type = EventType.get_by_id(event_type_id)
-        if not event_type:
-            return False, None, None
-        event = Event(name=name, game_id=game_id, event_type=event_type, dt=dt)
-        success, event_id = event.save_to_db()
-        return success, event_id, event
