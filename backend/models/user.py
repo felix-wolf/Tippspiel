@@ -43,6 +43,8 @@ class User:
 
     @staticmethod
     def from_dict(user_dict):
+        if user_dict is None:
+            return None
         color = None
         if "color" in user_dict:
             color = user_dict["color"]

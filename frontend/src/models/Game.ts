@@ -1,6 +1,7 @@
 import { User } from "./user/User";
 import { NetworkHelper } from "./NetworkHelper";
 import { Discipline } from "./user/Discipline";
+import { Event } from "./Event.ts";
 
 export class Game {
   private readonly _id: string;
@@ -72,6 +73,16 @@ export class Game {
     return NetworkHelper.execute<Game>(
       `/api/game/join?user_id=${user_id}&game_id=${game_id}${pw}`,
       Game.fromJson,
+    );
+  }
+
+  public processUrlForEvents(url: string): Promise<Event[]> {
+    const builder = (res: any): Event[] => {
+      return res.map((event: any) => Event.fromJson(event));
+    };
+    return NetworkHelper.fetchAll(
+      `/api/game/events?game_id=${this._id}&url=${encodeURIComponent(url)}`,
+      builder,
     );
   }
 

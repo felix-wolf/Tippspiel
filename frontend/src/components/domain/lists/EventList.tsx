@@ -147,6 +147,7 @@ export function EventList({
         <EventCreator
           onClick={onCreate}
           types={game?.discipline.eventTypes ?? []}
+          game={game}
         />
       )}
       <EventEditorModal

@@ -1,33 +1,32 @@
-import abc
+from abc import ABC, abstractmethod
 
 
-class BaseModel:
-    __metaclass__ = abc.ABCMeta
+class BaseModel(ABC):
 
-    @abc.abstractmethod
+    @abstractmethod
     def save_to_db(self):
         return
 
-    @abc.abstractmethod
+    @abstractmethod
     def to_dict(self):
         return
 
     @staticmethod
-    @abc.abstractmethod
+    @abstractmethod
     def from_dict(**kwargs):
         return
 
     @staticmethod
-    @abc.abstractmethod
+    @abstractmethod
     def get_by_id(i):
         return
 
     @staticmethod
-    @abc.abstractmethod
+    @abstractmethod
     def get_all():
         return
 
     @staticmethod
-    @abc.abstractmethod
+    @abstractmethod
     def load_into_db():
         return

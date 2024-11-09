@@ -5,7 +5,6 @@ from models.bet import Bet
 from models.event_type import EventType
 from models.result import Result
 import utils
-from disciplines import biathlon
 from zoneinfo import ZoneInfo
 
 
@@ -172,11 +171,15 @@ class Event:
 
     def preprocess_results_for_discipline(self, url, chrome_manager):
         """Retrieves results from urls for disciplines where url result fetching is implemented"""
+        #TODO CHANGE THIS
         if self.event_type.discipline_id == "biathlon":
             results, error = biathlon.preprocess_results(url, self, chrome_manager)
             return results, error
         else:
             return [], "Disziplin nicht auswertbar"
+
+    def preprocess_events_url_for_discipline(self):
+        pass
 
     def update(self, name: str, event_type_id: str, dt: datetime):
         """Update an event's information. If the type is changed, all bets are deleted :("""

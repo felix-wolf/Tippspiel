@@ -7,22 +7,28 @@ import styles from "./EventCreator.module.scss";
 import { EventType } from "../../models/user/EventType";
 import { Event } from "../../models/Event";
 import { Utils } from "../../utils";
+import { URLEventImporter } from "./URLEventImporter.tsx";
+import { Game } from "../../models/Game.ts";
 
 type EventCreatorProps = {
   onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
   types: EventType[] | undefined;
   event?: Event;
+  game?: Game;
 };
 
 export function EventCreator({
   onClick: _onClick,
   types,
   event,
+  game,
 }: EventCreatorProps) {
-  const [creating, setCreating] = useState(false);
+  const [creatingSingleEvent, setCreatingSingleEvent] = useState(false);
+  const [importingEvents, setImportingEvents] = useState(false);
   const [name, setName] = useState("");
   const [time, setTime] = useState("09:00");
   const [date, setDate] = useState(new Date());
+  const [saveButtonText, setSaveButtonText] = useState("Erstellen");
 
   const options: DropDownOption[] | undefined = types?.map((type) => {
     return { id: type.id, label: type.display_name };
@@ -33,21 +39,22 @@ export function EventCreator({
 
   useEffect(() => {
     if (event) {
-      setCreating(true);
+      setCreatingSingleEvent(true);
       setTime(Utils.getTimeString(event.datetime));
       setName(event.name);
       setType(event.type);
       setDate(event.datetime);
+      setSaveButtonText("Speichern");
     }
   }, [event, setTime]);
 
-  const onClick = useCallback(() => {
+  const onCreateSingleEventClick = useCallback(() => {
     if (type) {
       const d = date;
       d.setHours(Number(time.split(":")[0]), Number(time.split(":")[1]), 0, 0);
       _onClick(type, name, d)
         .then((success) => {
-          if (success) setCreating(false);
+          if (success) setCreatingSingleEvent(false);
         })
         .catch((error) => console.log(error));
     }
@@ -65,9 +72,18 @@ export function EventCreator({
     return name != "";
   }
 
+  console.log(game, game?.discipline.eventsUrl);
+
   return (
     <>
-      {creating && (
+      {importingEvents && game?.discipline?.eventsUrl && (
+        <URLEventImporter
+          game={game}
+          eventsUrl={game.discipline.eventsUrl}
+          onEventsFetched={() => setImportingEvents(true)}
+        />
+      )}
+      {creatingSingleEvent && (
         <form
           className={styles.form}
           onSubmit={(event) => event.preventDefault()}
@@ -97,22 +113,44 @@ export function EventCreator({
               initialTime={time}
             />
             <Button
-              onClick={onClick}
-              title={"Erstellen"}
+              onClick={onCreateSingleEventClick}
+              title={saveButtonText}
               type={"positive"}
               width={"flexible"}
               isEnabled={buttonEnabled()}
             />
+            {!event && (
+              <div style={{ width: "100px" }}>
+                <Button
+                  onClick={() => setCreatingSingleEvent(false)}
+                  title={"Close"}
+                  type={"negative"}
+                  width={"flexible"}
+                />
+              </div>
+            )}
           </div>
         </form>
       )}
-      {!creating && (
-        <Button
-          onClick={() => setCreating(true)}
-          type={"positive"}
-          title={"Erstell ein neues Event"}
-        />
-      )}
+
+      {
+        <div className={styles.container}>
+          {!creatingSingleEvent && (
+            <Button
+              onClick={() => setCreatingSingleEvent(true)}
+              type={"positive"}
+              title={"Erstell ein neues Event"}
+            />
+          )}
+          {!importingEvents && (
+            <Button
+              onClick={() => setImportingEvents(true)}
+              type={"positive"}
+              title={"Importiere Events"}
+            />
+          )}
+        </div>
+      }
     </>
   );
 }

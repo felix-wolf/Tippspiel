@@ -92,3 +92,7 @@ class Game(BaseModel):
         discipline = Discipline.get_by_id(discipline_name)
         game = Game(name=name, pw_hash=pw_hash, discipline=discipline, creator=creator, players=[creator])
         return game.save_to_db()
+
+    @staticmethod
+    def load_into_db():
+        raise NotImplementedError()

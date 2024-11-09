@@ -11,7 +11,6 @@ from models.game import Game
 from models.event import Event
 from models.discipline import Discipline
 from models.score_event import ScoreEvent
-import chrome_manager
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -248,7 +247,8 @@ def process_results():
                 return "Fehler...", 500
             if not discipline.validate_result_url(url):
                 return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
-            results, error = event.preprocess_results_for_discipline(url, chrome_manager)
+            # TODO: CHANGE THIS
+            results, error = discipline.preprocess_results_for_discipline(url, event)
             if error:
                 return error, 500
 
@@ -260,6 +260,31 @@ def process_results():
             return Event.get_by_id(event_id).to_dict()
         else:
             return error, 500
+
+
+@app.route("/api/game/events")
+@login_required
+def handle_events_import_url():
+    if request.method == "GET":
+        game_id = request.args.get("game_id", None)
+        game = Game.get_by_id(game_id)
+        if not game:
+            return "Game nicht gefunden", 400
+        url = request.args.get("url", None)
+        if url:
+            # check if discipline allows fetching events from url matches events_url
+            discipline = Discipline.get_by_id(game.discipline.id)
+            if not discipline:
+                return "Fehler...", 500
+            if not discipline.validate_events_url(url):
+                return "Disziplin erlaubt keine URL Events / URL falsch", 400
+            results, error = discipline.process_events_url(url)
+            if error:
+                return error, 500
+            return [e.to_dict() for e in results]
+
+        if not results:
+            return "Missing parameters", 400
 
 
 @app.route("/api/scores", methods=["GET"])

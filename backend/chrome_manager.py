@@ -7,12 +7,17 @@ import pandas as pd
 import io
 
 
-def read_table_into_df(url: str, table_element_value: str, table_element_key: str = 'id'):
-    driver = configure_driver()
-    driver.implicitly_wait(60)
-    driver.get(url)
+def read_table_into_df(url: str, table_element_value: str, table_element_key: str = 'id', element=None):
+    if element is None:
+        driver = configure_driver()
+        driver.implicitly_wait(60)
+        driver.get(url)
+        e = driver
+
+    else:
+        e = element
     try:
-        html = io.StringIO(driver.find_element(by=table_element_key, value=table_element_value).get_attribute('outerHTML'))
+        html = io.StringIO(e.find_element(by=table_element_key, value=table_element_value).get_attribute('outerHTML'))
         return pd.read_html(html)[0]
     except NoSuchElementException as exc:
         return None

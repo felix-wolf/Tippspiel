@@ -38,13 +38,6 @@ export function DialogModal({
     }
   }, [isOpened]);
 
-  /*
-  const proceedAndClose = () => {
-    onProceed();
-    onClose();
-  };
-   */
-
   return (
     <dialog
       style={style}
@@ -58,12 +51,6 @@ export function DialogModal({
       <h3>{title}</h3>
 
       {children}
-      {/*
-      <div className={styles.buttons}>
-        <button onClick={proceedAndClose}>Proceed</button>
-        <button onClick={onClose}>Close</button>
-      </div>
-      */}
     </dialog>
   );
 }

@@ -33,7 +33,8 @@ CREATE TABLE if not EXISTS Users (
 CREATE TABLE if not EXISTS Disciplines (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
-    result_url TEXT
+    result_url TEXT,
+    events_url TEXT
 );
 
 CREATE TABLE if not EXISTS Games (
