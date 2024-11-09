@@ -1,6 +1,6 @@
 import styles from "./Checkbox.module.scss";
 import checkbox_checked from "../../assets/icons/checkbox_checked.svg";
-import checkbox_unchecked from "../../assets/icons/checkbox_checked.svg";
+import checkbox_unchecked from "../../assets/icons/checkbox_unchecked.svg";
 
 type CheckboxProps = {
   checked?: boolean;
@@ -8,7 +8,6 @@ type CheckboxProps = {
 };
 
 export function Checkbox({ checked, onChange: _onChange }: CheckboxProps) {
-  console.log(checked);
   return (
     <div
       className={styles.container}
@@ -17,7 +16,7 @@ export function Checkbox({ checked, onChange: _onChange }: CheckboxProps) {
       }}
     >
       {checked && <img alt={"checkbox"} src={checkbox_checked} />}
-      {!checked && <img alt={"checkbox"} src={checkbox_unchecked} />}
+      {checked == false && <img alt={"checkbox"} src={checkbox_unchecked} />}
     </div>
   );
 }

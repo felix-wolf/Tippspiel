@@ -72,6 +72,26 @@ export class Event {
     return this._datetime;
   }
 
+  public processUrlForResults(url: string): Promise<Event> {
+    return NetworkHelper.post("/api/results", Event.fromJson, {
+      url: url,
+      event_id: this._id,
+    });
+  }
+
+  public processManualResults(results: Prediction[]): Promise<Event> {
+    return NetworkHelper.post("/api/results", Event.fromJson, {
+      results: results.map((pred) => {
+        return { place: pred.predicted_place, id: pred.object_id };
+      }),
+      event_id: this._id,
+    });
+  }
+
+  public toJson(): string {
+    return `{"id": "${this._id}"`;
+  }
+
   public static buildCacheKey(eventId: string) {
     return `event${eventId}`;
   }
@@ -137,22 +157,6 @@ export class Event {
       url += `&page=${page}`;
     }
     return NetworkHelper.fetchAll(url, builder);
-  }
-
-  public processUrlForResults(url: string): Promise<Event> {
-    return NetworkHelper.post("/api/results", Event.fromJson, {
-      url: url,
-      event_id: this._id,
-    });
-  }
-
-  public processManualResults(results: Prediction[]): Promise<Event> {
-    return NetworkHelper.post("/api/results", Event.fromJson, {
-      results: results.map((pred) => {
-        return { place: pred.predicted_place, id: pred.object_id };
-      }),
-      event_id: this._id,
-    });
   }
 
   public static create(

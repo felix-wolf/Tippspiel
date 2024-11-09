@@ -7,15 +7,24 @@
   width: 100%;
 }
 
-.row {
-  width: 90%;
-  grid-gap: var(--grid-l);
-  display: flex;
-  align-items: center;
-}
-
 .container {
+  margin-top: var(--grid-m);
+  margin-bottom: var(--grid-l);
   display: flex;
   flex-direction: row;
   grid-gap: var(--grid-s);
+}
+
+.creatorContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  grid-gap: var(--grid-s);
+  justify-content: center;
+  margin-bottom: var(--grid-l);
+}
+
+.creatorItem {
+  max-width: 800px;
+  width: 100%;
 }

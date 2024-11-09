@@ -69,12 +69,6 @@ export function EventList({
   if (type == "upcoming")
     events?.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
 
-  function dateToString(date: Date): string {
-    return `${getDoubleDigit(date.getDate().toString())}.${getDoubleDigit(
-      (date.getMonth() + 1).toString(),
-    )}.${date.getFullYear()} - ${Utils.getTimeString(date)}`;
-  }
-
   function getPageItems(currPage: number): TogglerItem[] {
     let items: TogglerItem[] = [];
     if (currPage == 1) {
@@ -111,11 +105,6 @@ export function EventList({
     },
     [game],
   );
-
-  function getDoubleDigit(digits: string): string {
-    if (digits.length == 2) return digits;
-    return "0" + digits;
-  }
 
   const getTitle = useCallback(
     (event: EventListType): string => {
@@ -177,7 +166,7 @@ export function EventList({
               return {
                 id: item.id,
                 name: item.name,
-                datetime: dateToString(item.datetime),
+                datetime: Utils.dateToString(item.datetime),
                 betsButton: undefined,
                 editButton: undefined,
                 hasBetForUser:

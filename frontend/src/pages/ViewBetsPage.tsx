@@ -46,7 +46,7 @@ export function ViewBetsPage() {
     const predictionsWithResults: Prediction[] =
       event?.bets
         .map((bet) => bet.predictions)
-        .reduce((acc, curr) => acc.concat(curr))
+        .reduce((acc, curr) => acc.concat(curr), [])
         .filter((pred) => pred.actual_place != undefined) ?? [];
     setResultsUploaded(predictionsWithResults.length > 0);
   }, [event]);

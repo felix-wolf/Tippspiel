@@ -12,7 +12,7 @@ import { Line } from "react-chartjs-2";
 import { useCallback, useState } from "react";
 import { Game } from "../../models/Game";
 import styles from "./ScoreLine.module.scss";
-import { Toggler } from "../design/Toggler";
+import { Toggler, TogglerItem } from "../design/Toggler";
 import { EventScore } from "../../models/EventScore";
 import Loader from "../design/Loader";
 
@@ -113,6 +113,20 @@ export function ScoreLine({ game, scores }: ScoreLineProps) {
       },
     };
 
+    function buildTogglerTabs(numEvents: number): TogglerItem[] {
+      const increments = [5, 10, 20, 10, 20];
+      let tabs: TogglerItem[] = [];
+      let i = 5;
+      let incrementsIndex = 0;
+      while (i < numEvents) {
+        tabs = [{ name: i.toString() }].concat(tabs);
+
+        i += increments[incrementsIndex];
+        incrementsIndex += 1;
+      }
+      return tabs.reverse().concat({ name: "Alle" });
+    }
+
     return (
       <div className={styles.container}>
         <Line
@@ -122,9 +136,9 @@ export function ScoreLine({ game, scores }: ScoreLineProps) {
         />
         <div className={styles.center}>
           <Toggler
-            items={[{ name: "5" }, { name: "10" }, { name: "Alle" }]}
+            items={buildTogglerTabs(sortedEvents.length)}
             height={"small"}
-            initialIndex={2}
+            initialIndex={buildTogglerTabs(sortedEvents.length).length - 1}
             didSelect={(item) => {
               setNumEvents(
                 item.name == "Alle" ? sortedEvents.length : parseInt(item.name),

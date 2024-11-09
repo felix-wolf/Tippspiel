@@ -15,7 +15,7 @@ export function ScoreList({ game, scores }: ScoreListProps) {
     .map((player) => {
       const score = scores
         .map((e) => e.scores.get(player.id) ?? 0)
-        .reduce((acc, curr) => (acc ?? 0) + (curr ?? 0));
+        .reduce((acc, curr) => (acc ?? 0) + (curr ?? 0), 0);
       return { name: player.name, score: score };
     })
     .sort((itemA, itemB) => itemB.score - itemA.score)

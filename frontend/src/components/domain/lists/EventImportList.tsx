@@ -1,5 +1,6 @@
 import TableList from "../../design/TableList.tsx";
 import { Checkbox } from "../../design/Checkbox.tsx";
+import { Event } from "../../../models/Event.ts";
 
 type EventImportListProps = {
   events: EventImportListItem[];
@@ -12,6 +13,7 @@ export type EventImportListItem = {
   datetime: string;
   isChecked: boolean;
   index: number;
+  event: Event;
 };
 
 export function EventImportList({
@@ -23,6 +25,7 @@ export function EventImportList({
     events?.length != 0 && (
       <>
         <TableList
+          onClick={(item) => _onChange(item.index, !item.isChecked)}
           items={events}
           headers={{
             importCheckbox: "",
@@ -32,12 +35,7 @@ export function EventImportList({
           }}
           customRenderers={{
             importCheckbox: (it) => (
-              <Checkbox
-                checked={it.isChecked}
-                onChange={() => {
-                  _onChange(it.index, !it.isChecked);
-                }}
-              />
+              <Checkbox checked={it.isChecked} onChange={() => {}} />
             ),
           }}
           displayNextArrow={false}

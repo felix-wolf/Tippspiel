@@ -50,4 +50,12 @@ export class Utils {
     const minutes = this.getDoubleDigit(datetime.getMinutes());
     return `${hours}:${minutes}`;
   }
+
+  public static dateToString(date: Date): string {
+    return `${this.getDoubleDigit(
+      date.getDate().toString(),
+    )}.${this.getDoubleDigit(
+      (date.getMonth() + 1).toString(),
+    )}.${date.getFullYear()} - ${Utils.getTimeString(date)}`;
+  }
 }

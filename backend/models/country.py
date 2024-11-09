@@ -22,6 +22,10 @@ class Country(BaseModel):
                 return None
         else:
             return None
+        
+    @staticmethod
+    def get_by_id(i):
+        raise NotImplementedError
 
     @staticmethod
     def get_all():

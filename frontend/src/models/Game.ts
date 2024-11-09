@@ -86,6 +86,16 @@ export class Game {
     );
   }
 
+  public saveImportedEvents(events: Event[]): Promise<Event[]> {
+    const builder = (res: any): Event[] => {
+      return res.map((event: any) => Event.fromJson(event));
+    };
+    return NetworkHelper.post<Event[]>("/api/event", builder, {
+      events: events.map((event: Event) => event.toJson()),
+      game_id: this._id,
+    });
+  }
+
   get name(): string {
     return this._name;
   }
