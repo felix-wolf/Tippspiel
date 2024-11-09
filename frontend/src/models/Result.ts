@@ -20,6 +20,16 @@ export class Result {
     this._object_name = obejct_name;
   }
 
+  public toJson(): string {
+    return `{
+      "id": "${this.id}",
+      "event_id": "${this.event_id}",
+      "place": "${this.place}",
+      "object_id": "${this.object_id}",
+      "object_name": "${this.object_name}",
+    }`;
+  }
+
   public static fromJson(json: any): Result {
     return new Result(
       json["id"],

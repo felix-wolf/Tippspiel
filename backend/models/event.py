@@ -120,13 +120,24 @@ class Event:
         success, event_id = event.save_to_db()
         return success, event_id, event
 
-    def save_to_db(self):
+    @staticmethod
+    def save_events(events):
+        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime) VALUES (?,?,?,?,?)"
+        success = db_manager.execute_many(
+            sql=sql,
+            params=[(event.id, event.name, event.game_id,
+                event.event_type.id, Event.datetime_to_string(event.dt)) for event in events],
+            )
+        return success
+
+    def save_to_db(self, commit=True):
         sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime) VALUES (?,?,?,?,?)"
         success = db_manager.execute(
             sql, [
                 self.id, self.name, self.game_id,
                 self.event_type.id, Event.datetime_to_string(self.dt)
-            ])
+            ],
+            commit=commit)
         return success, self.id
 
     def save_bet(self, user_id, predictions):
@@ -169,18 +180,6 @@ class Event:
                 return False, "Ergebnisse konnten nicht gespeichert werden"
         return True, None
 
-    def preprocess_results_for_discipline(self, url, chrome_manager):
-        """Retrieves results from urls for disciplines where url result fetching is implemented"""
-        #TODO CHANGE THIS
-        if self.event_type.discipline_id == "biathlon":
-            results, error = biathlon.preprocess_results(url, self, chrome_manager)
-            return results, error
-        else:
-            return [], "Disziplin nicht auswertbar"
-
-    def preprocess_events_url_for_discipline(self):
-        pass
-
     def update(self, name: str, event_type_id: str, dt: datetime):
         """Update an event's information. If the type is changed, all bets are deleted :("""
         success = True
@@ -208,3 +207,9 @@ class Event:
             success = db_manager.execute(sql,
                                          [self.name, self.event_type.id, Event.datetime_to_string(self.dt), self.id])
         return success, self
+    
+    def delete(self):
+        return db_manager.execute(
+            sql=f"DELETE FROM {db_manager.TABLE_EVENTS} WHERE id = ?",
+            params=[self.id]
+            )

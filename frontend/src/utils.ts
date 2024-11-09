@@ -45,10 +45,16 @@ export class Utils {
     return "0" + d;
   }
 
-  public static getTimeString(datetime: Date): string {
+  public static getTimeString(
+    datetime: Date,
+    withSeconds: boolean = false,
+  ): string {
     const hours = this.getDoubleDigit(datetime.getHours());
     const minutes = this.getDoubleDigit(datetime.getMinutes());
-    return `${hours}:${minutes}`;
+    const seconds = this.getDoubleDigit(datetime.getSeconds());
+    return withSeconds
+      ? `${hours}:${minutes}:${seconds}`
+      : `${hours}:${minutes}`;
   }
 
   public static dateToString(date: Date): string {
@@ -57,5 +63,13 @@ export class Utils {
     )}.${this.getDoubleDigit(
       (date.getMonth() + 1).toString(),
     )}.${date.getFullYear()} - ${Utils.getTimeString(date)}`;
+  }
+
+  public static dateToIsoString(date: Date): string {
+    return `${date.getFullYear()}-${this.getDoubleDigit(
+      date.getMonth() + 1,
+    ).toString()}-${this.getDoubleDigit(
+      date.getDate().toString(),
+    )} ${Utils.getTimeString(date, true)}`;
   }
 }

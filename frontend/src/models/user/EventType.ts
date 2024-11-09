@@ -41,6 +41,16 @@ export class EventType {
     return this._betting_on;
   }
 
+  public toJson(): string {
+    return `{
+      "id": "${this.id}",
+      "name": "${this.name}",
+      "discipline_id": "${this.discipline_id}",
+      "betting_on": "${this.betting_on}",
+      "display_name": "${this.display_name}"
+    }`;
+  }
+
   public static fromJson(e: any) {
     return new EventType(
       e["id"],

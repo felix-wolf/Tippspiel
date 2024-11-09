@@ -137,6 +137,7 @@ export function EventList({
           onClick={onCreate}
           types={game?.discipline.eventTypes ?? []}
           game={game}
+          onEventCreated={() => refetch(true)}
         />
       )}
       <EventEditorModal

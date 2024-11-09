@@ -5,17 +5,14 @@ import { Button } from "../design/Button.tsx";
 import { useCallback, useState } from "react";
 import { Game } from "../../models/Game.ts";
 import { Event } from "../../models/Event.ts";
-import {
-  EventImportList,
-  EventImportListItem,
-} from "./lists/EventImportList.tsx";
-import { Utils } from "../../utils.ts";
+import { EventImportList } from "./lists/EventImportList.tsx";
 
 type URLEventImporterProps = {
   eventsUrl: string;
   game: Game;
   onEventsFetched: (events: Event[]) => void;
   onDismiss: () => void;
+  onEventsSaved: () => void;
 };
 
 export function URLEventImporter({
@@ -23,11 +20,12 @@ export function URLEventImporter({
   eventsUrl,
   onEventsFetched: _onEventsFetched,
   onDismiss: _onDismiss,
+  onEventsSaved: _onEventsSaved,
 }: URLEventImporterProps) {
   const [shaking, setShaking] = useState(false);
   const [url, setUrl] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [events, setEvents] = useState<EventImportListItem[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [selectingEventsToImport, setSelectingEventsToImport] = useState(false);
 
   const uploadResults = useCallback(() => {
@@ -36,18 +34,7 @@ export function URLEventImporter({
       game
         .processUrlForEvents(url)
         .then((events) => {
-          setEvents(
-            events.map((event: Event, idx) => {
-              return {
-                name: event.name,
-                datetime: Utils.dateToString(event.datetime),
-                index: idx,
-                isChecked: true,
-                importCheckbox: undefined,
-                event: event,
-              };
-            }),
-          );
+          setEvents(events);
           console.log(events);
           _onEventsFetched(events);
           setSelectingEventsToImport(true);
@@ -61,27 +48,25 @@ export function URLEventImporter({
     }
   }, [game, url]);
 
-  const importSelectedEvents = useCallback(() => {
-    if (game) {
-      setIsProcessing(true);
-      game
-        .saveImportedEvents(
-          events.filter((e) => e.isChecked).map((e) => e.event),
-        )
-        .then((events) => {
-          console.log("yey");
-          console.log(events);
-          _onEventsFetched(events);
-          setSelectingEventsToImport(true);
-        })
-        .catch((_) => {
-          //setNumberOfErrors(numberOfErrors + 1);
-          setIsProcessing(false);
-          setShaking(true);
-          setTimeout(() => setShaking(false), 300);
-        });
-    }
-  }, [game, events]);
+  const importSelectedEvents = useCallback(
+    (events: Event[]) => {
+      if (game) {
+        setIsProcessing(true);
+        game
+          .saveImportedEvents(events)
+          .then(() => {
+            setSelectingEventsToImport(false);
+            _onEventsSaved();
+          })
+          .catch((_) => {
+            //setNumberOfErrors(numberOfErrors + 1);
+            setSelectingEventsToImport(false);
+            _onDismiss();
+          });
+      }
+    },
+    [game],
+  );
 
   return (
     <>
@@ -119,56 +104,11 @@ export function URLEventImporter({
         </form>
       )}
       {selectingEventsToImport && events && events.length > 0 && (
-        <>
-          <div className={styles.buttonContainer}>
-            <Button
-              onClick={() => {
-                setEvents(
-                  events.map((event) => {
-                    return { ...event, isChecked: true }; // Return a new object with updated isChecked
-                  }),
-                );
-              }}
-              title={"Alle auswählen"}
-            />
-            <Button
-              onClick={() => {
-                setEvents(
-                  events.map((event) => {
-                    return { ...event, isChecked: false }; // Return a new object with updated isChecked
-                  }),
-                );
-              }}
-              title={"Alle abwählen"}
-            />
-            <Button
-              onClick={() => importSelectedEvents()}
-              type={"positive"}
-              title={`${
-                events.filter((e) => e.isChecked).length
-              } Events importieren`}
-              isEnabled={events.filter((e) => e.isChecked).length > 0}
-            />
-            <Button
-              onClick={() => importSelectedEvents()}
-              type={"negative"}
-              title={"Abbrechen"}
-            />
-          </div>
-          <EventImportList
-            events={events}
-            onChange={(index, value) => {
-              setEvents(
-                events.map((event, idx) => {
-                  if (idx === index) {
-                    return { ...event, isChecked: value }; // Return a new object with updated isChecked
-                  }
-                  return event; // Return the existing event
-                }),
-              );
-            }}
-          />
-        </>
+        <EventImportList
+          events={events}
+          onDismiss={() => setSelectingEventsToImport(false)}
+          onImportEvents={(events) => importSelectedEvents(events)}
+        />
       )}
     </>
   );

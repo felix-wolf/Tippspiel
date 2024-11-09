@@ -3,12 +3,13 @@ from datetime import datetime
 
 from flask import Flask, request
 from flask_login import *
-
+import json
 from models.user import User
 from models.athlete import Athlete
 from models.country import Country
 from models.game import Game
 from models.event import Event
+from models.event_type import EventType
 from models.discipline import Discipline
 from models.score_event import ScoreEvent
 
@@ -183,6 +184,20 @@ def handle_event_request():
         else:
             return "No game_id specified", 404
     elif request.method == "POST":
+        events = request.get_json().get("events")
+        if events is not None:
+            parsed_events = []
+            for event_string in events:
+                e_dict = json.loads(event_string)
+                event_type = EventType.from_dict(e_dict['event_type'])
+                event = Event.from_dict(e_dict, event_type)
+                parsed_events.append(event)
+            success = Event.save_events(parsed_events)
+            if success:
+                return [e.to_dict() for e in parsed_events]
+            else:
+                return "Fehler beim speichern der Events", 500
+        
         name = request.get_json().get("name")
         game_id = request.get_json().get("game_id")
         event_type = request.get_json().get("type")
@@ -209,6 +224,21 @@ def handle_event_request():
             return event.to_dict()
         else:
             return "Fehler...", 500
+
+
+@app.route("/api/event/delete", methods=["POST"])
+@login_required
+def delete_event():
+    if request.method == "POST":
+        event_id = request.get_json().get("event_id", None)
+        event = Event.get_by_id(event_id)
+        if not event:
+            return "Event konnte nicht gefunden werden", 404
+        success = event.delete()
+        if success:
+            return {"deleted_id": event_id}
+        else:
+            return "Fehler beim Löschen des Events", 500
 
 
 @app.route("/api/event/save_bets", methods=["POST"])
@@ -247,7 +277,6 @@ def process_results():
                 return "Fehler...", 500
             if not discipline.validate_result_url(url):
                 return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
-            # TODO: CHANGE THIS
             results, error = discipline.preprocess_results_for_discipline(url, event)
             if error:
                 return error, 500
@@ -278,7 +307,7 @@ def handle_events_import_url():
                 return "Fehler...", 500
             if not discipline.validate_events_url(url):
                 return "Disziplin erlaubt keine URL Events / URL falsch", 400
-            results, error = discipline.process_events_url(url)
+            results, error = discipline.process_events_url(url, game_id=game.id)
             if error:
                 return error, 500
             return [e.to_dict() for e in results]

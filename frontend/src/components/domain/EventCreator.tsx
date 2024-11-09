@@ -12,6 +12,8 @@ type EventCreatorProps = {
   types: EventType[] | undefined;
   event?: Event;
   game?: Game;
+  onEventCreated?: () => void;
+  onEventDeleted?: () => void;
 };
 
 export function EventCreator({
@@ -19,6 +21,8 @@ export function EventCreator({
   types,
   event,
   game,
+  onEventCreated: _onEventCreated,
+  onEventDeleted: _onEventDeleted,
 }: EventCreatorProps) {
   const [creatingSingleEvent, setCreatingSingleEvent] = useState(false);
   const [importingEvents, setImportingEvents] = useState(false);
@@ -36,6 +40,10 @@ export function EventCreator({
             eventsUrl={game.discipline.eventsUrl}
             onEventsFetched={() => setImportingEvents(true)}
             onDismiss={() => setImportingEvents(false)}
+            onEventsSaved={() => {
+              setImportingEvents(false);
+              if (_onEventCreated) _onEventCreated();
+            }}
           />
         </div>
       )}
@@ -46,6 +54,13 @@ export function EventCreator({
             onClick={_onClick}
             types={types}
             onDismiss={() => setCreatingSingleEvent(false)}
+            onEventSaved={() => {
+              setCreatingSingleEvent(false);
+              if (_onEventCreated) _onEventCreated();
+            }}
+            onEventDeleted={() => {
+              if (_onEventDeleted) _onEventDeleted();
+            }}
           />
         </div>
       )}

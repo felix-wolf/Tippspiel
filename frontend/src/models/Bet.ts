@@ -25,6 +25,18 @@ export class Prediction {
     this._score = score;
   }
 
+  public toJson(): string {
+    return `{
+      "id": "${this.id}",
+      "bet_id": "${this.bet_id}",
+      "predicted_place": "${this.predicted_place}",
+      "object_id": "${this.object_id}",
+      "object_name": "${this.object_name}",
+      "actual_place": "${this.actual_place}",
+      "score": "${this.score}"
+    }`;
+  }
+
   public static fromJson(json: any): Prediction {
     return new Prediction(
       json["id"],
@@ -109,6 +121,17 @@ export class Bet {
 
   get score(): number | undefined {
     return this._score;
+  }
+
+  public toJson(): string {
+    return `{
+      "id": "${this.id}",
+      "user_id": "${this._user_id}",
+      "predictions": [${this._predictions
+        .map((pred) => pred.toJson())
+        .join(",")}],
+      "score": "${this.score}"
+    }`;
   }
 
   public static fromJson(json: any) {

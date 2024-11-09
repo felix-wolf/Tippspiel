@@ -3,16 +3,19 @@ import { TextField } from "../design/TextField.tsx";
 import { DropDown, DropDownOption } from "../design/DropDown.tsx";
 import { DateTimePicker } from "../design/DateTimePicker.tsx";
 import { Button } from "../design/Button.tsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Utils } from "../../utils.ts";
 import { EventType } from "../../models/user/EventType.ts";
 import { Event } from "../../models/Event.ts";
+import { Shakable } from "../design/Shakable.tsx";
 
 type ManualEventCreatorProps = {
   onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
   onDismiss: () => void;
   types: EventType[] | undefined;
   event?: Event;
+  onEventSaved: () => void;
+  onEventDeleted: () => void;
 };
 
 export function ManualEventCreator({
@@ -20,27 +23,22 @@ export function ManualEventCreator({
   types,
   event,
   onDismiss: _onDismiss,
+  onEventSaved: _onEventSaved,
+  onEventDeleted: _onEventDeleted,
 }: ManualEventCreatorProps) {
-  const [name, setName] = useState("");
-  const [time, setTime] = useState("09:00");
-  const [date, setDate] = useState(new Date());
-  const [saveButtonText, setSaveButtonText] = useState("Erstellen");
-
-  useEffect(() => {
-    if (event) {
-      setTime(Utils.getTimeString(event.datetime));
-      setName(event.name);
-      setType(event.type);
-      setDate(event.datetime);
-      setSaveButtonText("Speichern");
-    }
-  }, [event, setTime]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [shaking, setshaking] = useState(false);
+  const [name, setName] = useState(event ? event.name : "");
+  const [time, setTime] = useState(
+    event ? Utils.getTimeString(event.datetime) : "09:00",
+  );
+  const [date, setDate] = useState(event ? event.datetime : new Date());
 
   const options: DropDownOption[] | undefined = types?.map((type) => {
     return { id: type.id, label: type.display_name };
   });
   const [type, setType] = useState<EventType | undefined>(
-    types ? types[0] : undefined,
+    event ? event.type : types ? types[0] : undefined,
   );
 
   const onCreateSingleEventClick = useCallback(() => {
@@ -49,7 +47,7 @@ export function ManualEventCreator({
       d.setHours(Number(time.split(":")[0]), Number(time.split(":")[1]), 0, 0);
       _onClick(type, name, d)
         .then((success) => {
-          if (success) _onDismiss();
+          if (success) _onEventSaved();
         })
         .catch((error) => console.log(error));
     }
@@ -95,7 +93,7 @@ export function ManualEventCreator({
         />
         <Button
           onClick={onCreateSingleEventClick}
-          title={saveButtonText}
+          title={event ? "Speichern" : "Erstellen"}
           type={"positive"}
           width={"flexible"}
           isEnabled={buttonEnabled()}
@@ -111,6 +109,37 @@ export function ManualEventCreator({
           </div>
         )}
       </div>
+      {event && (
+        <div style={{ width: "100px" }}>
+          <Shakable shaking={shaking}>
+            {!confirmDelete && (
+              <Button
+                onClick={() => setConfirmDelete(true)}
+                title={"Löschen"}
+                type={"negative"}
+                width={"flexible"}
+              />
+            )}
+            {confirmDelete && (
+              <Button
+                onClick={() => {
+                  setConfirmDelete(false);
+                  event
+                    .delete()
+                    .then(_onEventDeleted)
+                    .catch(() => {
+                      setshaking(true);
+                      setTimeout(() => setshaking(false), 300);
+                    });
+                }}
+                title={"Wirklich löschen"}
+                type={"negative"}
+                width={"flexible"}
+              />
+            )}
+          </Shakable>
+        </div>
+      )}
     </form>
   );
 }

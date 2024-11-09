@@ -2,6 +2,7 @@ import { NetworkHelper } from "./NetworkHelper";
 import { Bet, Prediction } from "./Bet";
 import { EventType } from "./user/EventType";
 import { Result } from "./Result";
+import { Utils } from "../utils.ts";
 
 export type Predictions = [
   Prediction,
@@ -89,7 +90,22 @@ export class Event {
   }
 
   public toJson(): string {
-    return `{"id": "${this._id}"`;
+    return `{
+      "id": "${this._id}",
+      "name": "${this._name}",
+      "game_id": "${this._game_id}",
+      "datetime": "${Utils.dateToIsoString(this._datetime)}",
+      "hasBetsForUsers": "${this._hasBetsForUsers}",
+      "results": [${this._results.map((result) => result.toJson()).join(",")}],
+      "bets": [${this._bets.map((bet) => bet.toJson()).join(",")}],
+      "event_type": ${this._eventType.toJson()}
+      }`;
+  }
+
+  public delete() {
+    return NetworkHelper.post(`/api/event/delete`, () => {}, {
+      event_id: this._id,
+    });
   }
 
   public static buildCacheKey(eventId: string) {

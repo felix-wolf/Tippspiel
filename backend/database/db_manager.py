@@ -96,6 +96,7 @@ def execute_many(sql, params=None, commit=True):
             cursor.executemany(sql, params)
         if commit:
             conn.commit()
+        return True
     except Exception as e:
         print(e)
     finally:

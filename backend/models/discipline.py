@@ -9,7 +9,7 @@ from models.athlete import Athlete
 from models.country import Country
 import utils
 import chrome_manager
-import io
+import difflib
 from selenium.webdriver.common.by import By
 from selenium.common import NoSuchElementException
 import pandas as pd
@@ -114,9 +114,8 @@ class Discipline(BaseModel):
 
 
 class Biathlon(Discipline):
-
-
-    def process_events_url(self, url):
+        
+    def process_events_url(self, url, game_id):
         driver = chrome_manager.configure_driver()
         driver.implicitly_wait(3)
         driver.get(url)
@@ -129,10 +128,11 @@ class Biathlon(Discipline):
                 location_name = t.find_element(by=By.TAG_NAME, value='h4').get_attribute('innerHTML').strip()
                 table = chrome_manager.read_table_into_df(url=url, table_element_key=By.ID, table_element_value="thistable", element=t)
                 for _, row in table.iterrows():
+                    event_type_names = [et.name for et in self.event_types]
                     e = Event(
                         name=location_name.split(" | ")[0] + " - " + row['Description'],
-                        game_id=None,
-                        event_type=next((e_type for e_type in self.event_types if e_type.name in row['Description'].lower())),
+                        game_id=game_id,
+                        event_type=next((e_type for e_type in self.event_types if e_type.name == difflib.get_close_matches(row['Description'].lower(), event_type_names, n=1, cutoff=0.2)[0])),
                         dt=datetime.strptime(f"{row['Date']} {row['Time']}", "%Y-%m-%d %H:%M"),
                         event_id=None,
                         bets=None,
@@ -198,7 +198,7 @@ class Biathlon(Discipline):
         # find gender
         first_existing_althlete = None
         for a in athletes:
-            athlete_from_db = Athlete.find_by_id(a.id)
+            athlete_from_db = Athlete.get_by_id(a.id)
             if athlete_from_db is not None:
                 first_existing_althlete = athlete_from_db
                 break
@@ -215,8 +215,8 @@ class Biathlon(Discipline):
 
 class Skispringen(Discipline):
 
-    def process_events_url(self,):
-        pass
+    def process_events_url(self, url, game_id):
+         return [], "Disziplin nicht auswertbar"
 
-    def process_results_url(self):
+    def process_results_url(self, url, event):
         return [], "Disziplin nicht auswertbar"

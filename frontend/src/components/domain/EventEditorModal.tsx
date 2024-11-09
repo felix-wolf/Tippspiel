@@ -51,7 +51,12 @@ export function EventEditorModal({
       <div className={styles.warning}>
         ACHTUNG: Ändern der Eventart löscht ALLE bereits platzierten Tipps!
       </div>
-      <EventCreator onClick={onCreate} types={types} event={event} />
+      <EventCreator
+        onClick={onCreate}
+        types={types}
+        event={event}
+        onEventDeleted={_onEdited}
+      />
     </DialogModal>
   );
 }

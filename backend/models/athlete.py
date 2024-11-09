@@ -68,7 +68,7 @@ class Athlete(BaseModel):
         return [Athlete.from_dict(a) for a in res]
 
     @staticmethod
-    def find_by_id(athlete_id):
+    def get_by_id(athlete_id):
         sql = f"SELECT * FROM {db_manager.TABLE_ATHLETES} a WHERE a.id = ?"
         res = db_manager.query_one(sql, [athlete_id])
         if not res:
