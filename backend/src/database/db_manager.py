@@ -17,7 +17,7 @@ TABLE_RESULTS = "Results"
 
 
 def open_connection():
-    conn = sqlite3.connect("src/database/tippspiel.db")
+    conn = sqlite3.connect(current_app.config['DB_PATH'])
     conn.execute("PRAGMA foreign_keys = 1")
     return conn
 
