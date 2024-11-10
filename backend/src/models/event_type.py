@@ -1,6 +1,6 @@
-import utils
-from models.base_model import BaseModel
-from database import db_manager
+import src.utils as utils
+from src.models.base_model import BaseModel
+from src.database import db_manager
 
 
 class EventType(BaseModel):

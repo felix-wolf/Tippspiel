@@ -1,7 +1,7 @@
-from database import db_manager
-from models.base_model import BaseModel
-import utils
-import chrome_manager
+from src.database import db_manager
+from src.models.base_model import BaseModel
+import src.utils as utils
+import src.chrome_manager as chrome_manager
 
 
 class Athlete(BaseModel):

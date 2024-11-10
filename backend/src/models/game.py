@@ -1,9 +1,9 @@
-import utils
+import src.utils as utils
 
-from database import db_manager
-from models.discipline import Discipline
-from models.user import User
-from models.base_model import BaseModel
+from src.database import db_manager
+from src.models.discipline import Discipline
+from src.models.user import User
+from src.models.base_model import BaseModel
 
 
 class Game(BaseModel):

@@ -1,8 +1,6 @@
-import utils
-
-from database import db_manager
+from src.database import db_manager
 import sys
-import utils
+import src.utils as utils
 
 sys.path.append("..")
 

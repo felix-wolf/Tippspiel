@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from database import db_manager
-from models.bet import Bet
-from models.event_type import EventType
-from models.result import Result
-import utils
+from src.database import db_manager
+from src.models.bet import Bet
+from src.models.event_type import EventType
+from src.models.result import Result
+import src.utils as utils
 from zoneinfo import ZoneInfo
 
 

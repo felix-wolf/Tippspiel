@@ -1,14 +1,14 @@
 from abc import abstractmethod
 
-from database import db_manager
-from models.base_model import BaseModel
-from models.event_type import EventType
-from models.event import Event
-from models.result import Result
-from models.athlete import Athlete
-from models.country import Country
-import utils
-import chrome_manager
+from src.database import db_manager
+from src.models.base_model import BaseModel
+from src.models.event_type import EventType
+from src.models.event import Event
+from src.models.result import Result
+from src.models.athlete import Athlete
+from src.models.country import Country
+import src.utils as utils
+import src.chrome_manager as chrome_manager
 import difflib
 from selenium.webdriver.common.by import By
 from selenium.common import NoSuchElementException

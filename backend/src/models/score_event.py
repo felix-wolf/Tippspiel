@@ -1,6 +1,6 @@
 from datetime import datetime
-from database import db_manager
-from models.bet import Bet
+from src.database import db_manager
+from src.models.bet import Bet
 
 
 class ScoreEvent:

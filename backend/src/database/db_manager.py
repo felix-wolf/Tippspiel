@@ -1,6 +1,7 @@
 import csv
 import sqlite3
-import utils
+import src.utils as utils
+from flask import current_app
 
 TABLE_ATHLETES = "Athletes"
 TABLE_GAMES = "Games"
@@ -16,7 +17,7 @@ TABLE_RESULTS = "Results"
 
 
 def open_connection():
-    conn = sqlite3.connect("database/tippspiel.db")
+    conn = sqlite3.connect("src/database/tippspiel.db")
     conn.execute("PRAGMA foreign_keys = 1")
     return conn
 
