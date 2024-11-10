@@ -1,6 +1,6 @@
 .row {
   width: 90%;
-  grid-gap: var(--grid-l);
+  grid-gap: var(--grid-s);
   display: flex;
   align-items: center;
 }
@@ -12,4 +12,23 @@
   grid-gap: var(--grid-s);
   justify-content: center;
   width: 100%;
+}
+
+.button {
+  width: 100px;
+}
+
+.warning {
+  text-align: center;
+  color: red;
+  font-weight: var(--font_weight);
+}
+
+.deleteButtonContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+
 }

@@ -8,6 +8,7 @@ import { Utils } from "../../utils.ts";
 import { EventType } from "../../models/user/EventType.ts";
 import { Event } from "../../models/Event.ts";
 import { Shakable } from "../design/Shakable.tsx";
+import { cls } from "../../styles/cls.ts";
 
 type ManualEventCreatorProps = {
   onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
@@ -57,7 +58,7 @@ export function ManualEventCreator({
     if (event) {
       return (
         name != event.name ||
-        type != event.type ||
+        type?.id != event.type.id ||
         time != Utils.getTimeString(event.datetime) ||
         date.getTime() != event.datetime.getTime()
       );
@@ -66,51 +67,63 @@ export function ManualEventCreator({
   }
 
   return (
-    <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
-      <div className={styles.row}>
-        <TextField
-          initialValue={name}
-          placeholder={"Name"}
-          onInput={(i) => {
-            setName(i);
-          }}
-        />
-        <DropDown
-          onChange={(option) =>
-            setType(types?.find((type) => type.id == option?.id))
-          }
-          options={options ?? []}
-          initial={options?.find((opt) => opt.id == type?.id) ?? undefined}
-        />
-      </div>
-
-      <div className={styles.row}>
-        <DateTimePicker
-          onDateSet={(date) => setDate(date)}
-          onTimeSet={(time) => setTime(time)}
-          initialDate={date}
-          initialTime={time}
-        />
-        <Button
-          onClick={onCreateSingleEventClick}
-          title={event ? "Speichern" : "Erstellen"}
-          type={"positive"}
-          width={"flexible"}
-          isEnabled={buttonEnabled()}
-        />
-        {!event && (
-          <div style={{ width: "100px" }}>
-            <Button
-              onClick={_onDismiss}
-              title={"Abbrechen"}
-              type={"negative"}
-              width={"flexible"}
-            />
+    <div className={styles.deleteButtonContainer}>
+      <form
+        className={styles.form}
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className={styles.row}>
+          <TextField
+            initialValue={name}
+            placeholder={"Name"}
+            onInput={(i) => {
+              setName(i);
+            }}
+          />
+        </div>
+        <div className={styles.row}>
+          <DateTimePicker
+            onDateSet={(date) => setDate(date)}
+            onTimeSet={(time) => setTime(time)}
+            initialDate={date}
+            initialTime={time}
+          />
+          <DropDown
+            onChange={(option) =>
+              setType(types?.find((type) => type.id == option?.id))
+            }
+            options={options ?? []}
+            initial={options?.find((opt) => opt.id == type?.id) ?? undefined}
+          />
+        </div>
+        {event && type?.id != event.type.id && (
+          <div className={cls(styles.warning, styles.row)}>
+            ACHTUNG: Ändern der Eventart löscht alle bereits platzierten Tipps!
           </div>
         )}
-      </div>
+        <div className={styles.row}>
+          <Button
+            onClick={onCreateSingleEventClick}
+            title={event ? "Speichern" : "Erstellen"}
+            type={"positive"}
+            width={"flexible"}
+            isEnabled={buttonEnabled()}
+          />
+          {!event && (
+            <div className={styles.button}>
+              <Button
+                onClick={_onDismiss}
+                title={"Abbrechen"}
+                type={"negative"}
+                width={"flexible"}
+              />
+            </div>
+          )}
+        </div>
+      </form>
+
       {event && (
-        <div style={{ width: "100px" }}>
+        <div className={styles.button}>
           <Shakable shaking={shaking}>
             {!confirmDelete && (
               <Button
@@ -140,6 +153,6 @@ export function ManualEventCreator({
           </Shakable>
         </div>
       )}
-    </form>
+    </div>
   );
 }

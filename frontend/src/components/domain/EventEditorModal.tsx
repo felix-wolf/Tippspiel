@@ -3,7 +3,6 @@ import { DialogModal } from "../design/Dialog";
 import { EventType } from "../../models/user/EventType";
 import { Event } from "../../models/Event";
 import { useCallback } from "react";
-import styles from "./EventEditorModal.module.scss";
 
 type EventEditorModalProps = {
   isOpened: boolean;
@@ -20,7 +19,7 @@ export function EventEditorModal({
   onCancel: _onCancel,
   event,
 }: EventEditorModalProps) {
-  const onCreate = useCallback(
+  const onUpdateEvent = useCallback(
     (type: EventType, name: string, datetime: Date): Promise<boolean> => {
       return new Promise((resolve, reject) => {
         if (event?.game_id) {
@@ -29,9 +28,8 @@ export function EventEditorModal({
               _onEdited();
               resolve(true);
             })
-            .catch((error) => {
+            .catch(() => {
               reject();
-              console.log(error);
             });
         } else {
           reject();
@@ -48,11 +46,8 @@ export function EventEditorModal({
       onClose={_onCancel}
       style={{ height: 465 }}
     >
-      <div className={styles.warning}>
-        ACHTUNG: Ändern der Eventart löscht ALLE bereits platzierten Tipps!
-      </div>
       <EventCreator
-        onClick={onCreate}
+        onClick={onUpdateEvent}
         types={types}
         event={event}
         onEventDeleted={_onEdited}

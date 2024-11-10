@@ -6,6 +6,7 @@ import { Event } from "../../models/Event";
 import { URLEventImporter } from "./URLEventImporter.tsx";
 import { Game } from "../../models/Game.ts";
 import { ManualEventCreator } from "./ManualEventCreator.tsx";
+import { cls } from "../../styles/cls.ts";
 
 type EventCreatorProps = {
   onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
@@ -32,7 +33,7 @@ export function EventCreator({
   }, [event]);
 
   return (
-    <div className={styles.creatorContainer}>
+    <div className={cls(styles.creatorContainer, event && styles.height)}>
       {importingEvents && game?.discipline?.eventsUrl && (
         <div className={styles.creatorItem}>
           <URLEventImporter
