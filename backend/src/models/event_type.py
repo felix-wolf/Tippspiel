@@ -76,10 +76,7 @@ class EventType(BaseModel):
         return None
 
     @staticmethod
-    def load_into_db():
+    def get_base_data():
         event_types = db_manager.load_csv("event_types.csv")
         event_types = [EventType.from_dict(e) for e in event_types]
-        for event_type in event_types:
-            success, type_id = event_type.save_to_db()
-            if not success:
-                print("Error saving event_types")
+        return event_types

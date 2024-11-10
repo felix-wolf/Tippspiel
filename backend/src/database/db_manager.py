@@ -106,7 +106,7 @@ def execute_many(sql, params=None, commit=True):
 
 
 def execute_script(script_name):
-    with open(f'database/{script_name}', 'r') as sql_file:
+    with open(f'src/resources/{script_name}', 'r') as sql_file:
         sql_script = sql_file.read()
     try:
         conn = open_connection()
@@ -122,7 +122,7 @@ def execute_script(script_name):
 
 def load_csv(file_name, generate_id=False):
     values = []
-    with open(f'database/{file_name}', newline='') as csvfile:
+    with open(f'src/resources/{file_name}', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";")
         for row in reader:
             if generate_id:

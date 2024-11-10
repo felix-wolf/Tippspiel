@@ -6,9 +6,10 @@ from src.models.event_type import EventType
 from src.models.result import Result
 import src.utils as utils
 from zoneinfo import ZoneInfo
+from src.models.base_model import BaseModel
 
 
-class Event:
+class Event(BaseModel):
 
     def __init__(self, name: str, game_id: str, event_type: EventType, dt: datetime,
                  event_id: str = None, bets: [Bet] = None, results: [Result] = None):
@@ -213,3 +214,16 @@ class Event:
             sql=f"DELETE FROM {db_manager.TABLE_EVENTS} WHERE id = ?",
             params=[self.id]
             )
+
+
+    @staticmethod
+    def get_all():
+        result = db_manager.query(
+            sql=f"SELECT * FROM {db_manager.TABLE_EVENTS}"
+        )
+        # TODO: change this
+        return result
+
+    @staticmethod
+    def get_base_data():
+        return

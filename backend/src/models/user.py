@@ -1,11 +1,11 @@
 from src.database import db_manager
 import sys
 import src.utils as utils
+from src.models.base_model import BaseModel
 
 sys.path.append("..")
 
-
-class User:
+class User(BaseModel):
 
     def __init__(self, user_id: str, name: str, pw_hash: str, color: str = None):
         self.id = user_id
@@ -98,3 +98,14 @@ class User:
     def does_exist(name, pw_hash):
         return User.get_by_credentials(name, pw_hash) is not None
 
+
+    @staticmethod
+    def get_all():
+        pass
+
+    @staticmethod
+    def get_base_data():
+        pass
+
+    def save_to_db(self):
+        pass

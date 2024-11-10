@@ -28,5 +28,5 @@ class BaseModel(ABC):
 
     @staticmethod
     @abstractmethod
-    def load_into_db():
+    def get_base_data():
         return

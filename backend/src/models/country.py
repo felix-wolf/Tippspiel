@@ -43,9 +43,7 @@ class Country(BaseModel):
         return success, self.code
 
     @staticmethod
-    def load_into_db():
+    def get_base_data():
         countries = db_manager.load_csv("countries.csv")
         countries = [Country.from_dict(c) for c in countries]
-        for country in countries:
-            if not country.save_to_db():
-                print("Error saving country")
+        return countries

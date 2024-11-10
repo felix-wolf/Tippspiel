@@ -70,6 +70,7 @@ class Game(BaseModel):
     def get_all():
         sql = f"SELECT g.id FROM {db_manager.TABLE_GAMES} g"
         game_ids = db_manager.query(sql)
+        print(game_ids)
         if not game_ids:
             game_ids = []
         return [Game.get_by_id(g['id']) for g in game_ids]
@@ -94,5 +95,5 @@ class Game(BaseModel):
         return game.save_to_db()
 
     @staticmethod
-    def load_into_db():
+    def get_base_data():
         raise NotImplementedError()

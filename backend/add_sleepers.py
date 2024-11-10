@@ -1,9 +1,9 @@
-from models.bet import Bet
-from models.bet import Prediction
-from models.event import Event
-from models.user import User
-from models.athlete import Athlete
-from models.country import Country
+from src.models.bet import Bet
+from src.models.bet import Prediction
+from src.models.event import Event
+from src.models.user import User
+from src.models.athlete import Athlete
+from src.models.country import Country
 
 
 def getObjectName(object_type: str, object_id: str) -> str:

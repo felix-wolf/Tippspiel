@@ -1,8 +1,8 @@
 from src.database import db_manager
 import src.utils as utils
+from src.models.base_model import BaseModel
 
-
-class Result:
+class Result(BaseModel):
 
     def __init__(self, event_id: str, place: int, object_id: str, object_name: str = None, result_id: str = None):
         if result_id is None:
@@ -51,3 +51,18 @@ class Result:
         """
         success = db_manager.execute(sql, [self.id, self.event_id, self.place, self.object_id])
         return success, self.id
+
+    @staticmethod
+    def get_all():
+        result = db_manager.query(
+            sql=f"SELECT * FROM {db_manager.TABLE_RESULTS}"
+        )
+        return [Result.from_dict(r) for r in result]
+    
+    @staticmethod
+    def get_base_data():
+        pass
+    
+    @staticmethod
+    def get_by_id():
+        pass

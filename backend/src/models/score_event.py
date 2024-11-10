@@ -1,9 +1,9 @@
 from datetime import datetime
 from src.database import db_manager
 from src.models.bet import Bet
+from src.models.base_model import BaseModel
 
-
-class ScoreEvent:
+class ScoreEvent(BaseModel):
 
     def __init__(self, id: str, game_id: str, name: str, dt: datetime, scores=[]):
         self.id = id
@@ -53,3 +53,18 @@ class ScoreEvent:
             scores = {bet.user_id: bet.score for bet in bets}
             event.scores = scores
         return [e for e in events if len(e.scores) > 0 and len([v for k, v in e.scores.items() if v]) > 0]
+    
+    @staticmethod
+    def get_all():
+        pass
+    
+    @staticmethod
+    def get_base_data():
+        pass
+    
+    @staticmethod
+    def get_by_id():
+        pass 
+    
+    def save_to_db():
+        pass

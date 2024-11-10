@@ -104,14 +104,11 @@ class Discipline(BaseModel):
         return success, self.id
 
     @staticmethod
-    def load_into_db():
+    def get_base_data():
         disciplines = db_manager.load_csv("disciplines.csv")
         event_types = [EventType.get_by_discipline_id(d["id"]) for d in disciplines]
         disciplines = [Discipline.from_dict(d, event_type) for d, event_type in zip(disciplines, event_types)]
-        for discipline in disciplines:
-            if not discipline.save_to_db():
-                print("Error saving discipline")
-
+        return disciplines
 
 class Biathlon(Discipline):
         

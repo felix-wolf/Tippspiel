@@ -87,7 +87,7 @@ class Athlete(BaseModel):
         return success, self.id
 
     @staticmethod
-    def load_into_db():
+    def get_base_data():
         # insert athletes from csv
         athletes = db_manager.load_csv("athletes.csv", generate_id=False)
         athletes = [Athlete.from_dict(a) for a in athletes]
@@ -108,7 +108,4 @@ class Athlete(BaseModel):
                 result["discipline"] = url_object["discipline"]
             athletes.extend([Athlete.from_dict(a) for a in results])
             athletes = list(set(athletes))
-
-        for athlete in athletes:
-            if not athlete.save_to_db():
-                print("Error saving athlete")
+        return athletes

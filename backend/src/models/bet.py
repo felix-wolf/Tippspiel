@@ -1,8 +1,8 @@
 import src.utils as utils
 from src.database import db_manager
+from src.models.base_model import BaseModel
 
-
-class Prediction:
+class Prediction(BaseModel):
 
     def __init__(
             self, bet_id: str, object_id: str, object_name: str, predicted_place: int,
@@ -85,9 +85,33 @@ class Prediction:
                 return None
         else:
             return None
+        
+
+    def save_to_db(self):
+        sql = f"""
+                INSERT INTO {db_manager.TABLE_PREDICTIONS} 
+                (id, bet_id, predicted_place, object_id, actual_place)
+                VALUES (?,?,?,?,?)
+            """
+        return db_manager.execute(sql, [
+            self.id, self.id, self.predicted_place,
+            self.object_id, self.actual_place
+        ])
+    
+    @staticmethod
+    def get_all():
+        pass
+
+    @staticmethod
+    def get_base_data():
+        pass
+    
+    @staticmethod
+    def get_by_id():
+        pass
 
 
-class Bet:
+class Bet(BaseModel):
 
     def __init__(self, user_id: str, event_id: str, predictions: [Prediction] = None, score: int = None,
                  bet_id: str = None):
@@ -187,18 +211,23 @@ class Bet:
                 self.id, self.event_id, self.user_id, self.score
             ])
         for prediction in self.predictions:
-            sql = f"""
-                INSERT INTO {db_manager.TABLE_PREDICTIONS} 
-                (id, bet_id, predicted_place, object_id, actual_place)
-                VALUES (?,?,?,?,?)
-            """
-            if not db_manager.execute(sql, [
-                prediction.id, self.id, prediction.predicted_place,
-                prediction.object_id, prediction.actual_place
-            ]):
+            result = prediction.save_to_db()
+            if not result:
                 return False
         return success
 
     def delete(self):
         sql = f"DELETE FROM {db_manager.TABLE_BETS} WHERE event_id = ? "
         return db_manager.execute(sql, [self.event_id])
+
+    @staticmethod
+    def get_all():
+        pass
+
+    @staticmethod
+    def get_base_data():
+        pass
+    
+    @staticmethod
+    def get_by_id():
+        pass
