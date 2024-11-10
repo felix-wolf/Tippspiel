@@ -74,13 +74,15 @@ export function EventCreator({
               title={"Erstell ein neues Event"}
             />
           )}
-          {!importingEvents && !creatingSingleEvent && (
-            <Button
-              onClick={() => setImportingEvents(true)}
-              type={"positive"}
-              title={"Importiere Events"}
-            />
-          )}
+          {!importingEvents &&
+            !creatingSingleEvent &&
+            game?.discipline?.eventsUrl && (
+              <Button
+                onClick={() => setImportingEvents(true)}
+                type={"positive"}
+                title={"Importiere Events"}
+              />
+            )}
         </div>
       }
     </div>
