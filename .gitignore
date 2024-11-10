@@ -4,8 +4,8 @@
 *.db
 backend/database/tippspiel.db
 backend/database/*.db
-backend/config.py
-backend/chromedriver
+backend/config*.py
+backend/src/resources/chromedriver
 ### Flask ###
 instance/*
 !instance/.gitignore

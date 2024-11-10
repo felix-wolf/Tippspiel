@@ -26,7 +26,7 @@ def read_table_into_df(url: str, table_element_value: str, table_element_key: st
 # configures the driver by getting the executable etc.
 def configure_driver():
     this_path = os.path.dirname(os.path.abspath(__file__))
-    driver_dir = str(os.path.abspath(this_path + "/chromedriver"))
+    driver_dir = str(os.path.abspath(this_path + "/resources/chromedriver"))
 
     # Start a new instance of the Chrome browser
     options = webdriver.ChromeOptions()
