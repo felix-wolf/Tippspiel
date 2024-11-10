@@ -105,10 +105,6 @@ class Prediction(BaseModel):
     @staticmethod
     def get_base_data():
         pass
-    
-    @staticmethod
-    def get_by_id():
-        pass
 
 
 class Bet(BaseModel):
