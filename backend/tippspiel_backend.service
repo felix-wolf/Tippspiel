@@ -1,0 +1,15 @@
+[Unit]
+Description=Tippspiel backend service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=felix
+WorkingDirectory=/home/felix/tippspiel/backend/
+ExecStart=python3 -m pipenv run gunicorn --bind 0.0.0.0:5000 'main:create_app(env="prod")' 2>&1 >/home/felix/tippspiel/gunicorn.log
+
+[Install]
+WantedBy=multi-user.target
