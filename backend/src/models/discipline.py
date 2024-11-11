@@ -9,10 +9,8 @@ from src.models.athlete import Athlete
 from src.models.country import Country
 import src.utils as utils
 import src.chrome_manager as chrome_manager
-import difflib
 from selenium.webdriver.common.by import By
 from selenium.common import NoSuchElementException
-import pandas as pd
 from datetime import datetime
 
 
@@ -126,10 +124,19 @@ class Biathlon(Discipline):
                 table = chrome_manager.read_table_into_df(url=url, table_element_key=By.ID, table_element_value="thistable", element=t)
                 for _, row in table.iterrows():
                     event_type_names = [et.name for et in self.event_types]
+
+                    def get_correct_event_type(event_description):
+                        if "relay" in event_description.lower():
+                            return next((e_type for e_type in self.event_types if e_type.name == "relay"))
+                        elif "women" in event_description.lower():
+                            return next((e_type for e_type in self.event_types if e_type.name == "women"))
+                        else:
+                            return next((e_type for e_type in self.event_types if e_type.name == "men"))
+
                     e = Event(
                         name=location_name.split(" | ")[0] + " - " + row['Description'],
                         game_id=game_id,
-                        event_type=next((e_type for e_type in self.event_types if e_type.name == difflib.get_close_matches(row['Description'].lower(), event_type_names, n=1, cutoff=0.2)[0])),
+                        event_type=get_correct_event_type(row['Description']),
                         dt=datetime.strptime(f"{row['Date']} {row['Time']}", "%Y-%m-%d %H:%M"),
                         event_id=None,
                         bets=None,
