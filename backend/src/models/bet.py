@@ -94,7 +94,7 @@ class Prediction(BaseModel):
                 VALUES (?,?,?,?,?)
             """
         return db_manager.execute(sql, [
-            self.id, self.id, self.predicted_place,
+            self.id, self.bet_id, self.predicted_place,
             self.object_id, self.actual_place
         ])
     
