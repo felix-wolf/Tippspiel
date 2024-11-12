@@ -9,6 +9,8 @@ import { Game } from "../models/Game";
 import useFetch from "../useFetch";
 import { useCache } from "../contexts/CacheContext";
 import Loader from "../components/design/Loader";
+import { cls } from "../styles/cls.ts";
+import { useAppearance } from "../contexts/AppearanceContext.tsx";
 
 export function HomePage() {
   const logout = useLogout();
@@ -16,6 +18,7 @@ export function HomePage() {
   const user = useCurrentUser();
 
   const { setCache } = useCache();
+  const { appearance } = useAppearance();
 
   const { loading, data } = useFetch<Game[]>({
     func: Game.fetchAll,
@@ -35,8 +38,8 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className={styles.container}>
-      <h3>Hallo {user?.name}!</h3>
+    <div className={cls(styles.container, `theme-${appearance}`)}>
+      <h3 className={styles.greeting}>Hallo {user?.name}!</h3>
       {loading && <Loader />}
       {!loading && (
         <GamesContext.Provider value={data}>

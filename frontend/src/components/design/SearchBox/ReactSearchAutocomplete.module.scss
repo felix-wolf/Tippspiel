@@ -9,11 +9,12 @@
   flex-direction: column;
   width: 100%;
 
-  border: 1px solid #dfe1e5;
+
+  border: var(--border-m-light);//1px solid #dfe1e5;
   border-radius: 24px;
 
-  background-color: white;
-  color: #212121;
+  background-color: var(--bg-secondary);
+  color: var(--text-dark);
 
   font-size: 16px;
   font-family: Arial;

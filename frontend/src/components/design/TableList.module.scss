@@ -33,6 +33,7 @@
 .caption {
   composes: text-subtitle_emphasis from global;
   text-align: start;
+  color: var(--text-dark)
 }
 
 .listTitle {

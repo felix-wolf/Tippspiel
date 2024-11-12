@@ -4,7 +4,8 @@ import TableList from "../../design/TableList";
 import { Button } from "../../design/Button";
 import styles from "./EventList.module.scss";
 import { useCurrentUser } from "../../../models/user/UserContext";
-import edit from "../../../assets/icons/edit.svg";
+import edit_white from "../../../assets/icons/edit_white.svg";
+import edit_black from "../../../assets/icons/edit_black.svg";
 import { Utils } from "../../../utils";
 import useFetch from "../../../useFetch";
 import { EventEditorModal } from "../EventEditorModal";
@@ -12,6 +13,7 @@ import { Game } from "../../../models/Game";
 import { Toggler, TogglerItem } from "../../design/Toggler";
 import { EventCreator } from "../EventCreator";
 import { EventType } from "../../../models/user/EventType";
+import { useAppearance } from "../../../contexts/AppearanceContext.tsx";
 
 export type EventTimeType = "upcoming" | "past";
 
@@ -47,7 +49,7 @@ export function EventList({
   const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
   const [editorKey, setEditorKey] = useState(0);
   const [currPage, setCurrPage] = useState(1);
-
+  const { isLight } = useAppearance();
   let fetchArgs: any[] = [game.id];
   if (type == "past") {
     fetchArgs = fetchArgs.concat([currPage, true]);
@@ -209,7 +211,7 @@ export function EventList({
                     <Button
                       type={"clear"}
                       width={"flexible"}
-                      icon={edit}
+                      icon={isLight() ? edit_black : edit_white}
                       title={""}
                       onClick={() => {
                         setEventEditId(it.id);

@@ -22,7 +22,7 @@ export function GamePage() {
   const navigate = useNavigateParams();
   const [isCreator, setIsCreator] = useState(false);
   const user = useCurrentUser();
-  const appearance = useAppearance();
+  const { isLight } = useAppearance();
 
   const gameFetchValues = useFetch<Game>({
     key: Game.buildCacheKey(game_id),
@@ -72,7 +72,7 @@ export function GamePage() {
         isCreator && (
           <div style={{ width: 50 }}>
             <Button
-              icon={appearance.isLight() ? settings_white : settings_black}
+              icon={isLight() ? settings_white : settings_black}
               title={""}
               type={"neutral"}
               onClick={() => {}}

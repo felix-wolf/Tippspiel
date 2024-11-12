@@ -68,9 +68,9 @@
 }
 
 body:has(.theme-dark) {
-  --fg-primary: #A8DADC;
+  --fg-primary: #d9a026; //#FF6500;
   --fg-primary_light: #616a24;
-  --fg-secondary: #FF6500;
+  --fg-secondary: #A8DADC;
 
   --bg-primary: #1E3E62;
   --bg-secondary: #0B192C;

@@ -15,15 +15,10 @@ type NavPageProps = React.PropsWithChildren<{
 
 export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
   const navigate = useNavigate();
-  const appearance = useAppearance();
+  const { appearance, setAppearance, isLight } = useAppearance();
   return (
     <>
-      <div
-        className={cls(
-          styles.navContainer,
-          `theme-${appearance.getAppearance}`,
-        )}
-      >
+      <div className={cls(styles.navContainer, `theme-${appearance}`)}>
         <div className={styles.button}>
           <Button
             onClick={() => navigate(-1)}
@@ -36,9 +31,8 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
         <div className={styles.button}>
           <IconToggler
             icons={[darkModeWhite, lightModeWhite]}
-            didChange={(state) =>
-              appearance.setAppearance(state == 0 ? "light" : "dark")
-            }
+            didChange={(state) => setAppearance(state == 0 ? "light" : "dark")}
+            initialState={isLight() ? 0 : 1}
           />
           {navBarLeftItem && navBarLeftItem}
         </div>

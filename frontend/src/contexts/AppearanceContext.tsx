@@ -1,10 +1,10 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { Outlet } from "react-router-dom";
 
 type appearence = "light" | "dark";
 
 type ContextType = {
-  getAppearance: () => appearence;
+  appearance: appearence;
   setAppearance: (appearance: appearence) => void;
   isLight: () => boolean;
 };
@@ -22,28 +22,28 @@ type AppearanceContextProviderProps = React.PropsWithChildren;
 export function AppearanceContextProvider({
   children,
 }: AppearanceContextProviderProps) {
-  function getAppearance(): appearence {
+  const [app, setApp] = useState<appearence>(getInitialAppearance());
+
+  function getInitialAppearance(): appearence {
     const appearance = localStorage.getItem(appearanceStorageKey);
     if (appearance) {
-      console.log("Appearance found");
       return appearance as appearence;
     }
-    console.log("Appearance not found");
-    setAppearance("light");
+    setApp("light");
     return "light";
   }
 
   function setAppearance(appearance: appearence) {
-    console.log("Appearance set", appearance);
+    setApp(appearance as appearence);
     localStorage.setItem(appearanceStorageKey, appearance);
   }
 
   function isLight(): boolean {
-    return getAppearance() == "light";
+    return app == "light";
   }
 
   const contextValue = {
-    getAppearance,
+    appearance: app,
     setAppearance,
     isLight,
   };

@@ -1,6 +1,7 @@
 .heading {
  composes: text-subtitle from global;
  margin-bottom: 10px;
+ color: var(--fg-primary)
 }
 
 .editContainer {
