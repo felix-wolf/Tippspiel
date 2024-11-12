@@ -9,7 +9,6 @@ import { Outlet } from "react-router-dom";
 import { User } from "./User";
 
 type UserContext = {
-  //current: User | null;
   setCurrent: (user: User) => void;
   login: (name: string, password: string) => Promise<void>;
   logout: () => Promise<void>;

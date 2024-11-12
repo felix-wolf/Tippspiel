@@ -1,7 +1,7 @@
 .positive {
   background: var(--fg-primary);
-  color: white;
-  border: 2px solid darkblue;
+  color: var(--text-light);
+  border: var(--border-m-dark);
 }
 
 .negative {
@@ -10,9 +10,9 @@
 }
 
 .neutral {
-  background: gray;
-  border: var(--border-m);
-  color: var(--bg-secondary);
+  background: var(--fg-secondary);
+  border: var(--border-m-light);
+  color: var(--text-light);
 }
 
 .button {

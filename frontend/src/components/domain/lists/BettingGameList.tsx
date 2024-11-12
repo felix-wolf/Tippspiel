@@ -4,7 +4,7 @@ import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes";
 import { User } from "../../../models/user/User";
 import { Game } from "../../../models/Game";
 import { List } from "../../design/List";
-import { GamesContext } from "../../../contexts/GameContext";
+import { GamesContext } from "../../../contexts/GameContext.ts";
 
 type BettingGamesProps = {
   user?: User;

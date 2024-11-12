@@ -2,12 +2,13 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: start;
+  justify-content: space-between;
   grid-gap: var(--grid-l);
   margin-bottom: var(--grid-l);
 }
 
 .headline {
+  color: var(--fg-primary);
   font-size: var(--font-size-l);
   font-weight: var(--font_weight);
 }
@@ -20,4 +21,6 @@
 
 .button {
   width: 100px;
+  display: flex;
+  justify-content: end;
 }

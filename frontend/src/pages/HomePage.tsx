@@ -14,6 +14,7 @@ export function HomePage() {
   const logout = useLogout();
   const navigate = useNavigateParams();
   const user = useCurrentUser();
+
   const { setCache } = useCache();
 
   const { loading, data } = useFetch<Game[]>({

@@ -1,0 +1,16 @@
+.con {
+  width: 50px;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  grid-gap: var(--grid-s);
+}
+
+.icon {
+  height: 80%;
+}

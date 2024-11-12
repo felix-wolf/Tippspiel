@@ -12,12 +12,17 @@ import { ScoreList } from "../components/domain/lists/ScoreList";
 import useFetch from "../useFetch";
 import Loader from "../components/design/Loader";
 import { EventScore } from "../models/EventScore";
+import { Button } from "../components/design/Button.tsx";
+import settings_white from "../assets/icons/settings_white.svg";
+import settings_black from "../assets/icons/settings_black.svg";
+import { useAppearance } from "../contexts/AppearanceContext.tsx";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
   const navigate = useNavigateParams();
   const [isCreator, setIsCreator] = useState(false);
   const user = useCurrentUser();
+  const appearance = useAppearance();
 
   const gameFetchValues = useFetch<Game>({
     key: Game.buildCacheKey(game_id),
@@ -61,7 +66,22 @@ export function GamePage() {
   );
 
   return (
-    <NavPage title={game?.name}>
+    <NavPage
+      title={game?.name}
+      navBarLeftItem={
+        isCreator && (
+          <div style={{ width: 50 }}>
+            <Button
+              icon={appearance.isLight() ? settings_white : settings_black}
+              title={""}
+              type={"neutral"}
+              onClick={() => {}}
+              width={"flexible"}
+            />
+          </div>
+        )
+      }
+    >
       {gameLoading && <Loader />}
       {!gameLoading && (
         <>
