@@ -16,7 +16,7 @@ from datetime import datetime
 
 class Discipline(BaseModel):
 
-    def __init__(self, discipline_id: str, name: str, event_types: [EventType], result_url: str = None,
+    def __init__(self, discipline_id: str, name: str, event_types: list[EventType], result_url: str = None,
                  events_url: str = None):
         self.id = discipline_id
         self.name = name
@@ -198,7 +198,7 @@ class Biathlon(Discipline):
         else:
             return [], "Wettobjekt nicht bekannt"
 
-    def process_athletes(self, athletes: []):
+    def process_athletes(self, athletes: list[Athlete]):
         # find gender
         first_existing_althlete = None
         for a in athletes:
