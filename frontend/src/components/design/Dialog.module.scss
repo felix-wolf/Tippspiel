@@ -2,13 +2,18 @@
   width: 400px;
   border-radius: 8px;
   border: 1px solid #888;
+  background: var(--bg-secondary);
 
   ::backdrop {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-secondary);
   }
 }
 
 .buttons {
   display: flex;
   gap: 20px;
+}
+
+.heading {
+  color: var(--text-dark);
 }

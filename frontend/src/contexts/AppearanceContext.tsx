@@ -29,7 +29,6 @@ export function AppearanceContextProvider({
     if (appearance) {
       return appearance as appearence;
     }
-    setApp("light");
     return "light";
   }
 

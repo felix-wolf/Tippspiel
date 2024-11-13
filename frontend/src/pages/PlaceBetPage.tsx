@@ -10,7 +10,7 @@ import Loader from "../components/design/Loader";
 import { useCache } from "../contexts/CacheContext";
 
 export function PlaceBetPage() {
-  const { event_id, game_id } = usePathParams(SiteRoutes.PlaceBet);
+  const { event_id, game_id, page_num } = usePathParams(SiteRoutes.PlaceBet);
   const user = useCurrentUser();
   const navigate = useNavigate();
   const { deleteCache } = useCache();
@@ -29,7 +29,9 @@ export function PlaceBetPage() {
     if (predictions.length == 5 && user?.id) {
       Event.saveBets(event_id, user.id, predictions as Predictions)
         .then((_) => {
-          deleteCache(Event.buildListCacheKey(game_id) + "1upcoming");
+          console.log("deleteCache()");
+          deleteCache(Event.buildListCacheKey(game_id, page_num, "upcoming"));
+          deleteCache(Event.buildCacheKey(event_id));
           navigate(-1);
         })
         .catch((error) => console.log("error saving bets", error));

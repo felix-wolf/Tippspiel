@@ -86,19 +86,27 @@ export function BettingGameList({
   return (
     <List
       title={show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}
-      items={games.map((item, index) => (
-        <BettingGameItem
-          key={`${index}${item.game?.id}`}
-          item={item}
-          joined={show_games == "user"}
-          onGameSelect={(id) => {
-            useNavigate(SiteRoutes.Game, { game_id: id });
-          }}
-          onCreate={onCreate}
-          onJoin={onJoin}
-          type={item.type}
-        />
-      ))}
+      items={games
+        .sort((a, b) =>
+          !!a.game?.name && !!b.game?.name
+            ? a.game?.name > b.game?.name
+              ? 1
+              : -1
+            : 0,
+        )
+        .map((item, index) => (
+          <BettingGameItem
+            key={`${index}${item.game?.id}`}
+            item={item}
+            joined={show_games == "user"}
+            onGameSelect={(id) => {
+              useNavigate(SiteRoutes.Game, { game_id: id });
+            }}
+            onCreate={onCreate}
+            onJoin={onJoin}
+            type={item.type}
+          />
+        ))}
       emptyText={"Ganz schön leer hier :("}
     />
   );

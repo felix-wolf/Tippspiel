@@ -15,6 +15,7 @@ import styles from "./ScoreLine.module.scss";
 import { Toggler, TogglerItem } from "../design/Toggler";
 import { EventScore } from "../../models/EventScore";
 import Loader from "../design/Loader";
+import { useAppearance } from "../../contexts/AppearanceContext.tsx";
 
 ChartJS.register(
   CategoryScale,
@@ -41,8 +42,11 @@ export function ScoreLine({ game, scores }: ScoreLineProps) {
       .slice(-numEvents);
   }, [sortedEvents, numEvents]);
 
+  const { isLight } = useAppearance();
+
   const buildDatasets = useCallback((): {
     label: string;
+    color: string;
     data: number[];
     borderColor: string;
     backgroundColor: string;
@@ -51,6 +55,7 @@ export function ScoreLine({ game, scores }: ScoreLineProps) {
       game?.players.map((player) => {
         return {
           label: player.name,
+          color: "#FF0000",
           data: [0]
             .concat(
               sortedEvents
@@ -78,13 +83,35 @@ export function ScoreLine({ game, scores }: ScoreLineProps) {
     const options = {
       responsive: true,
       maintainAspectRatio: false,
+      scales: {
+        y: {
+          ticks: {
+            color: isLight() ? "#666666" : "#dbdbdb",
+          },
+          grid: {
+            color: isLight() ? "#66666650" : "#dbdbdb50",
+          },
+        },
+        x: {
+          ticks: {
+            color: isLight() ? "#666666" : "#dbdbdb",
+          },
+          grid: {
+            color: isLight() ? "#66666650" : "#dbdbdb50",
+          },
+        },
+      },
       plugins: {
         legend: {
           position: "top" as const,
+          labels: {
+            color: isLight() ? "#666666" : "#dbdbdb",
+          },
         },
         title: {
           display: true,
           text: "Punktestand",
+          color: isLight() ? "#666666" : "#dbdbdb",
         },
         tooltip: {
           callbacks: {

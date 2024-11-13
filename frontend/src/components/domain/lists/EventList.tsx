@@ -32,7 +32,7 @@ type EventListProps = {
   type: EventTimeType;
   game: Game;
   placeholderWhenEmpty?: React.ReactNode;
-  showUserBets?: (event_id: string) => void;
+  showUserBets?: (event_id: string, pageNum: string) => void;
   showAllBets?: (event_id: string) => void;
   isCreator?: boolean;
 };
@@ -50,23 +50,35 @@ export function EventList({
   const [editorKey, setEditorKey] = useState(0);
   const [currPage, setCurrPage] = useState(1);
   const { isLight } = useAppearance();
-  let fetchArgs: any[] = [game.id];
-  if (type == "past") {
-    fetchArgs = fetchArgs.concat([currPage, true]);
-  }
 
   useEffect(() => {
     refetch();
-  }, [currPage]);
+    if (game) {
+      console.log(game);
+      refetchNumEvents();
+    }
+  }, [currPage, game]);
+
+  const numEventsFetchValues = useFetch<number>({
+    key: `eventlistlength${type}${game.id}`,
+    func: Game.fetchNumEvents,
+    args: [game.id],
+    initialEnabled: false,
+  });
 
   const eventsFetchValues = useFetch<Event[]>({
-    key: Event.buildListCacheKey(game.id) + currPage + type,
+    key:
+      Event.buildListCacheKey(game.id, currPage.toString(), type) +
+      currPage +
+      type,
     func: Event.fetchAll,
-    args: fetchArgs,
+    args: [game.id, currPage, type == "past"],
     initialEnabled: false,
   });
 
   const { data: events, refetch, loading } = eventsFetchValues;
+
+  const { data: numEvents, refetch: refetchNumEvents } = numEventsFetchValues;
 
   if (type == "upcoming")
     events?.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
@@ -85,7 +97,9 @@ export function EventList({
         highlight: false,
       });
     }
-    if ((events?.length ?? 0) == 5 || currPage == 0) {
+    console.log(currPage, currPage * 5, numEvents);
+    if (currPage * 5 < (numEvents ?? 0)) {
+      //if ((numEvents ?? 0) == 5 || currPage == 0) {
       items = items.concat({ name: ">" });
     }
     return items;
@@ -193,7 +207,7 @@ export function EventList({
                     <Button
                       onClick={() => {
                         if (it.type == "upcoming" && _showUserBets)
-                          _showUserBets(it.id);
+                          _showUserBets(it.id, currPage.toString());
                         if (it.type == "past" && _showAllBets)
                           _showAllBets(it.id);
                       }}
@@ -221,7 +235,7 @@ export function EventList({
                 ),
             }}
           />
-          {type == "past" && !loading && (
+          {!loading && (
             <Toggler
               highlight={false}
               items={getPageItems(currPage)}

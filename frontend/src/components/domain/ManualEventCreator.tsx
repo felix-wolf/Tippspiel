@@ -7,8 +7,8 @@ import { useCallback, useState } from "react";
 import { Utils } from "../../utils.ts";
 import { EventType } from "../../models/user/EventType.ts";
 import { Event } from "../../models/Event.ts";
-import { Shakable } from "../design/Shakable.tsx";
 import { cls } from "../../styles/cls.ts";
+import { DeleteButton } from "../design/DeleteButton.tsx";
 
 type ManualEventCreatorProps = {
   onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
@@ -27,7 +27,6 @@ export function ManualEventCreator({
   onEventSaved: _onEventSaved,
   onEventDeleted: _onEventDeleted,
 }: ManualEventCreatorProps) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [shaking, setshaking] = useState(false);
   const [name, setName] = useState(event ? event.name : "");
   const [time, setTime] = useState(
@@ -64,6 +63,16 @@ export function ManualEventCreator({
       );
     }
     return name != "";
+  }
+
+  function onDeleteEvente(event: Event) {
+    event
+      .delete()
+      .then(_onEventDeleted)
+      .catch(() => {
+        setshaking(true);
+        setTimeout(() => setshaking(false), 300);
+      });
   }
 
   return (
@@ -123,35 +132,10 @@ export function ManualEventCreator({
       </form>
 
       {event && (
-        <div className={styles.button}>
-          <Shakable shaking={shaking}>
-            {!confirmDelete && (
-              <Button
-                onClick={() => setConfirmDelete(true)}
-                title={"Löschen"}
-                type={"negative"}
-                width={"flexible"}
-              />
-            )}
-            {confirmDelete && (
-              <Button
-                onClick={() => {
-                  setConfirmDelete(false);
-                  event
-                    .delete()
-                    .then(_onEventDeleted)
-                    .catch(() => {
-                      setshaking(true);
-                      setTimeout(() => setshaking(false), 300);
-                    });
-                }}
-                title={"Wirklich löschen"}
-                type={"negative"}
-                width={"flexible"}
-              />
-            )}
-          </Shakable>
-        </div>
+        <DeleteButton
+          shaking={shaking}
+          onFinalClick={() => onDeleteEvente(event)}
+        />
       )}
     </div>
   );

@@ -102,7 +102,7 @@ class Event(BaseModel):
         sql = f"""
             SELECT e.* FROM {db_manager.TABLE_EVENTS} e
             WHERE e.game_id = ? and e.datetime {"<" if past else ">"} '{now.strftime("%Y-%m-%d %H:%M:%S")}'
-            ORDER BY e.datetime DESC
+            ORDER BY e.datetime {"DESC" if past else "ASC"}
             """
         if page:
             sql += f"LIMIT {(page - 1) * 5}, {5}"

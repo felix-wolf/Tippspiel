@@ -12,7 +12,9 @@
   margin-bottom: var(--grid-l);
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   grid-gap: var(--grid-s);
+  justify-content: center;
 }
 
 .creatorContainer {

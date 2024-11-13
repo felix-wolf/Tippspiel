@@ -17,7 +17,7 @@ export const SiteRoutes = {
   Login: "/",
   Home: "/home",
   Game: "/home/game/:game_id",
-  PlaceBet: "/home/game/place_bet/:game_id/:event_id",
+  PlaceBet: "/home/game/place_bet/:game_id/:event_id/:page_num",
   ViewBets: "/home/game/view_bets/:game_id/:event_id",
   Export: "/:studyId/export",
   Debug: "/debug/*",

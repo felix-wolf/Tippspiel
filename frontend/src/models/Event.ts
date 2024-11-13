@@ -3,6 +3,7 @@ import { Bet, Prediction } from "./Bet";
 import { EventType } from "./user/EventType";
 import { Result } from "./Result";
 import { Utils } from "../utils.ts";
+import { EventTimeType } from "../components/domain/lists/EventList.tsx";
 
 export type Predictions = [
   Prediction,
@@ -112,8 +113,12 @@ export class Event {
     return `event${eventId}`;
   }
 
-  public static buildListCacheKey(gameId: string) {
-    return `events${gameId}`;
+  public static buildListCacheKey(
+    gameId: string,
+    index: string,
+    type: EventTimeType,
+  ) {
+    return `events${gameId}${index}${type}`;
   }
 
   public static fromJson(json: any) {

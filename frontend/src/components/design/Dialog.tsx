@@ -53,7 +53,7 @@ export function DialogModal({
         ref.current && !isClickInsideRectangle(e, ref.current) && onClose()
       }
     >
-      <h3>{title}</h3>
+      <h3 className={styles.heading}>{title}</h3>
 
       {children}
     </dialog>

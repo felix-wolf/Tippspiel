@@ -37,6 +37,7 @@ export function DateTimePicker({
         />
       </div>
       <input
+        className={styles.time}
         type={"time"}
         onChange={(ev) => _onTimeSet(ev.target.value)}
         min="00:00"

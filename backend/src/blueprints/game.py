@@ -77,3 +77,27 @@ def join_game():
         else:
             return "Beitreten nicht erfolgreich!", 400
     return "Tippspiel oder spieler konnte nicht gefunden werden!", 400
+
+@game_blueprint.route("/api/game/delete", methods=['GET'])
+@login_required
+def delete_game():
+    game_id = request.args.get("game_id")
+    game = Game.get_by_id(game_id)
+    if game:
+        success = game.delete()
+        if success:
+            return {"deleted_id": game_id}
+        return "Error deleting game", 500
+    return "Game to delete could not be found", 404
+
+@game_blueprint.route("/api/game/num_events", methods=['GET'])
+@login_required
+def get_num_events():
+    game_id = request.args.get("game_id")
+    game = Game.get_by_id(game_id)
+    if game:
+        success, num_events = game.get_num_events()
+        if success:
+            return {"num_events": num_events}
+        return "Error deleting game", 500
+    return "Game to delete could not be found", 404

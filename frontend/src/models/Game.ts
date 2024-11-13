@@ -5,7 +5,7 @@ import { Event } from "./Event.ts";
 
 export class Game {
   private readonly _id: string;
-  private readonly _name: string;
+  private _name: string;
   private readonly _players: User[];
   private readonly _creator?: User;
   private readonly _hasPassword: boolean = false;
@@ -39,6 +39,7 @@ export class Game {
   }
 
   public static buildCacheKey(gameId: string) {
+    console.log(gameId);
     return `game${gameId}`;
   }
 
@@ -76,6 +77,21 @@ export class Game {
     );
   }
 
+  public static fetchNumEvents(game_id: any): Promise<number> {
+    console.log("fetch", game_id);
+    return NetworkHelper.fetchOne(
+      `/api/game/num_events?game_id=${game_id}`,
+      (dict: any) => dict["num_events"],
+    );
+  }
+
+  public delete(): Promise<boolean> {
+    return NetworkHelper.execute(
+      `/api/game/delete?game_id=${this._id}`,
+      () => true,
+    );
+  }
+
   public processUrlForEvents(url: string): Promise<Event[]> {
     const builder = (res: any): Event[] => {
       return res.map((event: any) => Event.fromJson(event));
@@ -98,6 +114,10 @@ export class Game {
 
   get name(): string {
     return this._name;
+  }
+
+  set name(name: string) {
+    this._name = name;
   }
 
   get id(): string {

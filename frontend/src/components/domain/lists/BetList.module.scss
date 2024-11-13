@@ -15,8 +15,10 @@
   margin-top: 5px;
   composes: text-subtitle from global;
   text-align: center;
+  color: var(--text-dark);
 }
 
 .score {
   composes: text-subtitle from global;
+  color: var(--text-dark);
 }
