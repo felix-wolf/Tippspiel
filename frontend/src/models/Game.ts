@@ -39,7 +39,6 @@ export class Game {
   }
 
   public static buildCacheKey(gameId: string) {
-    console.log(gameId);
     return `game${gameId}`;
   }
 
@@ -78,7 +77,6 @@ export class Game {
   }
 
   public static fetchNumEvents(game_id: any): Promise<number> {
-    console.log("fetch", game_id);
     return NetworkHelper.fetchOne(
       `/api/game/num_events?game_id=${game_id}`,
       (dict: any) => dict["num_events"],

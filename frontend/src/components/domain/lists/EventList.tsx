@@ -54,7 +54,6 @@ export function EventList({
   useEffect(() => {
     refetch();
     if (game) {
-      console.log(game);
       refetchNumEvents();
     }
   }, [currPage, game]);
@@ -97,7 +96,7 @@ export function EventList({
         highlight: false,
       });
     }
-    console.log(currPage, currPage * 5, numEvents);
+
     if (currPage * 5 < (numEvents ?? 0)) {
       //if ((numEvents ?? 0) == 5 || currPage == 0) {
       items = items.concat({ name: ">" });
