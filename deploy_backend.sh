@@ -8,4 +8,4 @@ cd backend
 python3 -m pipenv install
 
 # run server in pipenv
-sudo systemctl start tippspiel_backend
+sudo systemctl restart tippspiel_backend
