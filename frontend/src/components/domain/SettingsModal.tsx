@@ -11,6 +11,7 @@ type SettingsModalProps = {
   onClose: () => void;
   game: Game;
   onGameDeleted: () => void;
+  onGameUpdated: () => void;
 };
 
 export function SettingsModal({
@@ -18,6 +19,7 @@ export function SettingsModal({
   onClose: _onClose,
   game,
   onGameDeleted: _onGameDeleted,
+  onGameUpdated: _onGameUpdated,
 }: SettingsModalProps) {
   const [gameName, setGameName] = useState(game.name);
   const [shaking, setshaking] = useState(false);
@@ -36,6 +38,16 @@ export function SettingsModal({
       });
   }
 
+  function onUpdateGameName() {
+    game
+      .saveNewName(gameName)
+      .then(_onGameUpdated)
+      .catch(() => {
+        setshaking(true);
+        setTimeout(() => setshaking(false), 300);
+      });
+  }
+
   return (
     <DialogModal
       title={"Einstellungen"}
@@ -44,7 +56,12 @@ export function SettingsModal({
       style={{ height: 465 }}
     >
       <div className={styles.container}>
-        <form className={styles.form}>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+          }}
+          className={styles.form}
+        >
           <div className={styles.row}>
             <TextField
               onInput={(text) => setGameName(text)}
@@ -54,7 +71,7 @@ export function SettingsModal({
           </div>
           <div className={styles.row}>
             <Button
-              onClick={() => {}}
+              onClick={() => onUpdateGameName()}
               title={"Speichern"}
               type={"positive"}
               width={"flexible"}

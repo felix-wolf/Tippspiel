@@ -110,6 +110,17 @@ export class Game {
     });
   }
 
+  public saveNewName(newName: string): Promise<Game> {
+    return NetworkHelper.update(
+      `/api/game/update?game_id=${this._id}`,
+      Game.fromJson,
+      {
+        game_id: this._id,
+        name: newName,
+      },
+    );
+  }
+
   get name(): string {
     return this._name;
   }

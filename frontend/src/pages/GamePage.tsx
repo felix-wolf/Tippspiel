@@ -17,13 +17,11 @@ import settings_white from "../assets/icons/settings_white.svg";
 import settings_black from "../assets/icons/settings_black.svg";
 import { useAppearance } from "../contexts/AppearanceContext.tsx";
 import { SettingsModal } from "../components/domain/SettingsModal.tsx";
-import { useNavigate } from "react-router-dom";
 import { useCache } from "../contexts/CacheContext.tsx";
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
-  const navigateParams = useNavigateParams();
-  const navigate = useNavigate();
+  const navigate = useNavigateParams();
   const [isCreator, setIsCreator] = useState(false);
   const user = useCurrentUser();
   const { isLight } = useAppearance();
@@ -53,21 +51,21 @@ export function GamePage() {
 
   useEffect(() => {
     if (!user) {
-      navigateParams(SiteRoutes.Login, {});
+      navigate(SiteRoutes.Login, {});
     }
     setIsCreator(game?.creator?.id == user?.id);
   }, [user, game]);
 
   const showUserBets = useCallback(
     (event_id: string, page_num: string) => {
-      navigateParams(SiteRoutes.PlaceBet, { game_id, event_id, page_num });
+      navigate(SiteRoutes.PlaceBet, { game_id, event_id, page_num });
     },
     [game_id],
   );
 
   const showAllBets = useCallback(
     (event_id: string) => {
-      navigateParams(SiteRoutes.ViewBets, { game_id, event_id });
+      navigate(SiteRoutes.ViewBets, { game_id, event_id });
     },
     [game_id],
   );
@@ -97,10 +95,15 @@ export function GamePage() {
             setShowingSettingsModal(false);
             setSettingsKey(settingsKey + 1);
           }}
+          onGameUpdated={() => {
+            setShowingSettingsModal(false);
+            setSettingsKey(settingsKey + 1);
+            refetchGame(true);
+          }}
           game={game}
           onGameDeleted={() => {
             cache.clearCache();
-            navigate(-1);
+            navigate(SiteRoutes.Home, {});
           }}
         />
       )}

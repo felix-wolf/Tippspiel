@@ -54,14 +54,21 @@ class Game(BaseModel):
 
     def delete(self):
         """Instead of delete the game, will set it to invisible to prevent damage for accidental clicks"""
-        sql = f"UPDATE {db_manager.TABLE_GAMES} SET visible = 0 WHERE id = '{self.id}'"
-        return db_manager.execute(sql)
+        sql = f"UPDATE {db_manager.TABLE_GAMES} SET visible = 0 WHERE id = ?"
+        return db_manager.execute(sql, [self.id])
     
     def get_num_events(self):
-        sql = f"SELECT COUNT(*) as num FROM {db_manager.TABLE_EVENTS} WHERE game_id = '{self.id}'"
-        num_events = db_manager.query_one(sql)
+        sql = f"SELECT COUNT(*) as num FROM {db_manager.TABLE_EVENTS} WHERE game_id = ?"
+        num_events = db_manager.query_one(sql, [self.id])
         if num_events is not None:
             return True, num_events["num"]
+        return False, None
+
+    def update(self, name: str):
+        sql = f"UPDATE {db_manager.TABLE_GAMES} SET name = ? WHERE id = ?"
+        success = db_manager.execute(sql, [name, self.id])
+        if success:
+            return True, Game.get_by_id(self.id)
         return False, None
 
     @staticmethod

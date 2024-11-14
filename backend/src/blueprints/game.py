@@ -90,6 +90,19 @@ def delete_game():
         return "Error deleting game", 500
     return "Game to delete could not be found", 404
 
+@game_blueprint.route("/api/game/update", methods=['PUT'])
+@login_required
+def update():
+    game_id = request.get_json().get("game_id", None)
+    name = request.get_json().get("name", None)
+    game = Game.get_by_id(game_id)
+    if game:
+        success, updated_game = game.update(name)
+        if success:
+            return updated_game.to_dict()
+        return "Error updating game", 500
+    return "Game to update could not be found", 404
+
 @game_blueprint.route("/api/game/num_events", methods=['GET'])
 @login_required
 def get_num_events():
