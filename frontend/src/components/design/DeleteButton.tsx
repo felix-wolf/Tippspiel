@@ -1,4 +1,4 @@
-import styles from "./deleteButton.module.scss";
+import styles from "./DeleteButton.module.scss";
 import { Shakable } from "./Shakable.tsx";
 import { Button } from "./Button.tsx";
 import { useState } from "react";
