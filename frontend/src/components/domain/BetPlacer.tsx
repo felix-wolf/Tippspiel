@@ -29,7 +29,14 @@ export function BetPlacer({
   const [completed, setCompleted] = useState(false);
   const [items, setItems] = useState<BetInputItem[]>([]);
   const [userBet, setUserBet] = useState<Bet | undefined>(undefined);
-  const selectionsNeeded = tryLoadExistingBet ? 5 : 10;
+  let selectionsNeeded = 10;
+  if (tryLoadExistingBet || event) {
+    if (event.allowPartialPoints) {
+      selectionsNeeded = event.numBets * 2;
+    } else {
+      selectionsNeeded = event.numBets;
+    }
+  }
 
   useEffect(() => {
     loadData(event.type)
@@ -75,7 +82,11 @@ export function BetPlacer({
   }
 
   function loadPredictions(userBet: Bet | undefined, items: BetInputItem[]) {
-    if (tryLoadExistingBet && userBet && userBet.predictions.length == 5) {
+    if (
+      tryLoadExistingBet &&
+      userBet &&
+      userBet.predictions.length == event.numBets
+    ) {
       const selected = items.filter((item) => {
         return (
           userBet.predictions.map((p) => p.object_id).indexOf(item.id ?? "") !=

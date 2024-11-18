@@ -9,9 +9,20 @@ import { EventType } from "../../models/user/EventType.ts";
 import { Event } from "../../models/Event.ts";
 import { cls } from "../../styles/cls.ts";
 import { DeleteButton } from "../design/DeleteButton.tsx";
+import { Checkbox } from "../design/Checkbox.tsx";
+
+type EventDetail = {
+  name: string;
+  time: string;
+  date: Date;
+  pointsCorrectBet: number;
+  numBets: number;
+  type: EventType | undefined;
+  allowPartialPoints: boolean;
+};
 
 type ManualEventCreatorProps = {
-  onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
+  onClick: (updatedEvent: Event) => Promise<boolean>;
   onDismiss: () => void;
   types: EventType[] | undefined;
   event?: Event;
@@ -28,41 +39,66 @@ export function ManualEventCreator({
   onEventDeleted: _onEventDeleted,
 }: ManualEventCreatorProps) {
   const [shaking, setshaking] = useState(false);
-  const [name, setName] = useState(event ? event.name : "");
-  const [time, setTime] = useState(
-    event ? Utils.getTimeString(event.datetime) : "09:00",
-  );
-  const [date, setDate] = useState(event ? event.datetime : new Date());
 
+  const [eventDetails, setEventDetails] = useState<EventDetail>(
+    createEventDetails(event),
+  );
   const options: DropDownOption[] | undefined = types?.map((type) => {
     return { id: type.id, label: type.display_name };
   });
-  const [type, setType] = useState<EventType | undefined>(
-    event ? event.type : types ? types[0] : undefined,
-  );
+
+  function createEventDetails(event?: Event): EventDetail {
+    return {
+      name: event ? event.name : "",
+      time: event ? Utils.getTimeString(event.datetime) : "09:00",
+      date: event ? event.datetime : new Date(),
+      type: event ? event.type : types ? types[0] : undefined,
+      numBets: event ? event.numBets : 5,
+      pointsCorrectBet: event ? event.pointsCorrectBet : 5,
+      allowPartialPoints: event ? event.allowPartialPoints : true,
+    };
+  }
 
   const onCreateSingleEventClick = useCallback(() => {
-    if (type) {
-      const d = date;
-      d.setHours(Number(time.split(":")[0]), Number(time.split(":")[1]), 0, 0);
-      _onClick(type, name, d)
+    if (eventDetails && eventDetails.type) {
+      const d = eventDetails.date;
+      d.setHours(
+        Number(eventDetails.time.split(":")[0]),
+        Number(eventDetails.time.split(":")[1]),
+        0,
+        0,
+      );
+      const e = new Event(
+        "",
+        eventDetails.name,
+        "",
+        eventDetails.type,
+        Utils.dateToString(d),
+        eventDetails.numBets,
+        eventDetails.pointsCorrectBet,
+        eventDetails.allowPartialPoints,
+        [],
+        [],
+        [],
+        d,
+      );
+      _onClick(e)
         .then((success) => {
           if (success) _onEventSaved();
         })
         .catch((error) => console.log(error));
     }
-  }, [type, time, date, name]);
+  }, [eventDetails]);
 
   function buttonEnabled(): boolean {
+    // TODO: REWORK THIS
     if (event) {
       return (
-        name != event.name ||
-        type?.id != event.type.id ||
-        time != Utils.getTimeString(event.datetime) ||
-        date.getTime() != event.datetime.getTime()
+        JSON.stringify(eventDetails) !==
+        JSON.stringify(createEventDetails(event))
       );
     }
-    return name != "";
+    return eventDetails.name != "";
   }
 
   function onDeleteEvente(event: Event) {
@@ -83,33 +119,88 @@ export function ManualEventCreator({
       >
         <div className={styles.row}>
           <TextField
-            initialValue={name}
+            initialValue={eventDetails.name}
             placeholder={"Name"}
-            onInput={(i) => {
-              setName(i);
-            }}
+            onInput={(i) => setEventDetails({ ...eventDetails, name: i })}
           />
         </div>
         <div className={styles.row}>
           <DateTimePicker
-            onDateSet={(date) => setDate(date)}
-            onTimeSet={(time) => setTime(time)}
-            initialDate={date}
-            initialTime={time}
+            onDateSet={(date) =>
+              setEventDetails({ ...eventDetails, date: date })
+            }
+            onTimeSet={(time) =>
+              setEventDetails({ ...eventDetails, time: time })
+            }
+            initialDate={eventDetails.date}
+            initialTime={eventDetails.time}
           />
           <DropDown
             onChange={(option) =>
-              setType(types?.find((type) => type.id == option?.id))
+              setEventDetails({
+                ...eventDetails,
+                type: types?.find((type) => type.id == option?.id),
+              })
             }
             options={options ?? []}
-            initial={options?.find((opt) => opt.id == type?.id) ?? undefined}
+            initial={
+              options?.find((opt) => opt.id == eventDetails.type?.id) ??
+              undefined
+            }
           />
         </div>
-        {event && type?.id != event.type.id && (
-          <div className={cls(styles.warning, styles.row)}>
-            ACHTUNG: Ändern der Eventart löscht alle bereits platzierten Tipps!
+
+        <div className={styles.row}>
+          <div className={styles.text}>Plätze zu tippen</div>
+          <div className={styles.numberInputContainer}>
+            <TextField
+              onInput={(input) =>
+                setEventDetails({ ...eventDetails, numBets: parseInt(input) })
+              }
+              placeholder={"Plätze zu tippen"}
+              type={"number"}
+              initialValue={eventDetails.numBets.toString()}
+            />
           </div>
-        )}
+        </div>
+        <div className={styles.row}>
+          <div className={styles.text}>Punkte für korrekte Tipps</div>
+          <div className={styles.numberInputContainer}>
+            <TextField
+              onInput={(input) =>
+                setEventDetails({
+                  ...eventDetails,
+                  pointsCorrectBet: parseInt(input),
+                })
+              }
+              placeholder={"Punkte für korrekte Tipps"}
+              type={"number"}
+              initialValue={eventDetails.pointsCorrectBet.toString()}
+            />
+          </div>
+        </div>
+        <div className={styles.row}>
+          <div className={styles.text}>Vergabe von Teilpunkte</div>
+          <div>
+            <Checkbox
+              onChange={(newValue) =>
+                setEventDetails({
+                  ...eventDetails,
+                  allowPartialPoints: newValue,
+                })
+              }
+              checked={eventDetails.allowPartialPoints}
+            />
+          </div>
+        </div>
+        {event &&
+          (eventDetails.type?.id != event.type.id ||
+            eventDetails.numBets != event.numBets) && (
+            <div className={cls(styles.warning, styles.row)}>
+              ACHTUNG: Speichern der Änderung löscht alle bereits platzierten
+              Tipps!
+            </div>
+          )}
         <div className={styles.row}>
           <Button
             onClick={onCreateSingleEventClick}

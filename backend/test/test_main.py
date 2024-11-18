@@ -54,7 +54,7 @@ def test_events_get_all(client):
 
 def test_event_get_by_game_id(client):
     games = Game.get_all() 
-    events = Event.get_all_by_game_id(games[0].id, get_full_objects=True)
+    events = Event.get_all_by_game_id(games[3].id, get_full_objects=True)
     assert events is not None and events != []
 
 def test_init_result(client):

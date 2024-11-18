@@ -138,6 +138,7 @@ class Biathlon(Discipline):
                         game_id=game_id,
                         event_type=get_correct_event_type(row['Description']),
                         dt=datetime.strptime(f"{row['Date']} {row['Time']}", "%Y-%m-%d %H:%M"),
+                        allow_partial_points=True,
                         event_id=None,
                         bets=None,
                         results=None

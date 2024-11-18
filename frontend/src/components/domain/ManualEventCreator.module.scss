@@ -3,6 +3,16 @@
   grid-gap: var(--grid-s);
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+.numberInputContainer {
+  min-width: 50px;
+  max-width: 100px;
+}
+
+.text {
+  color: var(--text-dark)
 }
 
 .form {

@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
         predictions = []
 
-        new_bet = Bet(user_id, event_id)
+        new_bet = Bet(user_id=user_id, event_id=event_id, allow_partial_points=True, points_correct_bet=5)
 
         for index, object_id in enumerate(objects):
             predictions.append(Prediction(new_bet.id, object_id, "", index + 1))

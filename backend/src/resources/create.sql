@@ -70,13 +70,16 @@ CREATE TABLE if not EXISTS Events (
     game_id TEXT NOT NULL,
     event_type_id TEXT NOT NULL,
     datetime DATETIME NOT NULL,
+    num_bets INTEGER NOT NULL DEFAULT 5,
+    points_correct_bet INTEGER NOT NULL DEFAULT 5,
+    allow_partial_points INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
 );
 
 CREATE TABLE if not EXISTS Results (
     id TEXT PRIMARY KEY NOT NULL,
     event_id NOT NULL,
-    place NUMERIC NOT NULL,
+    place INTEGER NOT NULL,
     object_id TEXT NOT NULL,
     FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
 );
@@ -110,7 +113,7 @@ CREATE TABLE if not EXISTS Bets (
     id TEXT PRIMARY KEY NOT NULL,
     event_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
-    score NUMERIC,
+    score INTEGER,
     FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
 );
@@ -119,10 +122,10 @@ CREATE TABLE if not EXISTS Bets (
 CREATE TABLE if not EXISTS Predictions (
     id TEXT PRIMARY KEY NOT NULL,
     bet_id TEXT NOT NULL,
-    predicted_place NUMERIC NOT NULL,
+    predicted_place INTEGER NOT NULL,
     object_id TEXT NOT NULL,
-    actual_place NUMERIC,
-    score NUMERIC,
+    actual_place INTEGER,
+    score INTEGER,
     FOREIGN KEY(bet_id) REFERENCES Bets(id) ON DELETE CASCADE
 );
 

@@ -26,9 +26,10 @@ export function PlaceBetPage() {
   }
 
   function onSave(predictions: Prediction[]) {
-    if (predictions.length == 5 && user?.id) {
+    if (predictions.length == data?.numBets && user?.id) {
       Event.saveBets(event_id, user.id, predictions as Predictions)
         .then((_) => {
+          console.log("delete");
           deleteCache(Event.buildListCacheKey(game_id, page_num, "upcoming"));
           deleteCache(Event.buildCacheKey(event_id));
           navigate(-1);

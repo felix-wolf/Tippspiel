@@ -20,10 +20,18 @@ export function EventEditorModal({
   event,
 }: EventEditorModalProps) {
   const onUpdateEvent = useCallback(
-    (type: EventType, name: string, datetime: Date): Promise<boolean> => {
+    (updatedEvent: Event): Promise<boolean> => {
       return new Promise((resolve, reject) => {
         if (event?.game_id) {
-          Event.update(event.id, name, event.game_id, type, datetime)
+          Event.update(
+            event.id,
+            updatedEvent.name,
+            event.game_id,
+            updatedEvent.type,
+            updatedEvent.datetime,
+            updatedEvent.numBets,
+            updatedEvent.pointsCorrectBet,
+          )
             .then((_) => {
               _onEdited();
               resolve(true);

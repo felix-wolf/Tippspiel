@@ -6,9 +6,10 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { isNumber } from "chart.js/helpers";
 
 type TextFieldProps = {
-  type?: "text" | "password";
+  type?: "text" | "password" | "number";
   placeholder: string;
   onInput: (input: string) => void;
   initialValue?: string;
@@ -43,18 +44,24 @@ export const TextField = React.forwardRef<TextFieldHandle, TextFieldProps>(
       [value],
     );
     const id = useId();
+    const blockLetters = type == "number";
 
     const onInput = useCallback(() => {
       let newValue = input.current?.value ?? "";
-      setValue(newValue);
+      if (
+        type != "number" ||
+        (blockLetters && newValue == "") ||
+        (blockLetters && isNumber(newValue))
+      )
+        setValue(newValue);
       _onInput?.(newValue);
-    }, [_onInput]);
+    }, [_onInput, type, input]);
 
     return (
       <input
         id={id}
         className={styles.textField}
-        type={type}
+        type={type == "number" ? "text" : type}
         ref={input}
         value={value}
         onInput={onInput}

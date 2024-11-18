@@ -26,11 +26,14 @@ class Prediction(BaseModel):
         success = db_manager.execute(sql, [self.id])
         return success, self.id
 
-    def set_actual_place(self, place):
+    def set_actual_place(self, place, points_correct_bet: int, allow_partial_points: bool):
         if type(place) == str:
             place = int(place)
         self.actual_place = place
-        self.score = max(0, min(5, 5 - abs(self.actual_place - self.predicted_place)))
+        if allow_partial_points:
+            self.score = max(0, min(points_correct_bet, points_correct_bet - abs(self.actual_place - self.predicted_place)))
+        else:
+            self.score = points_correct_bet if self.actual_place == self.predicted_place else 0
         sql = f"UPDATE {db_manager.TABLE_PREDICTIONS} SET score = ?, actual_place = ? WHERE id = ?"
         return db_manager.execute(sql, [self.score, self.actual_place, self.id])
 
@@ -109,8 +112,10 @@ class Prediction(BaseModel):
 
 class Bet(BaseModel):
 
-    def __init__(self, user_id: str, event_id: str, predictions: [Prediction] = None, score: int = None,
-                 bet_id: str = None):
+    def __init__(
+            self, user_id: str, event_id: str, predictions: list[Prediction] = None,
+            score: int = None, bet_id: str = None
+        ):
         if bet_id:
             self.id = bet_id
         else:
@@ -131,21 +136,18 @@ class Bet(BaseModel):
             "score": self.score
         }
 
-    def calc_score(self, results):
+    def calc_score(self, results, points_correct_bet, allow_partial_points):
         for pred in self.predictions:
             actual_place = 9999
             if pred.object_id in [r.object_id for r in results]:
                 actual_place = next((item.place for item in results if item.object_id == pred.object_id))
-            if not pred.set_actual_place(actual_place):
+            if not pred.set_actual_place(place=actual_place, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points):
                 return False
         self.score = sum([p.score for p in self.predictions])
         sql = f"UPDATE {db_manager.TABLE_BETS} SET score = ? WHERE id = ?"
         return db_manager.execute(sql, [self.score, self.id])
 
     def update_predictions(self, new_predictions):
-        if len(new_predictions) != 5:
-            return False, None
-
         if len(self.predictions) > 0:
             for prediction in self.predictions:
                 prediction.delete()
@@ -162,10 +164,10 @@ class Bet(BaseModel):
             return None
         # get predictions
         predictions = Prediction.get_by_id(bet_data["id"])
-        return Bet.from_dict(bet_data, predictions)
+        return Bet.from_dict(bet_dict=bet_data, predictions=predictions)
 
     @staticmethod
-    def get_by_event_id(event_id):
+    def get_by_event_id(event_id: str):
         bets = []
         sql = f"SELECT b.* FROM {db_manager.TABLE_BETS} b WHERE b.event_id = ? "
         bets_data = db_manager.query(sql, [event_id])
@@ -175,7 +177,7 @@ class Bet(BaseModel):
         for bet_data in bets_data:
             # get predictions
             predictions = Prediction.get_by_id(bet_data["id"])
-            bets.append(Bet.from_dict(bet_data, predictions))
+            bets.append(Bet.from_dict(bet_dict=bet_data, predictions=predictions))
         return bets
 
     @staticmethod

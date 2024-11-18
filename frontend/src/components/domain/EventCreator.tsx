@@ -9,7 +9,7 @@ import { ManualEventCreator } from "./ManualEventCreator.tsx";
 import { cls } from "../../styles/cls.ts";
 
 type EventCreatorProps = {
-  onClick: (type: EventType, name: string, datetime: Date) => Promise<boolean>;
+  onClick: (updatedEvent: Event) => Promise<boolean>;
   types: EventType[] | undefined;
   event?: Event;
   game?: Game;

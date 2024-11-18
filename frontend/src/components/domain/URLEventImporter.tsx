@@ -35,7 +35,6 @@ export function URLEventImporter({
         .processUrlForEvents(url)
         .then((events) => {
           setEvents(events);
-          console.log(events);
           _onEventsFetched(events);
           setSelectingEventsToImport(true);
         })
@@ -52,8 +51,7 @@ export function URLEventImporter({
     (events: Event[]) => {
       if (game) {
         setIsProcessing(true);
-        game
-          .saveImportedEvents(events)
+        Event.saveImportedEvents(events)
           .then(() => {
             setSelectingEventsToImport(false);
             _onEventsSaved();

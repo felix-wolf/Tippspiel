@@ -38,6 +38,7 @@ def handle_event_request():
         else:
             return "No game_id specified", 404
     elif request.method == "POST":
+        # posting a list of events
         events = request.get_json().get("events")
         if events is not None:
             parsed_events = []
@@ -51,15 +52,22 @@ def handle_event_request():
                 return [e.to_dict() for e in parsed_events]
             else:
                 return "Fehler beim speichern der Events", 500
-        
+        # posting a single event
         name = request.get_json().get("name")
         game_id = request.get_json().get("game_id")
         event_type = request.get_json().get("type")
         dt = request.get_json().get("datetime")
-        if not name or not game_id or not event_type or not dt:
+        allow_partial_points = bool(request.get_json().get("allow_partial_points"))
+        print(allow_partial_points)
+        num_bets = request.get_json().get("num_bets")
+        points_correct_bet = request.get_json().get("points_correct_bet")
+        if not name or not game_id or not event_type or not dt or not num_bets or not points_correct_bet or allow_partial_points is None:
             return "Required params not spefified", 500
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
-        success, event_id, event = Event.create(name, game_id, event_type, dt)
+        success, event_id, event = Event.create(
+            name=name, game_id=game_id, event_type_id=event_type, dt=dt, 
+            num_bets=num_bets, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points
+        )
         if success:
             return event.to_dict()
         else:
@@ -70,10 +78,13 @@ def handle_event_request():
         event_type = request.get_json().get("type")
         dt = request.get_json().get("datetime")
         event_id = request.get_json().get("event_id")
-        if not name or not game_id or not event_type or not dt or not event_id:
+        num_bets = request.get_json().get("num_bets")
+        points_correct_bet = request.get_json().get("points_correct_bet")
+        allow_partial_points = bool(request.get_json().get("allow_partial_points"))
+        if not name or not game_id or not event_type or not dt or not num_bets or not points_correct_bet or allow_partial_points is None:
             return "Required params not spefified", 500
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
-        success, event = Event.get_by_id(event_id).update(name, event_type, dt)
+        success, event = Event.get_by_id(event_id).update(name=name, event_type_id=event_type, dt=dt, num_bets=num_bets, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points)
         if success:
             return event.to_dict()
         else:

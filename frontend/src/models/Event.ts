@@ -17,6 +17,9 @@ export class Event {
   private readonly _id: string;
   private readonly _name: string;
   private readonly _game_id: string;
+  private readonly _numBets: number;
+  private readonly _pointsCorrectBet: number;
+  private readonly _allowPartialPoints: boolean;
   private readonly _eventType: EventType;
   private readonly _bets: Bet[];
   private readonly _datetime: Date;
@@ -28,18 +31,29 @@ export class Event {
     game_id: string,
     type: EventType,
     datetime: string,
+    numBets: number,
+    pointsCorrectBet: number,
+    allowPartialPoints: boolean,
     bets: Bet[],
     results: Result[],
     hasBetsForUsers: string[],
+    date?: Date,
   ) {
     this._id = id;
     this._name = name;
     this._game_id = game_id;
     this._eventType = type;
     this._bets = bets;
+    this._numBets = numBets;
+    this._pointsCorrectBet = pointsCorrectBet;
+    this._allowPartialPoints = allowPartialPoints;
     this._results = results;
     this._hasBetsForUsers = hasBetsForUsers;
-    this._datetime = new Date(Date.parse(datetime.replace(/-/g, "/")));
+    if (date) {
+      this._datetime = date;
+    } else {
+      this._datetime = new Date(Date.parse(datetime.replace(/-/g, "/")));
+    }
   }
 
   public hasBetsForUsers(): string[] {
@@ -60,6 +74,18 @@ export class Event {
 
   get type(): EventType {
     return this._eventType;
+  }
+
+  get numBets(): number {
+    return this._numBets;
+  }
+
+  get pointsCorrectBet(): number {
+    return this._pointsCorrectBet;
+  }
+
+  get allowPartialPoints(): boolean {
+    return this._allowPartialPoints;
   }
 
   get bets(): Bet[] {
@@ -97,6 +123,7 @@ export class Event {
       "game_id": "${this._game_id}",
       "datetime": "${Utils.dateToIsoString(this._datetime)}",
       "hasBetsForUsers": "${this._hasBetsForUsers}",
+      "allow_partial_points": "${this.allowPartialPoints ? 1 : 0}",
       "results": [${this._results.map((result) => result.toJson()).join(",")}],
       "bets": [${this._bets.map((bet) => bet.toJson()).join(",")}],
       "event_type": ${this._eventType.toJson()}
@@ -128,6 +155,9 @@ export class Event {
       json["game_id"],
       EventType.fromJson(json["event_type"]),
       json["datetime"],
+      json["num_bets"],
+      json["points_correct_bet"],
+      json["allow_partial_points"],
       json["bets"].map((bet: any) => Bet.fromJson(bet)),
       json["results"].map((result: any) => Result.fromJson(result)),
       json["has_bets_for_users"],
@@ -165,6 +195,15 @@ export class Event {
     );
   }
 
+  public static saveImportedEvents(events: Event[]): Promise<Event[]> {
+    const builder = (res: any): Event[] => {
+      return res.map((event: any) => Event.fromJson(event));
+    };
+    return NetworkHelper.post<Event[]>("/api/event", builder, {
+      events: events.map((event: Event) => event.toJson()),
+    });
+  }
+
   public static fetchAll(
     game_id: string,
     page: number,
@@ -185,6 +224,8 @@ export class Event {
     game_id: string,
     type: EventType,
     datetime: Date,
+    numBets: number,
+    pointsCorrectBet: number,
   ): Promise<Event> {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -197,6 +238,8 @@ export class Event {
       game_id: game_id,
       type: type.id,
       datetime: date_string,
+      num_bets: numBets,
+      points_correct_bet: pointsCorrectBet,
     });
   }
 
@@ -206,6 +249,8 @@ export class Event {
     game_id: string,
     type: EventType,
     datetime: Date,
+    numBets: number,
+    pointsCorrectBet: number,
   ): Promise<Event> {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -219,6 +264,8 @@ export class Event {
       game_id: game_id,
       type: type.id,
       datetime: date_string,
+      num_bets: numBets,
+      points_correct_bet: pointsCorrectBet,
     });
   }
 }

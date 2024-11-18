@@ -12,7 +12,6 @@ import { EventEditorModal } from "../EventEditorModal";
 import { Game } from "../../../models/Game";
 import { Toggler, TogglerItem } from "../../design/Toggler";
 import { EventCreator } from "../EventCreator";
-import { EventType } from "../../../models/user/EventType";
 import { useAppearance } from "../../../contexts/AppearanceContext.tsx";
 
 export type EventTimeType = "upcoming" | "past";
@@ -66,10 +65,7 @@ export function EventList({
   });
 
   const eventsFetchValues = useFetch<Event[]>({
-    key:
-      Event.buildListCacheKey(game.id, currPage.toString(), type) +
-      currPage +
-      type,
+    key: Event.buildListCacheKey(game.id, currPage.toString(), type),
     func: Event.fetchAll,
     args: [game.id, currPage, type == "past"],
     initialEnabled: false,
@@ -105,9 +101,16 @@ export function EventList({
   }
 
   const onCreate = useCallback(
-    (type: EventType, name: string, datetime: Date): Promise<boolean> => {
+    (updatedEvent: Event): Promise<boolean> => {
       return new Promise((resolve, reject) => {
-        Event.create(name, game.id, type, datetime)
+        Event.create(
+          updatedEvent.name,
+          game.id,
+          updatedEvent.type,
+          updatedEvent.datetime,
+          updatedEvent.numBets,
+          updatedEvent.pointsCorrectBet,
+        )
           .then((_) => {
             refetch(true);
             resolve(true);

@@ -19,13 +19,6 @@ export const SiteRoutes = {
   Game: "/home/game/:game_id",
   PlaceBet: "/home/game/place_bet/:game_id/:event_id/:page_num",
   ViewBets: "/home/game/view_bets/:game_id/:event_id",
-  Export: "/:studyId/export",
-  Debug: "/debug/*",
-  Test: "/test/:studyId/:subjectId",
-  Dashboard: "/dashboard/:inviteCode",
-  Transcription: "/transcribe/:studyId/:subjectId", //TODO: Add parameters for question index/module index
-  TestSchemaManagement: "/schemas",
-  TestEditor: "/schemas/:schemaId",
 } as const satisfies Record<string, string>;
 
 /**

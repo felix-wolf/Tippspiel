@@ -52,7 +52,7 @@ class ScoreEvent(BaseModel):
             bets = Bet.get_by_event_id(event.id)
             scores = {bet.user_id: bet.score for bet in bets}
             event.scores = scores
-        return [e for e in events if len(e.scores) > 0 and len([v for k, v in e.scores.items() if v]) > 0]
+        return [e for e in events if len(e.scores) > 0 and len([v for k, v in e.scores.items() if v is not None]) > 0]
     
     @staticmethod
     def get_all():

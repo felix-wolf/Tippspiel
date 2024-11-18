@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from src.models.discipline import Discipline
 from src.models.event import Event
+from src.models.result import Result
 from flask_login import *
 
 result_blueprint = Blueprint('result', __name__)
@@ -14,7 +15,7 @@ def process_results():
         if not event:
             return "Event nicht gefunden", 400
         url = request.get_json().get("url", None)
-        results = request.get_json().get("results", None)
+        results_json = request.get_json().get("results", None)
         if url:
             # check if discipline allows url updates and if url matches result_url
             discipline = Discipline.get_by_id(event.event_type.discipline_id)
@@ -25,6 +26,8 @@ def process_results():
             results, error = discipline.preprocess_results_for_discipline(url, event)
             if error:
                 return error, 500
+        else:
+            results = [Result(event_id, j['place'], j['id']) for j in results_json]
 
         if not results:
             return "Missing parameters", 400
