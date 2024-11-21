@@ -15,6 +15,7 @@ type BetPlacerProps = {
   tryLoadExistingBet?: boolean;
   user?: User;
   saveEnabled?: boolean;
+  enteringResults: boolean;
 };
 export function BetPlacer({
   event,
@@ -22,6 +23,7 @@ export function BetPlacer({
   user,
   tryLoadExistingBet = true,
   saveEnabled = true,
+  enteringResults,
 }: BetPlacerProps) {
   const [placedPredictions, setPlacedPredictions] = useState<BetInputItem[]>(
     [],
@@ -31,7 +33,7 @@ export function BetPlacer({
   const [userBet, setUserBet] = useState<Bet | undefined>(undefined);
   let selectionsNeeded = 10;
   if (tryLoadExistingBet || event) {
-    if (event.allowPartialPoints) {
+    if (event.allowPartialPoints && enteringResults) {
       selectionsNeeded = event.numBets * 2;
     } else {
       selectionsNeeded = event.numBets;
@@ -111,7 +113,12 @@ export function BetPlacer({
   }
 
   function calcCompleted(bets: BetInputItem[]) {
-    setCompleted(bets.filter((bet) => bet.id).length == selectionsNeeded);
+    const equal = bets
+      .map((bet, index) => bet.id == userBet?.predictions[index].object_id)
+      .every((eq) => eq);
+    setCompleted(
+      bets.filter((bet) => bet.id).length == selectionsNeeded && !equal,
+    );
   }
 
   const onSelectItem = useCallback(

@@ -29,7 +29,6 @@ export function PlaceBetPage() {
     if (predictions.length == data?.numBets && user?.id) {
       Event.saveBets(event_id, user.id, predictions as Predictions)
         .then((_) => {
-          console.log("delete");
           deleteCache(Event.buildListCacheKey(game_id, page_num, "upcoming"));
           deleteCache(Event.buildCacheKey(event_id));
           navigate(-1);
@@ -43,7 +42,14 @@ export function PlaceBetPage() {
       {loading && <Loader />}
       {!loading && (
         <NavPage title={"TIPPEN FÜR: " + data?.name}>
-          {data && <BetPlacer user={user} onSave={onSave} event={data} />}
+          {data && (
+            <BetPlacer
+              user={user}
+              onSave={onSave}
+              event={data}
+              enteringResults={false}
+            />
+          )}
         </NavPage>
       )}
     </>

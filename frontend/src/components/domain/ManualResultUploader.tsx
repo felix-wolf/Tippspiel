@@ -54,6 +54,7 @@ export function ManualResultUploader({
             event={event}
             tryLoadExistingBet={false}
             saveEnabled={!isProcessing}
+            enteringResults={true}
           />
         </div>
       )}

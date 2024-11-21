@@ -172,9 +172,9 @@ class Event(BaseModel):
         return success, self.id
 
     def save_bet(self, user_id, predictions):
-        bet = Bet.get_by_event_id_user_id(event_id=self.id, user_id=user_id, points_correct_bet=self.points_correct_bet)
+        bet = Bet.get_by_event_id_user_id(event_id=self.id, user_id=user_id)
         if not bet:
-            bet = Bet(user_id=user_id, event_id=self.id, allow_partial_points=self.allow_partial_points, points_correct_bet=self.points_correct_bet)
+            bet = Bet(user_id=user_id, event_id=self.id)
         if len(predictions) != self.num_bets:
             return False, None
         return bet.update_predictions(predictions), self.id
@@ -220,7 +220,7 @@ class Event(BaseModel):
             self.name = name
         if event_type_id != self.event_type.id:
             # delete all associated bets since event type was changed
-            bets = Bet.get_by_event_id(self.id, self.points_correct_bet)
+            bets = Bet.get_by_event_id(self.id)
 
             for bet in bets:
                 deletion_successful = bet.delete()
