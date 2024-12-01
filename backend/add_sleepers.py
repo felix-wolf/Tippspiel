@@ -1,76 +1,134 @@
 from src.models.bet import Bet
 from src.models.bet import Prediction
 from src.models.event import Event
+from src.models.event_type import EventType
 from src.models.user import User
 from src.models.athlete import Athlete
 from src.models.country import Country
+from src.database import db_manager
+from main import create_app
+import inquirer
 
 
-def getObjectName(object_type: str, object_id: str) -> str:
-    if object_type == "a":
-        return next(" ".join([a.first_name, a.last_name]) for a in Athlete.get_all() if a.id == object_id)
-    if object_type == "c":
-        return next(c.name for c in Country.get_all() if c.code == object_id)
-
-
-def confirm_with_user(user_id: str, event_id: str, objects: [], object_type: str) -> bool:
+def confirm_with_user(user: str, event: str, objects: []) -> bool:
     print("Are you sure you want to save this?")
-    print(f"Event: {Event.get_by_id(event_id, get_full_object=False).name}")
-    print(f"User: {User.get_by_id(user_id).name}")
-    for index, object_id in enumerate(objects):
-        print(f"Platz {index + 1}: {getObjectName(object_type, object_id)}")
+    print(f"Event: {event['name']}")
+    print(f"User: {user['name']}")
+    for index, o in enumerate(objects):
+        print(f"Platz {index + 1}: {o['name']}")
     return input("Type YES to confirm: ") == "YES"
 
 
-event_id = "f02c2c3f7438e16e74c8817c4ef898d4"
-data = [
-    # {"userId": "userId", "type": "c || a", "objects": ["id_1", "id_2", "id_3", "id_4", "id_5"]}
-    {
-        # luisa
-        "userId": "28ac3f81293bc9112f05bfb2b9dfb9cd",
-        "type": "a",
-        "objects": [
-            "c5e52ac3c42b5ffa461ab553613bc62d",
-            "863a08de49b7cbe1ca04205d3f192a27",
-            "19029c339a2a8dd8c31e83a62ae07b5a",
-            "55098e927de05689d8ae8683c348b7ab",
-            "11c697c980013126bc5fd0edf9dc11a5"
+def select_game():
+    sql = f"SELECT * FROM GAMES;"
+    games = db_manager.query(sql)
+    choices = [game['name'] for game in games]
+    questions = [
+        inquirer.List(
+            name="game",
+            message= 'Select Game:',
+            choices=choices
+        )
+    ]
+    answers = inquirer.prompt(questions)
+    return games[choices.index(answers['game'])]
+
+
+def select_event(game):
+    sql = f"SELECT * FROM EVENTS WHERE game_id = ? ORDER BY datetime ASC;"
+    events = db_manager.query(sql, [game['id']])
+    choices = [event['name'] for event in events]
+    questions = [
+        inquirer.List(
+            name="event",
+            message= 'Select Event:',
+            choices=choices
+        )
+    ]
+    answers = inquirer.prompt(questions)
+    return events[choices.index(answers['event'])]
+
+
+def select_user(game):
+    sql = f"""
+        SELECT u.* FROM USERS u 
+        INNER JOIN GamePlayers gp on u.id = gp.player_id
+        WHERE gp.game_id = ?"""
+    users = db_manager.query(sql, [game['id']])
+    choices = [user['name'] for user in users]
+    questions = [
+        inquirer.List(
+            name="user",
+            message= 'Select Users:',
+            choices=choices
+        )
+    ]
+    answers = inquirer.prompt(questions)
+    return users[choices.index(answers['user'])]
+
+
+def select_objects_to_bet_on(game, event):
+    event_type = EventType.get_by_id(event['event_type_id'])
+    selected_objects = []
+    all_objects = []
+    for place in range(1, event['num_bets'] + 1):
+        print("Place: ", place)
+        if event_type.betting_on == 'countries':
+            id_col = "code"
+            sql = f"SELECT * FROM Countries ORDER BY code"
+            objects = db_manager.query(sql)
+            all_objects = [{"id": o['code'], "name": o['name']} for o in objects]
+            choices = [o['name'] for o in all_objects]
+        elif event_type.betting_on == 'athletes':
+            id_col = "id"
+            sql = f"SELECT * FROM Athletes WHERE discipline = ? ORDER BY gender, last_name"
+            objects = db_manager.query(sql, [event_type.discipline_id])
+            while True:
+                partial_name = input("Input part of name:\t")
+                all_objects = [{"id": o['id'], "name": o['last_name'] + ", " + o['first_name']} for o in objects]
+                choices =  [o['name'] for o in all_objects if partial_name in o['name']]
+                if len(choices) > 0:
+                    break
+        questions = [
+            inquirer.List(
+                name="object",
+                message= 'Select Objects:',
+                choices=choices
+            )
         ]
-    },
-    #{
-        # ute
-        #"userId": "28ac3f81293bc9112f05bfb2b9dfb9cd",
-        #"type": "c",
-        #"objects": [
-        #    "NOR",
-        #    "FRA",
-        #    "GER",
-        #    "SWE",
-        #    "ITA"
-        #]
-    #},
-]
+        answers = inquirer.prompt(questions)
+        selected_objects.append(all_objects[choices.index(answers['object'])])
+    return selected_objects
 
 if __name__ == '__main__':
-    for entry in data:
-        user_id = entry['userId']
-        object_type = entry['type']
-        objects = entry['objects']
+    app = create_app("prod")
+    # other setup can go here
+    with app.app_context():
+        game = select_game()    
+
+        event = select_event(game)
+
+        user = select_user(game)
+
+        objects = select_objects_to_bet_on(game, event)
 
         predictions = []
+        new_bet = Bet(user_id=user['id'], event_id=event['id'])
 
-        new_bet = Bet(user_id=user_id, event_id=event_id, allow_partial_points=True, points_correct_bet=5)
-
-        for index, object_id in enumerate(objects):
-            predictions.append(Prediction(new_bet.id, object_id, "", index + 1))
+        for index, o in enumerate(objects):
+            predictions.append(Prediction(
+                    bet_id=new_bet.id,
+                    object_id=o["id"],
+                    object_name=o['name'],
+                    predicted_place=index + 1
+            ))
         new_bet.predictions = predictions
 
-        if confirm_with_user(user_id, event_id, objects, object_type):
+        if confirm_with_user(user, event, objects):
+            print("SAVING")
             if new_bet.save_to_db():
                 print("saving successful.\n")
             else:
                 print("Error when saving.\n")
         else:
             print("Did not save.\n")
-
-
