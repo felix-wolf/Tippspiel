@@ -23,7 +23,7 @@ def process_results():
                 return "Fehler...", 500
             if not discipline.validate_result_url(url):
                 return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
-            results, error = discipline.preprocess_results_for_discipline(url, event)
+            results, error = discipline.process_results_url(url, event)
             if error:
                 return error, 500
         else:
