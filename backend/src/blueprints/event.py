@@ -58,7 +58,6 @@ def handle_event_request():
         event_type = request.get_json().get("type")
         dt = request.get_json().get("datetime")
         allow_partial_points = bool(request.get_json().get("allow_partial_points"))
-        print(allow_partial_points)
         num_bets = request.get_json().get("num_bets")
         points_correct_bet = request.get_json().get("points_correct_bet")
         if not name or not game_id or not event_type or not dt or not num_bets or not points_correct_bet or allow_partial_points is None:

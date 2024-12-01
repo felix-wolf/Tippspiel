@@ -159,14 +159,14 @@ class Event(BaseModel):
     def save_to_db(self, commit=True):
         sql = f"""
         INSERT INTO {db_manager.TABLE_EVENTS} 
-            (id, name, game_id, event_type_id, datetime, num_bets, points_correct_bet) 
-            VALUES (?,?,?,?,?,?,?)
+            (id, name, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points) 
+            VALUES (?,?,?,?,?,?,?, ?)
         """
         success = db_manager.execute(
             sql, [
                 self.id, self.name, self.game_id,
                 self.event_type.id, Event.datetime_to_string(self.dt),
-                self.num_bets, self.points_correct_bet
+                self.num_bets, self.points_correct_bet, self.allow_partial_points
             ],
             commit=commit)
         return success, self.id
