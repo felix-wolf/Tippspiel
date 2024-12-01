@@ -67,7 +67,7 @@ def select_user(game):
     return users[choices.index(answers['user'])]
 
 
-def select_objects_to_bet_on(game, event):
+def select_objects_to_bet_on(event):
     event_type = EventType.get_by_id(event['event_type_id'])
     selected_objects = []
     all_objects = []
@@ -83,7 +83,7 @@ def select_objects_to_bet_on(game, event):
             objects = db_manager.query(sql, [event_type.discipline_id])
             while True:
                 partial_name = input("Input part of name:\t")
-                all_objects = [{"id": o['id'], "name": o['last_name'] + ", " + o['first_name']} for o in objects if partial_name in o['name']]
+                all_objects = [{"id": o['id'], "name": o['last_name'] + ", " + o['first_name']} for o in objects if partial_name in o['first_name'] + o['last_name']]
                 choices =  [o['name'] for o in all_objects]
                 if len(choices) > 0:
                     break
