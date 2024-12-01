@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
         user = select_user(game)
 
-        objects = select_objects_to_bet_on(game, event)
+        objects = select_objects_to_bet_on(event)
 
         predictions = []
         new_bet = Bet(user_id=user['id'], event_id=event['id'])
