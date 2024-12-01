@@ -2,7 +2,8 @@
 CREATE TABLE if not EXISTS Countries (
     code TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
-    flag TEXT NOT NULL
+    flag TEXT NOT NULL,
+    english_name TEXT NOT NULL
 
 );
 

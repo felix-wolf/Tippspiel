@@ -107,9 +107,10 @@ def update():
 @login_required
 def get_num_events():
     game_id = request.args.get("game_id")
+    past = bool(int(request.args.get("past", "0")))
     game = Game.get_by_id(game_id)
     if game:
-        success, num_events = game.get_num_events()
+        success, num_events = game.get_num_events(past)
         if success:
             return {"num_events": num_events}
         return "Error deleting game", 500

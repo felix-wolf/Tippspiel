@@ -76,9 +76,9 @@ export class Game {
     );
   }
 
-  public static fetchNumEvents(game_id: any): Promise<number> {
+  public static fetchNumEvents(game_id: any, past: number): Promise<number> {
     return NetworkHelper.fetchOne(
-      `/api/game/num_events?game_id=${game_id}`,
+      `/api/game/num_events?game_id=${game_id}&past=${past}`,
       (dict: any) => dict["num_events"],
     );
   }

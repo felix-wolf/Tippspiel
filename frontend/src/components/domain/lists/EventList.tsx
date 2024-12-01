@@ -60,7 +60,7 @@ export function EventList({
   const numEventsFetchValues = useFetch<number>({
     key: `eventlistlength${type}${game.id}`,
     func: Game.fetchNumEvents,
-    args: [game.id],
+    args: [game.id, type == "past" ? 1 : 0],
     initialEnabled: false,
   });
 
@@ -92,7 +92,7 @@ export function EventList({
         highlight: false,
       });
     }
-
+    console.log(currPage * 5 < (numEvents ?? 0), currPage, numEvents);
     if (currPage * 5 < (numEvents ?? 0)) {
       //if ((numEvents ?? 0) == 5 || currPage == 0) {
       items = items.concat({ name: ">" });

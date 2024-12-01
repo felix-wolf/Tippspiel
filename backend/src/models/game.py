@@ -4,7 +4,7 @@ from src.database import db_manager
 from src.models.discipline import Discipline
 from src.models.user import User
 from src.models.base_model import BaseModel
-
+from datetime import datetime
 
 class Game(BaseModel):
 
@@ -57,8 +57,14 @@ class Game(BaseModel):
         sql = f"UPDATE {db_manager.TABLE_GAMES} SET visible = 0 WHERE id = ?"
         return db_manager.execute(sql, [self.id])
     
-    def get_num_events(self):
-        sql = f"SELECT COUNT(*) as num FROM {db_manager.TABLE_EVENTS} WHERE game_id = ?"
+    def get_num_events(self, past):
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if past:
+            clause = f"datetime < '{now}'"
+        else:
+            clause = f"datetime > '{now}'"
+        print(clause)
+        sql = f"SELECT COUNT(*) as num FROM {db_manager.TABLE_EVENTS} WHERE game_id = ? AND {clause}"
         num_events = db_manager.query_one(sql, [self.id])
         if num_events is not None:
             return True, num_events["num"]
