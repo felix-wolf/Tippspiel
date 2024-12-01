@@ -26,7 +26,7 @@ def select_game():
     questions = [
         inquirer.List(
             name="game",
-            message= 'Select Game:',
+            message= 'Select Game',
             choices=choices
         )
     ]
@@ -41,7 +41,7 @@ def select_event(game):
     questions = [
         inquirer.List(
             name="event",
-            message= 'Select Event:',
+            message= 'Select Event',
             choices=choices
         )
     ]
@@ -59,7 +59,7 @@ def select_user(game):
     questions = [
         inquirer.List(
             name="user",
-            message= 'Select Users:',
+            message= 'Select Users',
             choices=choices
         )
     ]
@@ -74,19 +74,17 @@ def select_objects_to_bet_on(game, event):
     for place in range(1, event['num_bets'] + 1):
         print("Place: ", place)
         if event_type.betting_on == 'countries':
-            id_col = "code"
             sql = f"SELECT * FROM Countries ORDER BY code"
             objects = db_manager.query(sql)
             all_objects = [{"id": o['code'], "name": o['name']} for o in objects]
             choices = [o['name'] for o in all_objects]
         elif event_type.betting_on == 'athletes':
-            id_col = "id"
             sql = f"SELECT * FROM Athletes WHERE discipline = ? ORDER BY gender, last_name"
             objects = db_manager.query(sql, [event_type.discipline_id])
             while True:
                 partial_name = input("Input part of name:\t")
-                all_objects = [{"id": o['id'], "name": o['last_name'] + ", " + o['first_name']} for o in objects]
-                choices =  [o['name'] for o in all_objects if partial_name in o['name']]
+                all_objects = [{"id": o['id'], "name": o['last_name'] + ", " + o['first_name']} for o in objects if partial_name in o['name']]
+                choices =  [o['name'] for o in all_objects]
                 if len(choices) > 0:
                     break
         questions = [
@@ -125,7 +123,6 @@ if __name__ == '__main__':
         new_bet.predictions = predictions
 
         if confirm_with_user(user, event, objects):
-            print("SAVING")
             if new_bet.save_to_db():
                 print("saving successful.\n")
             else:

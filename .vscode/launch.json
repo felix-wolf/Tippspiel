@@ -4,6 +4,16 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+        {
+            "cwd": "${workspaceFolder}/backend",
+            "name": "no args",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": []
+        },
         {
             "cwd": "${workspaceFolder}/backend",
             "name": "Start Backend",
