@@ -63,7 +63,6 @@ class Game(BaseModel):
             clause = f"datetime < '{now}'"
         else:
             clause = f"datetime > '{now}'"
-        print(clause)
         sql = f"SELECT COUNT(*) as num FROM {db_manager.TABLE_EVENTS} WHERE game_id = ? AND {clause}"
         num_events = db_manager.query_one(sql, [self.id])
         if num_events is not None:

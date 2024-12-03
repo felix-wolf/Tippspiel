@@ -161,22 +161,27 @@ class Biathlon(Discipline):
             return [], "Fehler beim Parsen der Webseite"
 
         if event.event_type.betting_on == "countries":
-            if "Rank" not in df or "Country" not in df:
-                print("Webseite enthält nicht die erwarteten Daten")
+            if "Rank" not in df or "Country" not in df or "Nation" not in df:
                 return [], "Webseite enthält nicht die erwarteten Daten"
-            df = df[["Rank", "Country"]]
+            df = df[["Rank", "Country", "Nation"]]
             df = df[df["Country"].notnull()]
             results = []
+            countries = []
             for r in df.values:
                 place = r[0]
                 country_name = r[1]
-                country = Country.get_by_english_name(country_name)
-                result = Result(event_id=event.id, place=utils.validate_int(r[0]), object_id=country.code, object_name=country.name)
-                results.append(result)
+                country_code = r[2]
+                r = Result(event_id=event.id, place=utils.validate_int(place), object_id=country_code, object_name=country_name)
+                results.append(r)
+                # if new country would appear in the relay list, we save it
+                c = Country(country_code, country_name, "🏴‍☠️")
+                countries.append(c)
+            self.process_countries(countries)
             return results, None
 
         elif event.event_type.betting_on == "athletes":
             if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
+                print("Webseite enthält nicht die erwarteten Daten")
                 return [], "Webseite enthält nicht die erwarteten Daten"
             df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
             results = []
@@ -212,6 +217,11 @@ class Biathlon(Discipline):
         for a in athletes:
             a.gender = first_existing_althlete.gender
             a.save_to_db()
+
+    
+    def process_countries(self, countries):
+        for c in countries:
+            c.save_to_db()
 
 
 class Skispringen(Discipline):

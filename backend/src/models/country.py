@@ -28,12 +28,6 @@ class Country(BaseModel):
         raise NotImplementedError
 
     @staticmethod
-    def get_by_english_name(e_name):
-        sql = f"""SELECT * FROM {db_manager.TABLE_COUNTRIES} WHERE english_name = ?"""
-        res = db_manager.query_one(sql, [e_name])
-        return Country.from_dict(res)
-
-    @staticmethod
     def get_all():
         sql = f"""SELECT * FROM {db_manager.TABLE_COUNTRIES}"""
         res = db_manager.query(sql)
