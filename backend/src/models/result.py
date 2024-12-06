@@ -4,7 +4,7 @@ from src.models.base_model import BaseModel
 
 class Result(BaseModel):
 
-    def __init__(self, event_id: str, place: int, object_id: str, object_name: str = None, result_id: str = None):
+    def __init__(self, event_id: str, place: int, object_id: str, object_name: str = None, result_id: str = None, time: str = None, behind: str = None):
         if result_id is None:
             self.id = utils.generate_id([event_id, place, object_id])
         else:
@@ -13,11 +13,21 @@ class Result(BaseModel):
         self.place = place
         self.object_id = object_id
         self.object_name = object_name
+        self.time = time
+        self.behind = behind
 
     @staticmethod
     def from_dict(r_dict):
         if r_dict:
-            return Result(r_dict['event_id'], r_dict['place'], r_dict['object_id'], r_dict['object_name'], r_dict['id'])
+            return Result(
+                event_id=r_dict['event_id'], 
+                place=r_dict['place'], 
+                object_id=r_dict['object_id'], 
+                object_name=r_dict['object_name'], 
+                result_id=r_dict['id'], 
+                time=r_dict['time'],
+                behind=r_dict['behind']
+            )
         else:
             return None
 
@@ -40,16 +50,18 @@ class Result(BaseModel):
             "event_id": self.event_id,
             "place": self.place,
             "object_id": self.object_id,
-            "object_name": self.object_name
+            "object_name": self.object_name,
+            "time": self.time,
+            "behind": self.behind
         }
 
     def save_to_db(self):
         sql = f"""
             INSERT INTO {db_manager.TABLE_RESULTS} 
-            (id, event_id, place, object_id)
-            VALUES (?,?,?,?)
+            (id, event_id, place, object_id, time, behind)
+            VALUES (?,?,?,?,?,?)
         """
-        success = db_manager.execute(sql, [self.id, self.event_id, self.place, self.object_id])
+        success = db_manager.execute(sql, [self.id, self.event_id, self.place, self.object_id, self.time, self.behind])
         return success, self.id
 
     @staticmethod

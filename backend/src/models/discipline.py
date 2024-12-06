@@ -12,6 +12,7 @@ import src.chrome_manager as chrome_manager
 from selenium.webdriver.common.by import By
 from selenium.common import NoSuchElementException
 from datetime import datetime
+import pandas as pd
 
 
 class Discipline(BaseModel):
@@ -163,40 +164,58 @@ class Biathlon(Discipline):
         if event.event_type.betting_on == "countries":
             if "Rank" not in df or "Country" not in df or "Nation" not in df:
                 return [], "Webseite enthält nicht die erwarteten Daten"
-            df = df[["Rank", "Country", "Nation"]]
             df = df[df["Country"].notnull()]
             results = []
-            countries = []
-            for r in df.values:
-                place = r[0]
-                country_name = r[1]
-                country_code = r[2]
-                r = Result(event_id=event.id, place=utils.validate_int(place), object_id=country_code, object_name=country_name)
-                results.append(r)
-                # if new country would appear in the relay list, we save it
-                c = Country(country_code, country_name, "🏴‍☠️")
-                countries.append(c)
-            self.process_countries(countries)
+            for _, row in df.iterrows():
+                place = row["Rank"]
+                country_name = row["Country"]
+                time = row.get("Total Time") if pd.notna(row.get("Total Time")) else None
+                behind = row.get("Behind") if pd.notna(row.get("Behind")) else None
+                country = Country.get_by_english_name(country_name)
+                result = Result(
+                    event_id=event.id, 
+                    place=utils.validate_int(place), 
+                    object_id=country.code, 
+                    object_name=country.name,
+                    time=time,
+                    behind=behind
+                )
+                results.append(result)
             return results, None
 
         elif event.event_type.betting_on == "athletes":
             if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
                 print("Webseite enthält nicht die erwarteten Daten")
                 return [], "Webseite enthält nicht die erwarteten Daten"
-            df = df[["Rank", "Family\xa0Name", "Given Name", "Nation"]]
             results = []
             athletes = []
-            for r in df.values:
-                place = r[0]
-                last_name = r[1]
-                first_name = r[2]
-                country_code = r[3]
+            for _, row in df.iterrows():
+                place = row["Rank"]
+                last_name = row["Family\xa0Name"]
+                first_name = row["Given Name"]
+                country_code = row["Nation"]
+                time = row.get("Total Time") if pd.notna(row.get("Total Time")) else None
+                behind = row.get("Behind") if pd.notna(row.get("Behind")) else None
+
                 a_id = utils.generate_id([last_name, first_name, country_code])
                 a_name = " ".join([first_name, last_name])
-                r = Result(event_id=event.id, place=utils.validate_int(place), object_id=a_id, object_name=a_name)
+                r = Result(
+                    event_id=event.id, 
+                    place=utils.validate_int(place), 
+                    object_id=a_id, 
+                    object_name=a_name,
+                    time=time,
+                    behind=behind
+                    )
                 results.append(r)
-                a = Athlete(athlete_id=a_id, first_name=first_name, last_name=last_name, country_code=country_code,
-                            gender="?", discipline="biathlon")
+                a = Athlete(
+                    athlete_id=a_id, 
+                    first_name=first_name,
+                    last_name=last_name,
+                    country_code=country_code,
+                    gender="?",
+                    discipline="biathlon"
+                )
                 athletes.append(a)
             self.process_athletes(athletes)
             return results, None
@@ -205,6 +224,10 @@ class Biathlon(Discipline):
             return [], "Wettobjekt nicht bekannt"
 
     def process_athletes(self, athletes: list[Athlete]):
+        """
+        Saves all athletes (existing as well as new) to database. 
+        Gender is inferred from other competing, known athletes.
+        """
         # find gender
         first_existing_althlete = None
         for a in athletes:

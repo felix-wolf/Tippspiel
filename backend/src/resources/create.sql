@@ -80,6 +80,8 @@ CREATE TABLE if not EXISTS Results (
     event_id NOT NULL,
     place INTEGER NOT NULL,
     object_id TEXT NOT NULL,
+    time TEXT DEFAULT NULL,
+    behind TEXT DEFAULT NULL,
     FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
 );
 
