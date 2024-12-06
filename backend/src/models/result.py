@@ -25,8 +25,8 @@ class Result(BaseModel):
                 object_id=r_dict['object_id'], 
                 object_name=r_dict['object_name'], 
                 result_id=r_dict['id'], 
-                time=r_dict['time'],
-                behind=r_dict['behind']
+                time=r_dict.get('time'),
+                behind=r_dict.get('behind')
             )
         else:
             return None
