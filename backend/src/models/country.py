@@ -10,7 +10,11 @@ class Country(BaseModel):
         self.flag = flag
 
     def to_dict(self):
-        return {"code": self.code, "name": self.name, "flag": self.flag}
+        return {
+            "code": self.code, 
+            "name": self.name, 
+            "flag": self.flag
+            }
 
     @staticmethod
     def from_dict(c_dict):
@@ -24,8 +28,9 @@ class Country(BaseModel):
             return None
         
     @staticmethod
-    def get_by_id(i):
-        raise NotImplementedError
+    def get_by_id(id):
+        sql = f"SELECT * FROM {db_manager.TABLE_COUNTRIES} WHERE code = ?"
+        return db_manager.query_one(sql, [id])
 
     @staticmethod
     def get_all():

@@ -47,6 +47,8 @@ class Athlete(BaseModel):
             a_id = None
             if "flag" in a_dict:
                 flag = a_dict["flag"]
+            if flag is None:
+                flag = "🏴‍☠️"
             if "id" in a_dict:
                 a_id = a_dict["id"]
             try:

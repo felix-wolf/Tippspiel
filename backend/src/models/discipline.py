@@ -169,9 +169,13 @@ class Biathlon(Discipline):
             for _, row in df.iterrows():
                 place = row["Rank"]
                 country_name = row["Country"]
+                nation = row['Nation']
                 time = row.get("Total Time") if pd.notna(row.get("Total Time")) else None
                 behind = row.get("Behind") if pd.notna(row.get("Behind")) else None
-                country = Country.get_by_english_name(country_name)
+                country = Country.get_by_id(nation)
+                if country is None:
+                    country = Country(nation, country_name, "🏴‍☠️")
+                    country.save_to_db()
                 result = Result(
                     event_id=event.id, 
                     place=utils.validate_int(place), 

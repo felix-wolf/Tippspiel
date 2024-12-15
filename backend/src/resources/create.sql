@@ -1,4 +1,3 @@
-
 CREATE TABLE if not EXISTS Countries (
     code TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
@@ -13,13 +12,11 @@ CREATE TABLE if not EXISTS Athletes (
      gender TEXT NOT NULL,
      discipline TEXT NOT NULL,
      FOREIGN KEY(discipline) REFERENCES Disciplines(id) ON DELETE CASCADE
-     FOREIGN KEY(country_code) REFERENCES Countries(code) ON DELETE CASCADE
 );
 
 CREATE VIEW if not EXISTS VIEW_Athletes AS
-    SELECT a.*, c.flag FROM Athletes a, Countries c
-    WHERE a.country_code = c.code;
-
+    SELECT a.*, c.flag FROM Athletes a
+    LEFT JOIN Countries c ON a.country_code = c.code;
 
 CREATE TABLE if not EXISTS Users (
     id TEXT PRIMARY KEY NOT NULL,
@@ -27,7 +24,6 @@ CREATE TABLE if not EXISTS Users (
     pw_hash TEXT NOT NULL,
     color TEXT
 );
-
 
 CREATE TABLE if not EXISTS Disciplines (
     id TEXT PRIMARY KEY NOT NULL,
@@ -118,7 +114,6 @@ CREATE TABLE if not EXISTS Bets (
     FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
 );
-
 
 CREATE TABLE if not EXISTS Predictions (
     id TEXT PRIMARY KEY NOT NULL,
