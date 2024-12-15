@@ -30,7 +30,10 @@ class Country(BaseModel):
     @staticmethod
     def get_by_id(id):
         sql = f"SELECT * FROM {db_manager.TABLE_COUNTRIES} WHERE code = ?"
-        return db_manager.query_one(sql, [id])
+        country = db_manager.query_one(sql, [id])
+        if country:
+            return Country.from_dict(country)
+        return None
 
     @staticmethod
     def get_all():
