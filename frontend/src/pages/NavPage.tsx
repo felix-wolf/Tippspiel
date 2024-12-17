@@ -34,7 +34,10 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
             console.log("on long press");
             navigateParam(SiteRoutes.Debug, {});
           }}
-          onClick={() => console.log("on click")}
+          onClick={() => {
+            console.log("on click");
+            navigateParam(SiteRoutes.Debug, {});
+          }}
           delay={500}
         >
           <div className={styles.headline}>{title}</div>
