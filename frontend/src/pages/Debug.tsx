@@ -50,10 +50,40 @@ export default function Debug() {
       });
   }
 
+  function registerServiceWorker() {
+    // Register service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/service-worker.js")
+          .then((registration) => {
+            console.log(
+              "Service Worker registered with scope:",
+              registration.scope,
+            );
+            setDebugInfoText(
+              "Service Worker registered with scope: " +
+                registration.scope.toString(),
+            );
+          })
+          .catch((error) => {
+            console.error("Service Worker registration failed:", error);
+            setDebugInfoText(
+              "Service Worker registration failed: " + error.toString(),
+            );
+          });
+      });
+    } else {
+      console.log("serviceWorker not in navigator");
+      setDebugInfoText("serviceWorker not in navigator");
+    }
+  }
+
   return (
     <div>
       <h1 style={{ fontSize: 40 }}>Debug</h1>
       <div onClick={() => onClickPermission()}>Request Permission</div>
+      <div onClick={() => registerServiceWorker()}>Register Service Worker</div>
       <div onClick={() => requestToken()}>Request Token</div>
       <div style={{ margin: 40 }}>{debugInfoText}</div>
     </div>
