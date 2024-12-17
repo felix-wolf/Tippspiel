@@ -8,6 +8,7 @@ import { HomePage } from "./pages/HomePage";
 import { PlaceBetPage } from "./pages/PlaceBetPage";
 import { ViewBetsPage } from "./pages/ViewBetsPage";
 import AppearanceContextLayout from "./contexts/AppearanceContext.tsx";
+import Debug from "./pages/Debug.tsx";
 
 /**
  * All available routes.
@@ -19,6 +20,7 @@ function AppRoutes() {
     <Routes>
       <Route element={<UserContextLayout />}>
         <Route element={<AppearanceContextLayout />}>
+          <Route path={SiteRoutes.Debug} element={<Debug />} />
           <Route path={SiteRoutes.Login} element={<Login />} />
           <Route path={SiteRoutes.Home} element={<HomePage />} />
           <Route path={SiteRoutes.Game} element={<GamePage />} />

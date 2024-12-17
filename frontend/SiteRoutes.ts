@@ -19,6 +19,7 @@ export const SiteRoutes = {
   Game: "/home/game/:game_id",
   PlaceBet: "/home/game/place_bet/:game_id/:event_id/:page_num",
   ViewBets: "/home/game/view_bets/:game_id/:event_id",
+  Debug: "/debug",
 } as const satisfies Record<string, string>;
 
 /**
