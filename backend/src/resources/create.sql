@@ -145,7 +145,7 @@ CREATE TABLE if not EXISTS DeviceTokens (
     user_id TEXT NOT NULL,
     device_token TEXT NOT NULL,
     platform TEXT,
-    created_at DATETIME NOT NULL DEFAULT NOW(),
-    updated_at DATETIME NOT NULL DEFAULT NOW(),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 )

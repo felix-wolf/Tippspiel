@@ -31,6 +31,9 @@ class NotificationHelper(BaseModel):
             f"SELECT device_token FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id = ? AND platform = ?",
             [user_id, platform]
             )
+    
+    def get_tokens_for_users(user_ids):
+        return db_manager.query(f"SELECT device_token FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id IN ({', '.join(map(repr, user_ids))})")
 
     @staticmethod
     def save_to_db(token, user_id, platform):

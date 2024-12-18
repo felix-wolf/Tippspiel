@@ -6,6 +6,7 @@ import styles from "./SettingsModal.module.scss";
 import { Button } from "../design/Button.tsx";
 import { DeleteButton } from "../design/DeleteButton.tsx";
 import { NotificationHelper } from "../../models/NotificationHelper.ts";
+import { Shakable } from "../design/Shakable.tsx";
 
 type SettingsModalProps = {
   isOpen: boolean;
@@ -25,7 +26,9 @@ export function SettingsModal({
   onGameUpdated: _onGameUpdated,
 }: SettingsModalProps) {
   const [gameName, setGameName] = useState(game.name);
-  const [shaking, setshaking] = useState(false);
+  const [deleteShaking, setDeleteShaking] = useState(false);
+  const [pushShaking, setPushShaking] = useState(false);
+  const [testPushShaking, setTestPushShaking] = useState(false);
 
   function buttonEnabled(): boolean {
     return gameName !== game.name;
@@ -36,8 +39,8 @@ export function SettingsModal({
       .delete()
       .then(_onGameDeleted)
       .catch(() => {
-        setshaking(true);
-        setTimeout(() => setshaking(false), 300);
+        setDeleteShaking(true);
+        setTimeout(() => setDeleteShaking(false), 300);
       });
   }
 
@@ -46,8 +49,8 @@ export function SettingsModal({
       .saveNewName(gameName)
       .then(_onGameUpdated)
       .catch(() => {
-        setshaking(true);
-        setTimeout(() => setshaking(false), 300);
+        setDeleteShaking(true);
+        setTimeout(() => setDeleteShaking(false), 300);
       });
   }
 
@@ -60,34 +63,42 @@ export function SettingsModal({
     >
       <div className={styles.simpleContainer}>
         <div className={styles.row}>
-          <Button
-            onClick={() => {
-              NotificationHelper.registerDevice()
-                .then((response) => {
-                  console.log(response);
-                })
-                .catch((error) => {
-                  console.log(error);
-                });
-            }}
-            type={"positive"}
-            title={"Push Benachrichtigungen aktivieren"}
-          />
+          <Shakable shaking={pushShaking}>
+            <Button
+              onClick={() => {
+                NotificationHelper.registerDevice()
+                  .then((response) => {
+                    console.log(response);
+                  })
+                  .catch((error) => {
+                    console.log(error);
+                    setPushShaking(true);
+                    setTimeout(() => setPushShaking(false), 300);
+                  });
+              }}
+              type={"positive"}
+              title={"Push Benachrichtigungen aktivieren"}
+            />
+          </Shakable>
         </div>
         <div className={styles.row}>
-          <Button
-            onClick={() => {
-              NotificationHelper.sendTestNotification()
-                .then((response) => {
-                  console.log(response);
-                })
-                .catch((error) => {
-                  console.log(error);
-                });
-            }}
-            type={"positive"}
-            title={"Testbenachrichtigung senden"}
-          />
+          <Shakable shaking={testPushShaking}>
+            <Button
+              onClick={() => {
+                NotificationHelper.sendTestNotification()
+                  .then((response) => {
+                    console.log(response);
+                  })
+                  .catch((error) => {
+                    console.log(error);
+                    setTestPushShaking(true);
+                    setTimeout(() => setTestPushShaking(false), 300);
+                  });
+              }}
+              type={"positive"}
+              title={"Testbenachrichtigung senden"}
+            />
+          </Shakable>
         </div>
       </div>
       {isCreator && (
@@ -126,7 +137,7 @@ export function SettingsModal({
           <div className={styles.row}>
             <div className={styles.deleteButtonContainer}>
               <DeleteButton
-                shaking={shaking}
+                shaking={deleteShaking}
                 onFinalClick={() => onDeleteGame()}
               />
             </div>

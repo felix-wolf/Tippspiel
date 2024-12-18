@@ -268,9 +268,10 @@ class Event(BaseModel):
     @staticmethod
     def get_all():
         result = db_manager.query(
-            sql=f"SELECT * FROM {db_manager.TABLE_EVENTS}"
+            sql=f"SELECT id FROM {db_manager.TABLE_EVENTS}"
         )
-        # TODO: change this
+        if result is not None:
+            return [Event.get_by_id(e['id']) for e in result]
         return result
 
     @staticmethod

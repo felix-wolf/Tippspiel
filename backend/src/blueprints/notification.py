@@ -2,7 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_login import *
 from firebase_admin import messaging
 from src.models.notification_helper import NotificationHelper
-
+from datetime import datetime, timedelta
+from src.models.event import Event
+from src.models.game import Game
 
 notification_blueprint = Blueprint('notification', __name__)
 
@@ -37,21 +39,25 @@ def send_test_notification():
         return {'token': response }
 
 
-@notification_blueprint.route('/send-notification', methods=['GET'])
+@notification_blueprint.route('/api/notification/check', methods=['GET'])
 def send_notification():
-    print("LEL")
-    token = request.args.get("token")
-    title = request.args.get("title", 'Default Title')
-    body = request.args.get("body", 'Default Body')
-
-    if not token:
-        return jsonify({'error': 'Token is required'}), 400
-
-    try:
-        send_push_notification(token, title, body)
-        return jsonify({'success': True, 'message': 'NotificationHelper sent successfully!'}), 200
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+    time = datetime.now()
+    
+    games = Game.get_all()
+    for game in games:
+        events = Event.get_all_by_game_id(game.id, get_full_objects=False)
+        events = [event for event in events if timedelta(minutes=3162) > event.dt - time > timedelta(minutes=58)]
+        if len(events) == 0:
+            continue
+        for event in events:
+            players_without_bets = list(set([player.id for player in game.players]).difference(set(event.has_bets_for_users)))
+            result = NotificationHelper.get_tokens_for_users(players_without_bets)
+            for res in result:
+                try:
+                    send_push_notification(res['device_token'], "Rennen startet in einer Stunde!", event.name)
+                except Exception as e:
+                    return jsonify({'success': False, 'error': str(e)}), 500
+    return "Success", 200
     
 
 def send_push_notification(token, title, body):
