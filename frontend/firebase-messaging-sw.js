@@ -61,8 +61,13 @@ self.addEventListener("push", (event) => {
   );
 
   const showNotificationPromise = self.registration.showNotification(
-    notificationData.title,
-    notificationData
+    notificationData.notification.title,
+    { 
+      body: notificationData.notification.body,
+      actions: [
+        {action: "Test", title: "ActionTItle"}
+      ]
+    }
   );
   const promiseChain = Promise.all([
     messageClientPromise,
@@ -71,3 +76,65 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(promiseChain);
 });
+
+// Custom notification actions
+self.addEventListener('notificationclick', (event) => {
+  console.log(
+    '[Service Worker]: Received notificationclick event',
+    event.notification
+  );
+
+  try {
+    let notification = event.notification;
+
+    if (event.action == 'open_url') {
+      console.log('[Service Worker]: Performing action open_url');
+
+      event.waitUntil(clients.openWindow(notification.data.action.url));
+
+      return;
+    } else if (event.action == 'open_project_repo') {
+      console.log('[Service Worker]: Performing action open_project_repo');
+
+      event.waitUntil(clients.openWindow(notification.data.project.github));
+
+      return;
+    } else if (event.action == 'open_author_twitter') {
+      console.log('[Service Worker]: Performing action open_author_twitter');
+
+      event.waitUntil(clients.openWindow(notification.data.author.twitter));
+
+      return;
+    }
+  } catch (error) {
+    console.error('[Service Worker]: Error parsing notification data', error);
+  }
+
+  console.log('[Service Worker]: Performing default click action');
+
+  // This looks to see if the current is already open and
+  // focuses if it is
+  event.waitUntil(
+    clients
+      .matchAll({
+        includeUncontrolled: true,
+        type: 'window',
+      })
+      .then(function (clientList) {
+        for (var i = 0; i < clientList.length; i++) {
+          var client = clientList[i];
+          if (client.url == '/' && 'focus' in client) return client.focus();
+        }
+        if (clients.openWindow) return clients.openWindow('/');
+      })
+  );
+
+  event.notification.close();
+});
+
+// Closing notification action
+self.addEventListener('notificationclose', (event) => {
+  console.log(
+    '[Service Worker]: Received notificationclose event',
+    event.notification
+  );

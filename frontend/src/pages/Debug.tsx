@@ -57,7 +57,7 @@ export default function Debug() {
     console.log("load");
     window.addEventListener("load", () => {
       navigator.serviceWorker
-        .register("/service-worker.js")
+        .register("/firebase-messaging-sw.js")
         .then((registration) => {
           // requestToken(registration);
           console.log(
