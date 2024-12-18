@@ -18,11 +18,14 @@ export default function Debug() {
     });
   }
 
-  function requestToken() {
+  function requestToken(
+    serviceWorkerRegistration: ServiceWorkerRegistration | undefined,
+  ) {
     console.log("Requesting permission...");
     getToken(messaging, {
       vapidKey:
         "BJrEvjNP4CKHuxmUsvLIQnCTD2TveRozjOgxfyESQonaZJfMcChWX67OFlJivbiqCD9Z2bIvgFQvLeUnT12zcZE",
+      serviceWorkerRegistration: serviceWorkerRegistration,
     })
       .then((currentToken) => {
         if (currentToken) {
@@ -49,12 +52,14 @@ export default function Debug() {
         // ...
       });
   }
+
   if ("serviceWorker" in navigator) {
     console.log("load");
     window.addEventListener("load", () => {
       navigator.serviceWorker
         .register("/service-worker.js")
         .then((registration) => {
+          requestToken(registration);
           console.log(
             "Service Worker registered with scope:",
             registration.scope,
@@ -80,7 +85,7 @@ export default function Debug() {
     <div>
       <h1 style={{ fontSize: 40 }}>Debug</h1>
       <div onClick={() => onClickPermission()}>Request Permission</div>
-      <div onClick={() => requestToken()}>Request Token</div>
+      <div onClick={() => requestToken(undefined)}>Request Token</div>
       <div style={{ margin: 40 }}>{debugInfoText}</div>
     </div>
   );
