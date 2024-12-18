@@ -10,3 +10,7 @@ self.addEventListener("fetch", (event) => {
   console.log("Fetching:", event.request.url);
   // Optionally handle requests
 });
+
+self.addEventListener('push', (event) => {
+  console.log('[Service Worker]: Received push event', event);
+});
