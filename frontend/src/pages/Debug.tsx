@@ -21,7 +21,7 @@ export default function Debug() {
   function requestToken(
     serviceWorkerRegistration: ServiceWorkerRegistration | undefined,
   ) {
-    console.log("Requesting permission...");
+    console.log("getting Token");
     getToken(messaging, {
       vapidKey:
         "BJrEvjNP4CKHuxmUsvLIQnCTD2TveRozjOgxfyESQonaZJfMcChWX67OFlJivbiqCD9Z2bIvgFQvLeUnT12zcZE",
