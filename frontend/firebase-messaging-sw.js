@@ -13,4 +13,37 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   console.log("[Service Worker]: Received push event", event);
+ 
+  let notificationData = {};
+
+  try {
+    notificationData = event.data.json();
+  } catch (error) {
+    console.error('[Service Worker]: Error parsing notification data', error);
+    notificationData = {
+      title: 'No data from server',
+      message: 'Displaying default notification',
+      icon: 'https://push.foo/images/logo.jpg',
+      badge: 'https://push.foo/images/logo-mask.png',
+    };
+  }
+
+  console.log('[Service Worker]: notificationData', notificationData);
+
+  const messageClientPromise = messageClient(
+    event,
+    'NOTIFICATION_RECEIVED',
+    notificationData
+  );
+
+  const showNotificationPromise = self.registration.showNotification(
+    notificationData.title,
+    notificationData
+  );
+  const promiseChain = Promise.all([
+    messageClientPromise,
+    showNotificationPromise,
+  ]);
+
+  event.waitUntil(promiseChain);
 });
