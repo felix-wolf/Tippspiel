@@ -1,3 +1,26 @@
+async function messageClient(event, messageType, data = {}) {
+  console.log('[Service Worker]: Sending message to app', messageType);
+
+  let message = {
+    type: messageType,
+    data: data,
+  };
+
+  if (!event.clientId) {
+    const clients = await self.clients.matchAll({ type: 'window' });
+    for (const client of clients) {
+      client.postMessage(message);
+      console.log('[Service Worker]: Sent message to app', client);
+    }
+  } else {
+    const client = await clients.get(event.clientId);
+    if (!client) return;
+
+    client.postMessage(message);
+    console.log('[Service Worker]: Sent message to app', client);
+  }
+}
+
 self.addEventListener("install", (event) => {
   console.log("Service worker installing...");
 });
@@ -10,6 +33,7 @@ self.addEventListener("fetch", (event) => {
   console.log("Fetching:", event.request.url);
   // Optionally handle requests
 });
+
 
 self.addEventListener("push", (event) => {
   console.log("[Service Worker]: Received push event", event);
