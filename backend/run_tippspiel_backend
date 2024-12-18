@@ -1,0 +1,1 @@
+*/5 * * * * curl https://tippspiel.me/api/notification/check

@@ -4,9 +4,9 @@ import { messaging } from "../main.tsx";
 import { useCurrentUser } from "./user/UserContext.tsx";
 
 export class NotificationHelper {
-  public static registerDevice(): Promise<boolean> {
+  public static registerDevice(): Promise<void> {
     const user = useCurrentUser();
-    return new Promise<boolean>(async (_, reject) => {
+    return new Promise<void>(async (resolve, reject) => {
       try {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
@@ -19,17 +19,21 @@ export class NotificationHelper {
               if (currentToken) {
                 console.log("Current Token:", currentToken);
                 // Send the token to your server and update the UI if necessary
-                return NetworkHelper.post(
+                NetworkHelper.post(
                   "/api/notification/register_device",
-                  () => {
-                    return true;
-                  },
+                  () => {},
                   {
                     token: currentToken,
                     user_id: user?.id,
                     platform: navigator.userAgent,
                   },
-                );
+                )
+                  .then(() => resolve())
+                  .catch(() =>
+                    reject(
+                      "Error communicating with backend to store GCM token.",
+                    ),
+                  );
               } else {
                 // Show permission request UI
                 console.log(
@@ -54,15 +58,12 @@ export class NotificationHelper {
     });
   }
 
-  public static sendTestNotification(): Promise<boolean> {
+  public static sendTestNotification(): Promise<void> {
     const user = useCurrentUser();
 
-    return NetworkHelper.post(
-      "/api/notification/test",
-      () => {
-        return true;
-      },
-      { user_id: user?.id, platform: navigator.userAgent },
-    );
+    return NetworkHelper.post("/api/notification/test", () => {}, {
+      user_id: user?.id,
+      platform: navigator.userAgent,
+    });
   }
 }

@@ -7,6 +7,9 @@ import { Button } from "../design/Button.tsx";
 import { DeleteButton } from "../design/DeleteButton.tsx";
 import { NotificationHelper } from "../../models/NotificationHelper.ts";
 import { Shakable } from "../design/Shakable.tsx";
+import checkbox_checked_white from "../../assets/icons/checkbox_checked_white.svg";
+import checkbox_checked_black from "../../assets/icons/checkbox_checked_black.svg";
+import { useAppearance } from "../../contexts/AppearanceContext.tsx";
 
 type SettingsModalProps = {
   isOpen: boolean;
@@ -29,6 +32,9 @@ export function SettingsModal({
   const [deleteShaking, setDeleteShaking] = useState(false);
   const [pushShaking, setPushShaking] = useState(false);
   const [testPushShaking, setTestPushShaking] = useState(false);
+  const [notificationRegisterSuccess, setNotificationRegisterSuccess] =
+    useState(false);
+  const { isLight } = useAppearance();
 
   function buttonEnabled(): boolean {
     return gameName !== game.name;
@@ -63,42 +69,52 @@ export function SettingsModal({
     >
       <div className={styles.simpleContainer}>
         <div className={styles.row}>
-          <Shakable shaking={pushShaking}>
-            <Button
-              onClick={() => {
-                NotificationHelper.registerDevice()
-                  .then((response) => {
-                    console.log(response);
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                    setPushShaking(true);
-                    setTimeout(() => setPushShaking(false), 300);
-                  });
-              }}
-              type={"positive"}
-              title={"Push Benachrichtigungen aktivieren"}
+          <div>
+            <Shakable shaking={pushShaking}>
+              <Button
+                onClick={() => {
+                  NotificationHelper.registerDevice()
+                    .then(() => {
+                      setNotificationRegisterSuccess(true);
+                    })
+                    .catch((error) => {
+                      console.log(error);
+                      setPushShaking(true);
+                      setNotificationRegisterSuccess(false);
+                      setTimeout(() => setPushShaking(false), 300);
+                    });
+                }}
+                type={"positive"}
+                title={"Push Benachrichtigungen aktivieren"}
+              />
+            </Shakable>
+          </div>
+          {notificationRegisterSuccess && (
+            <img
+              src={isLight() ? checkbox_checked_black : checkbox_checked_white}
+              alt={"checkbox"}
             />
-          </Shakable>
+          )}
         </div>
         <div className={styles.row}>
-          <Shakable shaking={testPushShaking}>
-            <Button
-              onClick={() => {
-                NotificationHelper.sendTestNotification()
-                  .then((response) => {
-                    console.log(response);
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                    setTestPushShaking(true);
-                    setTimeout(() => setTestPushShaking(false), 300);
-                  });
-              }}
-              type={"positive"}
-              title={"Testbenachrichtigung senden"}
-            />
-          </Shakable>
+          <div>
+            <Shakable shaking={testPushShaking}>
+              <Button
+                onClick={() => {
+                  NotificationHelper.sendTestNotification()
+                    .then(() => {
+                      setNotificationRegisterSuccess(true);
+                    })
+                    .catch((error) => {
+                      console.log(error);
+                      setTimeout(() => setTestPushShaking(false), 300);
+                    });
+                }}
+                type={"positive"}
+                title={"Testbenachrichtigung senden"}
+              />
+            </Shakable>
+          </div>
         </div>
       </div>
       {isCreator && (
