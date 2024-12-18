@@ -1,1 +1,1 @@
-*/5 * * * * curl https://tippspiel.me/api/notification/check
+*/5 * * * * felix curl --silent https://tippspiel.me/api/notification/check 2>&1
