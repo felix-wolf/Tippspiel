@@ -8,6 +8,7 @@
 }
 
 .headline {
+  overflow-wrap: anywhere;
   color: var(--fg-primary);
   font-size: var(--font-size-l);
   font-weight: var(--font_weight);
