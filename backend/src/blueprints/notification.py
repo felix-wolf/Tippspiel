@@ -46,7 +46,7 @@ def send_notification():
     games = Game.get_all()
     for game in games:
         events = Event.get_all_by_game_id(game.id, get_full_objects=False)
-        events = [event for event in events if timedelta(minutes=4000) > event.dt - time > timedelta(minutes=58)]
+        events = [event for event in events if timedelta(minutes=63) > event.dt - time > timedelta(minutes=58)]
         if len(events) == 0:
             continue
         for event in events:
