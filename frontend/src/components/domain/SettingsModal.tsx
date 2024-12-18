@@ -58,31 +58,37 @@ export function SettingsModal({
       onClose={_onClose}
       style={{ height: 465 }}
     >
-      <div className={styles.container}>
-        <Button
-          onClick={() => {
-            NotificationHelper.registerDevice()
-              .then((response) => {
-                console.log(response);
-              })
-              .catch((error) => {
-                console.log(error);
-              });
-          }}
-          title={"Push Benachrichtigungen aktivieren"}
-        />
-        <Button
-          onClick={() => {
-            NotificationHelper.sendTestNotification()
-              .then((response) => {
-                console.log(response);
-              })
-              .catch((error) => {
-                console.log(error);
-              });
-          }}
-          title={"Testbenachrichtigung senden"}
-        />
+      <div className={styles.simpleContainer}>
+        <div className={styles.row}>
+          <Button
+            onClick={() => {
+              NotificationHelper.registerDevice()
+                .then((response) => {
+                  console.log(response);
+                })
+                .catch((error) => {
+                  console.log(error);
+                });
+            }}
+            type={"positive"}
+            title={"Push Benachrichtigungen aktivieren"}
+          />
+        </div>
+        <div className={styles.row}>
+          <Button
+            onClick={() => {
+              NotificationHelper.sendTestNotification()
+                .then((response) => {
+                  console.log(response);
+                })
+                .catch((error) => {
+                  console.log(error);
+                });
+            }}
+            type={"positive"}
+            title={"Testbenachrichtigung senden"}
+          />
+        </div>
       </div>
       {isCreator && (
         <div className={styles.container}>

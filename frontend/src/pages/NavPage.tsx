@@ -7,8 +7,6 @@ import { IconToggler } from "../components/design/IconToggler.tsx";
 import darkModeWhite from "../assets/icons/dark_mode_white.svg";
 import lightModeWhite from "../assets/icons/light_mode_white.svg";
 import { useAppearance } from "../contexts/AppearanceContext.tsx";
-import LongPressable from "../components/design/LongPressable.tsx";
-import { SiteRoutes, useNavigateParams } from "../../SiteRoutes.ts";
 
 type NavPageProps = React.PropsWithChildren<{
   title: string | undefined;
@@ -17,7 +15,6 @@ type NavPageProps = React.PropsWithChildren<{
 
 export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
   const navigate = useNavigate();
-  const navigateParam = useNavigateParams();
   const { appearance, setAppearance, isLight } = useAppearance();
   return (
     <>
@@ -29,6 +26,7 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
             width={"flexible"}
           />
         </div>
+        {/*
         <LongPressable
           onLongPress={() => {
             console.log("on long press");
@@ -42,6 +40,8 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
         >
           <div className={styles.headline}>{title}</div>
         </LongPressable>
+        */}
+        <div className={styles.headline}>{title}</div>
         <div className={styles.button}>
           <IconToggler
             icons={[darkModeWhite, lightModeWhite]}
