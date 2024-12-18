@@ -1,18 +1,18 @@
 {
   "name": "Biathlon Tippspiel",
   "short_name": "Tippspiel",
-  "start_url": ".",
+  "start_url": "https://www.tippspiel.me/home",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#FFFFFF",
   "icons": [
     {
-      "src": "assets/icon-192x192.png",
+      "src": "/assets/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "assets/icon-512x512.png",
+      "src": "/assets/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

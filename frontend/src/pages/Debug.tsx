@@ -5,7 +5,7 @@ import { messaging } from "../main.tsx";
 export default function Debug() {
   const [debugInfoText, setDebugInfoText] = useState("");
 
-  function onClickPermission() {
+   function onClickPermission() {
     console.log("Requesting permission...");
     Notification.requestPermission().then((permission) => {
       if (permission === "granted") {
@@ -59,7 +59,7 @@ export default function Debug() {
       navigator.serviceWorker
         .register("/service-worker.js")
         .then((registration) => {
-          requestToken(registration);
+          // requestToken(registration);
           console.log(
             "Service Worker registered with scope:",
             registration.scope,
