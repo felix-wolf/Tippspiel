@@ -15,6 +15,7 @@ requests = "*"
 selenium = "*"
 pytest = "*"
 inquirer = "*"
+firebase-admin = "*"
 
 [dev-packages]
 

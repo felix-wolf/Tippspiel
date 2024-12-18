@@ -14,6 +14,7 @@ TABLE_BETS = "Bets"
 TABLE_PREDICTIONS = "Predictions"
 TABLE_DISCIPLINES = "Disciplines"
 TABLE_RESULTS = "Results"
+TABLE_DEVICE_TOKENS = "DeviceTokens"
 
 
 def open_connection():

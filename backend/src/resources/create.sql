@@ -139,3 +139,13 @@ CREATE VIEW if not EXISTS VIEW_Predictions AS
         VIEW_Athletes va ON p.object_id  = va.id
     LEFT JOIN
         Countries c ON p.object_id = c.code;
+
+CREATE TABLE if not EXISTS DeviceTokens (
+    id TEXT PRIMARY KEY NOT NULL,
+    user_id TEXT NOT NULL,
+    device_token TEXT NOT NULL,
+    platform TEXT,
+    created_at DATETIME NOT NULL DEFAULT NOW(),
+    updated_at DATETIME NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+)

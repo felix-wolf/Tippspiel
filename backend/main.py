@@ -13,8 +13,18 @@ from src.blueprints.result import result_blueprint
 from src.blueprints.score import score_blueprint
 from src.blueprints.status import status_blueprint
 from src.blueprints.user import user_blueprint
+from src.blueprints.notification import notification_blueprint
+import firebase_admin
+from firebase_admin import messaging, credentials
+
+
 
 login_manager = LoginManager()
+
+cred = credentials.Certificate("firebase_backend_admin_cred.json")
+
+firebase_admin.initialize_app(cred)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -45,6 +55,7 @@ def create_app(env):
     app.register_blueprint(score_blueprint)
     app.register_blueprint(status_blueprint)
     app.register_blueprint(user_blueprint)
+    app.register_blueprint(notification_blueprint)
     return app
 
 

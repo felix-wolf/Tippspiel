@@ -74,22 +74,21 @@ export function GamePage() {
     <NavPage
       title={game?.name}
       navBarLeftItem={
-        isCreator && (
-          <div style={{ width: 50 }}>
-            <Button
-              icon={isLight() ? settings_white : settings_black}
-              title={""}
-              type={"neutral"}
-              onClick={() => setShowingSettingsModal(true)}
-              width={"flexible"}
-            />
-          </div>
-        )
+        <div style={{ width: 50 }}>
+          <Button
+            icon={isLight() ? settings_white : settings_black}
+            title={""}
+            type={"neutral"}
+            onClick={() => setShowingSettingsModal(true)}
+            width={"flexible"}
+          />
+        </div>
       }
     >
       {game && (
         <SettingsModal
           key={settingsKey}
+          isCreator={isCreator}
           isOpen={showingSettingsModal}
           onClose={() => {
             setShowingSettingsModal(false);

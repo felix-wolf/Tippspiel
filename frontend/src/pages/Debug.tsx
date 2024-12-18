@@ -5,7 +5,7 @@ import { messaging } from "../main.tsx";
 export default function Debug() {
   const [debugInfoText, setDebugInfoText] = useState("");
 
-   function onClickPermission() {
+  function onClickPermission() {
     console.log("Requesting permission...");
     Notification.requestPermission().then((permission) => {
       if (permission === "granted") {

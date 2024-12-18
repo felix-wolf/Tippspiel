@@ -5,10 +5,12 @@ import { Game } from "../../models/Game.ts";
 import styles from "./SettingsModal.module.scss";
 import { Button } from "../design/Button.tsx";
 import { DeleteButton } from "../design/DeleteButton.tsx";
+import { NotificationHelper } from "../../models/NotificationHelper.ts";
 
 type SettingsModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  isCreator: boolean;
   game: Game;
   onGameDeleted: () => void;
   onGameUpdated: () => void;
@@ -18,6 +20,7 @@ export function SettingsModal({
   isOpen,
   onClose: _onClose,
   game,
+  isCreator,
   onGameDeleted: _onGameDeleted,
   onGameUpdated: _onGameUpdated,
 }: SettingsModalProps) {
@@ -56,46 +59,74 @@ export function SettingsModal({
       style={{ height: 465 }}
     >
       <div className={styles.container}>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
+        <Button
+          onClick={() => {
+            NotificationHelper.registerDevice()
+              .then((response) => {
+                console.log(response);
+              })
+              .catch((error) => {
+                console.log(error);
+              });
           }}
-          className={styles.form}
-        >
-          <div className={styles.row}>
-            <TextField
-              onInput={(text) => setGameName(text)}
-              placeholder={gameName}
-              initialValue={gameName}
-            />
-          </div>
-          <div className={styles.row}>
-            <Button
-              onClick={() => onUpdateGameName()}
-              title={"Speichern"}
-              type={"positive"}
-              width={"flexible"}
-              isEnabled={buttonEnabled()}
-            />
-            <div className={styles.button}>
+          title={"Push Benachrichtigungen aktivieren"}
+        />
+        <Button
+          onClick={() => {
+            NotificationHelper.sendTestNotification()
+              .then((response) => {
+                console.log(response);
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          }}
+          title={"Testbenachrichtigung senden"}
+        />
+      </div>
+      {isCreator && (
+        <div className={styles.container}>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+            }}
+            className={styles.form}
+          >
+            <div className={styles.row}>
+              <TextField
+                onInput={(text) => setGameName(text)}
+                placeholder={gameName}
+                initialValue={gameName}
+              />
+            </div>
+            <div className={styles.row}>
               <Button
-                onClick={_onClose}
-                title={"Abbrechen"}
-                type={"neutral"}
+                onClick={() => onUpdateGameName()}
+                title={"Speichern"}
+                type={"positive"}
                 width={"flexible"}
+                isEnabled={buttonEnabled()}
+              />
+              <div className={styles.button}>
+                <Button
+                  onClick={_onClose}
+                  title={"Abbrechen"}
+                  type={"neutral"}
+                  width={"flexible"}
+                />
+              </div>
+            </div>
+          </form>
+          <div className={styles.row}>
+            <div className={styles.deleteButtonContainer}>
+              <DeleteButton
+                shaking={shaking}
+                onFinalClick={() => onDeleteGame()}
               />
             </div>
           </div>
-        </form>
-        <div className={styles.row}>
-          <div className={styles.deleteButtonContainer}>
-            <DeleteButton
-              shaking={shaking}
-              onFinalClick={() => onDeleteGame()}
-            />
-          </div>
         </div>
-      </div>
+      )}
     </DialogModal>
   );
 }
