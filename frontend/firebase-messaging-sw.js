@@ -138,3 +138,4 @@ self.addEventListener('notificationclose', (event) => {
     '[Service Worker]: Received notificationclose event',
     event.notification
   );
+});
