@@ -5,6 +5,26 @@ from datetime import datetime
 
 class NotificationHelper(BaseModel):
 
+    def to_dict(self):
+        return
+
+    @staticmethod
+    def from_dict(**kwargs):
+        return
+
+    @staticmethod
+    def get_by_id(i):
+        return
+
+    @staticmethod
+    def get_all():
+        return
+
+    @staticmethod
+    def get_base_data():
+        return
+
+
     def get_token(user_id, platform):
         # check for existing token
         return db_manager.query_one(
