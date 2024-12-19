@@ -43,14 +43,9 @@ def send_test_notification():
 @notification_blueprint.route('/api/notification/check', methods=['GET'])
 def send_notification():
     now = datetime.now(pytz.timezone('CET'))
-    print(now)
     games = Game.get_all()
     for game in games:
         events = Event.get_all_by_game_id(game.id, get_full_objects=False)
-        if len(events) == 0:
-            continue
-        print(events[0].dt)
-        print(events[0].dt.replace(tzinfo=pytz.timezone('CET')))
         events = [event for event in events if timedelta(minutes=63) > event.dt.replace(tzinfo=pytz.timezone('CET')) - now]
         if len(events) == 0:
             continue
