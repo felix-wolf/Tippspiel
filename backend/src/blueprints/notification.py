@@ -5,6 +5,7 @@ from src.models.notification_helper import NotificationHelper
 from datetime import datetime, timedelta
 from src.models.event import Event
 from src.models.game import Game
+import pytz
 
 notification_blueprint = Blueprint('notification', __name__)
 
@@ -41,12 +42,11 @@ def send_test_notification():
 
 @notification_blueprint.route('/api/notification/check', methods=['GET'])
 def send_notification():
-    time = datetime.now()
-    
+    now = datetime.now(pytz.timezone('CET'))
     games = Game.get_all()
     for game in games:
         events = Event.get_all_by_game_id(game.id, get_full_objects=False)
-        events = [event for event in events if timedelta(minutes=63) > event.dt - time > timedelta(minutes=58)]
+        events = [event for event in events if timedelta(minutes=63) > event.dt - now]
         if len(events) == 0:
             continue
         for event in events:
