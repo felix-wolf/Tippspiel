@@ -11,12 +11,14 @@ import { BetList } from "../components/domain/lists/BetList";
 import { ResultsList } from "../components/domain/lists/ResultsList";
 import useFetch from "../useFetch";
 import Loader from "../components/design/Loader";
+import { useCache } from "../contexts/CacheContext.tsx";
+import { EventScore } from "../models/EventScore.ts";
 
 export function ViewBetsPage() {
   const { event_id, game_id } = usePathParams(SiteRoutes.ViewBets);
   const [resultsUploaded, setResultsUploaded] = useState(false);
   const user = useCurrentUser();
-
+  const { deleteCache } = useCache();
   const gameFetchValues = useFetch<Game>({
     key: Game.buildCacheKey(game_id),
     func: Game.fetchOne,
@@ -61,14 +63,22 @@ export function ViewBetsPage() {
               resultUrl={game.discipline.resultUrl}
               resultsUploaded={resultsUploaded}
               event={event}
-              onEventUpdated={() => refetchEvent(true)}
+              onEventUpdated={() => {
+                refetchEvent(true);
+                deleteCache(Game.buildCacheKey(game_id));
+                deleteCache(EventScore.buildCacheKey(game_id));
+              }}
             />
           )}
           {isCreator && !game?.discipline?.resultUrl && (
             <ManualResultUploader
               resultsUploaded={resultsUploaded}
               event={event}
-              onEventUpdated={() => refetchEvent(true)}
+              onEventUpdated={() => {
+                refetchEvent(true);
+                deleteCache(Game.buildCacheKey(game_id));
+                deleteCache(EventScore.buildCacheKey(game_id));
+              }}
             />
           )}
           {event && event.results.length != 0 && <ResultsList event={event} />}
