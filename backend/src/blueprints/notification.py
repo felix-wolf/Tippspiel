@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from flask_login import *
-from firebase_admin import messaging
 from src.models.notification_helper import NotificationHelper
 from datetime import datetime, timedelta
 from src.models.event import Event
@@ -36,7 +35,7 @@ def send_test_notification():
         response = NotificationHelper.get_token(user_id=user_id, platform=platform)
         if not response:
             return "No token found", 404
-        send_push_notification(response['device_token'], "Das hier ist ein Test", "Test123")
+        NotificationHelper.send_push_notification(response['device_token'], "Das hier ist ein Test", "Test123")
         return {'token': response }
 
 
@@ -51,10 +50,10 @@ def send_notification():
             continue
         for event in events:
             players_without_bets = list(set([player.id for player in game.players]).difference(set(event.has_bets_for_users)))
-            result = NotificationHelper.get_tokens_for_users(players_without_bets)
+            result = NotificationHelper.get_tokens_for_users(players_without_bets, check_reminder=True)
             for res in result:
                 try:
-                    send_push_notification(res['device_token'], "Rennen startet in einer Stunde!", event.name)
+                    NotificationHelper.send_push_notification(res['device_token'], "Rennen startet in einer Stunde!", event.name)
                 except Exception as e:
                     return jsonify({'success': False, 'error': str(e)}), 500
     return "Success", 200
@@ -75,21 +74,3 @@ def settings():
         if not success:
             return "Error", 500
     return {"Code": 200}
-
-
-def send_push_notification(token, title, body):
-    # Construct the message
-    message = messaging.Message(
-        notification=messaging.Notification(
-            title=title,
-            body=body,
-        ),
-        token=token,
-    )
-
-    try:
-        # Send the message
-        response = messaging.send(message)
-        print('Successfully sent message:', response)
-    except Exception as e:
-        print('Error sending message:', e)

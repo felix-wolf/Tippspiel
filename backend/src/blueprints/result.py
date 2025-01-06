@@ -1,6 +1,8 @@
 from flask import Blueprint, request
 from src.models.discipline import Discipline
+from src.models.notification_helper import NotificationHelper
 from src.models.event import Event
+from src.models.game import Game
 from src.models.result import Result
 from flask_login import *
 
@@ -14,6 +16,9 @@ def process_results():
         event = Event.get_by_id(event_id)
         if not event:
             return "Event nicht gefunden", 400
+        game = Game.get_by_id(event.game_id)
+        if not game:
+            return "Game zu Event nicht gefunden", 500
         url = request.get_json().get("url", None)
         results_json = request.get_json().get("results", None)
         if url:
@@ -34,6 +39,9 @@ def process_results():
 
         success, error = event.process_results(results)
         if success:
+            result = NotificationHelper.get_tokens_for_users([player.id for player in game.players], check_results=1)
+            for res in result:
+                NotificationHelper.send_push_notification(res['device_token'], "Neue Ergebnisse verfügbar!", event.name)
             return Event.get_by_id(event_id).to_dict()
         else:
             return error, 500

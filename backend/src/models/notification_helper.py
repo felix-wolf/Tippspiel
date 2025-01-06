@@ -2,6 +2,7 @@ import src.utils as utils
 from src.database import db_manager
 from src.models.base_model import BaseModel
 from datetime import datetime
+from firebase_admin import messaging
 
 class NotificationHelper(BaseModel):
 
@@ -33,8 +34,13 @@ class NotificationHelper(BaseModel):
             )
     
     @staticmethod
-    def get_tokens_for_users(user_ids):
-        return db_manager.query(f"SELECT device_token FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id IN ({', '.join(map(repr, user_ids))})")
+    def get_tokens_for_users(user_ids, check_reminder=False, check_results=False):
+        sql = f"SELECT device_token FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id IN ({', '.join(map(repr, user_ids))})"
+        if check_reminder:
+            sql += " AND reminder_notification = 1"
+        if check_results:
+            sql += " AND results_notification = 1"
+        return db_manager.query(sql)
 
     @staticmethod
     def get_notification_settings_for_user(user_id, platform):
@@ -72,3 +78,22 @@ class NotificationHelper(BaseModel):
                 VALUES (?,?,?,?,?,?)
             """
         return db_manager.execute(sql, [id, user_id, token, platform, datetime.now(), datetime.now(),])
+    
+
+    @staticmethod
+    def send_push_notification(token, title, body):
+        # Construct the message
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            token=token,
+        )
+
+        try:
+            # Send the message
+            response = messaging.send(message)
+            print('Successfully sent message:', response)
+        except Exception as e:
+            print('Error sending message:', e)

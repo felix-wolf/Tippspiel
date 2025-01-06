@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./IconToggler.module.scss";
 
 type IconTogglerProps = {
   icons: string[];
   num_states?: number;
   initialState?: number;
-  didChange: (newState: number) => void;
-  externallyManagedState?: number;
+  didChange: (newState: number) => Promise<void> | void;
 };
 
 export function IconToggler({
@@ -14,19 +13,25 @@ export function IconToggler({
   num_states = 2,
   initialState = 0,
   didChange: _didChange,
-  externallyManagedState,
 }: IconTogglerProps) {
   const [state, setState] = useState(initialState);
+
+  useEffect(() => {
+    setState(initialState);
+  }, [initialState]);
   return (
     <div className={styles.con}>
       <div
         className={styles.container}
         onClick={() => {
+          const oldState = state;
           const newState = (state + 1) % num_states;
-          if (externallyManagedState == undefined) {
-            setState(newState);
-          }
-          _didChange(newState);
+          setState(newState);
+          _didChange(newState)
+            ?.then()
+            .catch(() => {
+              setState(oldState);
+            });
         }}
       >
         <img className={styles.icon} src={icons[state]} alt={"image"} />

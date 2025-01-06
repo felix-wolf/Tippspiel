@@ -1,6 +1,6 @@
 import { DialogModal } from "../design/Dialog.tsx";
 import { TextField } from "../design/TextField.tsx";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Game } from "../../models/Game.ts";
 import styles from "./SettingsModal.module.scss";
 import { Button } from "../design/Button.tsx";
@@ -50,16 +50,12 @@ export function SettingsModal({
   const [testPushShaking, setTestPushShaking] = useState(false);
   const [reminderShaking, setReminderShaking] = useState(false);
   const [resultsShaking, setResultsShaking] = useState(false);
-  const [reminderState, setReminderState] = useState(0);
-  const [resultsState, setResultsState] = useState(0);
   const [notificationRegisterSuccess, setNotificationRegisterSuccess] =
     useState(false);
   const { isLight } = useAppearance();
   function buttonEnabled(): boolean {
     return gameName !== game.name;
   }
-
-  //console.log("Test");
 
   const settingsFetchValues = useFetch<NotificationSettings>({
     key: "notificationSettings",
@@ -69,7 +65,7 @@ export function SettingsModal({
 
   const { data: settings } = settingsFetchValues;
 
-  const buildSettingsItems = useCallback((): SettingsItem[] => {
+  function buildSettingsItems(): SettingsItem[] {
     const colorSettingsitem: SettingsItem = {
       title: "Graph",
       subitems: [
@@ -127,29 +123,30 @@ export function SettingsModal({
           <div className={cls(styles.settingsItemText)}>neuen Ergebnissen</div>
           <Shakable shaking={resultsShaking}>
             {settings?.reminder}
-            <img src={settings?.reminder ? checked_white : unchecked_white} />
             <IconToggler
-              //externallyManagedState={resultsState}
               icons={
                 isLight()
                   ? [unchecked_black, checked_black]
                   : [unchecked_white, checked_white]
               }
               initialState={!!settings?.results ? 1 : 0}
-              didChange={(number) => {
-                console.log(number);
-                NotificationHelper.saveNotificationSetting(
-                  user,
-                  "results",
-                  number,
-                )
-                  .then(() => {
-                    setResultsState((resultsState + 1) % 2);
-                  })
-                  .catch(() => {
-                    setResultsShaking(true);
-                    setTimeout(() => setResultsShaking(false), 300);
-                  });
+              didChange={(number): Promise<void> => {
+                return new Promise((resolve, reject) => {
+                  console.log(number);
+                  NotificationHelper.saveNotificationSetting(
+                    user,
+                    "results",
+                    number,
+                  )
+                    .then(() => {
+                      resolve();
+                    })
+                    .catch(() => {
+                      reject();
+                      setResultsShaking(true);
+                      setTimeout(() => setResultsShaking(false), 300);
+                    });
+                });
               }}
             />
           </Shakable>
@@ -160,24 +157,26 @@ export function SettingsModal({
           </div>
           <Shakable shaking={reminderShaking}>
             <IconToggler
-              externallyManagedState={reminderState}
               icons={
                 isLight()
                   ? [unchecked_black, checked_black]
                   : [unchecked_white, checked_white]
               }
               initialState={!!settings?.reminder ? 1 : 0}
-              didChange={(number) => {
-                NotificationHelper.saveNotificationSetting(
-                  user,
-                  "reminder",
-                  number,
-                )
-                  .then(() => setReminderState((reminderState + 1) % 2))
-                  .catch(() => {
-                    setReminderShaking(true);
-                    setTimeout(() => setReminderShaking(false), 300);
-                  });
+              didChange={(number): Promise<void> => {
+                return new Promise((resolve, reject) => {
+                  NotificationHelper.saveNotificationSetting(
+                    user,
+                    "reminder",
+                    number,
+                  )
+                    .then(() => resolve())
+                    .catch(() => {
+                      reject();
+                      setReminderShaking(true);
+                      setTimeout(() => setReminderShaking(false), 300);
+                    });
+                });
               }}
             />
           </Shakable>
@@ -185,14 +184,7 @@ export function SettingsModal({
       ],
     };
     return [colorSettingsitem, pushSettingsItem];
-  }, [
-    notificationRegisterSuccess,
-    reminderShaking,
-    settings,
-    reminderState,
-    resultsShaking,
-    resultsState,
-  ]);
+  }
 
   function onDeleteGame() {
     game
