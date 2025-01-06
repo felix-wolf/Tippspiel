@@ -6,6 +6,7 @@ type IconTogglerProps = {
   num_states?: number;
   initialState?: number;
   didChange: (newState: number) => void;
+  externallyManagedState?: number;
 };
 
 export function IconToggler({
@@ -13,6 +14,7 @@ export function IconToggler({
   num_states = 2,
   initialState = 0,
   didChange: _didChange,
+  externallyManagedState,
 }: IconTogglerProps) {
   const [state, setState] = useState(initialState);
   return (
@@ -21,7 +23,9 @@ export function IconToggler({
         className={styles.container}
         onClick={() => {
           const newState = (state + 1) % num_states;
-          setState(newState);
+          if (externallyManagedState == undefined) {
+            setState(newState);
+          }
           _didChange(newState);
         }}
       >

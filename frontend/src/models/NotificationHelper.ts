@@ -2,6 +2,13 @@ import { NetworkHelper } from "./NetworkHelper.ts";
 import { getToken } from "firebase/messaging";
 import { messaging } from "../main.tsx";
 import { useCurrentUser } from "./user/UserContext.tsx";
+import { User } from "./user/User.ts";
+
+type settingCategory = "results" | "reminder";
+export type NotificationSettings = {
+  reminder: boolean;
+  results: boolean;
+};
 
 export class NotificationHelper {
   public static registerDevice(): Promise<void> {
@@ -58,12 +65,37 @@ export class NotificationHelper {
     });
   }
 
-  public static sendTestNotification(): Promise<void> {
-    const user = useCurrentUser();
+  public static getSettings(
+    user: User | undefined,
+  ): Promise<NotificationSettings> {
+    return NetworkHelper.fetchAll(
+      `/api/notification/settings?user_id=${user?.id}&platform=${navigator.userAgent}`,
+      (setting): NotificationSettings => {
+        return {
+          reminder: !!setting.reminder_notification,
+          results: !!setting.results_notification,
+        };
+      },
+    );
+  }
 
+  public static sendTestNotification(user: User | undefined): Promise<void> {
     return NetworkHelper.post("/api/notification/test", () => {}, {
       user_id: user?.id,
       platform: navigator.userAgent,
+    });
+  }
+
+  public static saveNotificationSetting(
+    user: User | undefined,
+    setting: settingCategory,
+    value: number,
+  ): Promise<void> {
+    return NetworkHelper.post("/api/notification/settings", () => {}, {
+      user_id: user?.id,
+      platform: navigator.userAgent,
+      setting: setting,
+      value: value,
     });
   }
 }

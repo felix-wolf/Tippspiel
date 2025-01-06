@@ -24,6 +24,39 @@
   gap: var(--grid-s);
 }
 
+.settingItem {
+  margin-bottom: var(--grid-s);
+}
+
+.innerItems {
+  padding-left: var(--grid-s);
+}
+
+.innerItem {
+  margin-bottom: var(--grid-xs);
+
+}
+
+.text {
+  color: var(--text-dark);
+  margin-top: var(--grid-s);
+}
+
+.settingsItemText {
+  color: var(--text-dark);
+  composes: text-emphasis from global;
+  margin-bottom: var(--grid-xs);
+}
+
+.notificationToggle {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--grid-s);
+}
+
 .container {
   display: flex;
   flex-direction: column;

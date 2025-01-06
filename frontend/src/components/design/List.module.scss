@@ -24,8 +24,11 @@
   min-height: 100px;
   display: flex;
   flex-flow: wrap;
-  overflow: scroll;
   grid-gap: var(--grid-s);
+}
+
+.scroll {
+  overflow: scroll;
 }
 
 .border {

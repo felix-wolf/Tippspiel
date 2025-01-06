@@ -7,9 +7,5 @@ type ShakableProps = React.PropsWithChildren<{
 }>;
 
 export function Shakable({ shaking, children }: ShakableProps) {
-  return (
-    <div className={cls(styles.shakable, shaking && styles.shake)}>
-      {children}
-    </div>
-  );
+  return <div className={cls(shaking && styles.shake)}>{children}</div>;
 }

@@ -117,6 +117,7 @@ export function BetList({ game, event }: BetListProps) {
         )) ?? []
       }
       max_height={6000}
+      scroll={false}
       align={"center"}
     />
   );

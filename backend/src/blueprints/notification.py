@@ -60,6 +60,23 @@ def send_notification():
     return "Success", 200
     
 
+@notification_blueprint.route('/api/notification/settings', methods=['GET', 'POST'])
+def settings():
+    if request.method == "GET":
+        user_id = request.args.get("user_id")
+        platform = request.args.get("platform")
+        return NotificationHelper.get_notification_settings_for_user(user_id=user_id, platform=platform)
+    if request.method == "POST":
+        user_id = request.get_json().get("user_id")
+        platform = request.get_json().get("platform")
+        setting = request.get_json().get("setting")
+        value = request.get_json().get("value")
+        success = NotificationHelper.save_setting(user_id=user_id, platform=platform, setting=setting, value=bool(int(value)))
+        if not success:
+            return "Error", 500
+    return {"Code": 200}
+
+
 def send_push_notification(token, title, body):
     # Construct the message
     message = messaging.Message(

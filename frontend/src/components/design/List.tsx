@@ -10,6 +10,7 @@ type ListProps = {
   max_height?: number;
   displayBorder?: boolean;
   align?: "left" | "center";
+  scroll?: boolean;
 };
 
 export function List({
@@ -20,6 +21,7 @@ export function List({
   max_height = 200,
   displayBorder = true,
   align = "left",
+  scroll = true,
 }: ListProps) {
   return (
     <div className={styles.container}>
@@ -31,6 +33,7 @@ export function List({
           align == "center" && styles.alignCenter,
           items.length == 0 && styles.empty,
           displayBorder && styles.border,
+          scroll && styles.scroll,
         )}
       >
         {items.length == 0 && emptyText && (
