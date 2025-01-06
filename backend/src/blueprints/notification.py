@@ -45,17 +45,18 @@ def send_notification():
     games = Game.get_all()
     for game in games:
         events = Event.get_all_by_game_id(game.id, get_full_objects=False)
-        events = [event for event in events if timedelta(minutes=63) > event.dt.replace(tzinfo=pytz.timezone('CET')) - now]
+        #events = [event for event in events if timedelta(minutes=63) > event.dt.replace(tzinfo=pytz.timezone('CET')) - now]]
         if len(events) == 0:
             continue
         for event in events:
-            players_without_bets = list(set([player.id for player in game.players]).difference(set(event.has_bets_for_users)))
+            players_without_bets = list(set([player.id for player in game.players if player.name == "Flexschmex"]).difference(set(event.has_bets_for_users)))
             result = NotificationHelper.get_tokens_for_users(players_without_bets, check_reminder=True)
             for res in result:
                 try:
-                    NotificationHelper.send_push_notification(res['device_token'], "Rennen startet in einer Stunde!", event.name)
+                    NotificationHelper.send_push_notification(res['device_token'], "Rennen startet in einer Stunde!", event.name + (event.dt.replace(tzinfo=pytz.timezone('CET')) - now).total_seconds() / 60)
                 except Exception as e:
                     return jsonify({'success': False, 'error': str(e)}), 500
+            break
     return "Success", 200
     
 
