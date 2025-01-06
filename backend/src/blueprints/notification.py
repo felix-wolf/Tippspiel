@@ -53,7 +53,11 @@ def send_notification():
             result = NotificationHelper.get_tokens_for_users(players_without_bets, check_reminder=True)
             for res in result:
                 try:
-                    NotificationHelper.send_push_notification(res['device_token'], f"Rennen startet in einer Stunde um {pytz.timezone('CET').localize(event.dt).strftime("%H:%M")}!", event.name)
+                    NotificationHelper.send_push_notification(
+                        res['device_token'], 
+                        event.name,
+                        f"Rennen startet in einer Stunde um {pytz.timezone('CET').localize(event.dt).strftime('%H:%M')}!"
+                    )
                 except Exception as e:
                     return jsonify({'success': False, 'error': str(e)}), 500
             break

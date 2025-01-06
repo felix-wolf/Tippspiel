@@ -41,7 +41,11 @@ def process_results():
         if success:
             result = NotificationHelper.get_tokens_for_users([player.id for player in game.players], check_results=1)
             for res in result:
-                NotificationHelper.send_push_notification(res['device_token'], "Neue Ergebnisse verfügbar!", event.name)
+                NotificationHelper.send_push_notification(
+                    res['device_token'], 
+                    event.name,
+                    "Neue Ergebnisse verfügbar!"
+                )
             return Event.get_by_id(event_id).to_dict()
         else:
             return error, 500
