@@ -251,6 +251,7 @@ export class Event {
     datetime: Date,
     numBets: number,
     pointsCorrectBet: number,
+    allowPartialPoints: boolean,
   ): Promise<Event> {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -266,6 +267,7 @@ export class Event {
       datetime: date_string,
       num_bets: numBets,
       points_correct_bet: pointsCorrectBet,
+      allow_partial_points: allowPartialPoints,
     });
   }
 }

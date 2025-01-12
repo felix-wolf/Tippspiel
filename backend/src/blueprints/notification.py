@@ -69,7 +69,10 @@ def settings():
     if request.method == "GET":
         user_id = request.args.get("user_id")
         platform = request.args.get("platform")
-        return NotificationHelper.get_notification_settings_for_user(user_id=user_id, platform=platform)
+        settings = NotificationHelper.get_notification_settings_for_user(user_id=user_id, platform=platform)
+        if settings is None:
+            return "Could not find settings for user", 404
+        return settings
     if request.method == "POST":
         user_id = request.get_json().get("user_id")
         platform = request.get_json().get("platform")

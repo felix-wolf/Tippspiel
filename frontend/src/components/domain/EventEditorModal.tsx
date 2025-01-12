@@ -31,6 +31,7 @@ export function EventEditorModal({
             updatedEvent.datetime,
             updatedEvent.numBets,
             updatedEvent.pointsCorrectBet,
+            updatedEvent.allowPartialPoints,
           )
             .then((_) => {
               _onEdited();
