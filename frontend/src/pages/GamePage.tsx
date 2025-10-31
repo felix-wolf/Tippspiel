@@ -6,7 +6,6 @@ import { useCurrentUser } from "../models/user/UserContext";
 import { NavPage } from "./NavPage";
 import styles from "./GamePage.module.scss";
 import { ScoreLine } from "../components/domain/ScoreLine";
-import { ColorUpdater } from "../components/domain/ColorUpdater";
 import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
 import useFetch from "../useFetch";
@@ -18,6 +17,8 @@ import settings_black from "../assets/icons/settings_black.svg";
 import { useAppearance } from "../contexts/AppearanceContext.tsx";
 import { SettingsModal } from "../components/domain/SettingsModal.tsx";
 import { useCache } from "../contexts/CacheContext.tsx";
+import { Trophy, Calendar, Table as TableIcon } from "lucide-react";
+
 
 export function GamePage() {
   const { game_id } = usePathParams(SiteRoutes.Game);
@@ -70,17 +71,16 @@ export function GamePage() {
     [game_id],
   );
 
-  return (
+  return (<>
     <NavPage
       title={game?.name}
       navBarLeftItem={
         <div style={{ width: 50 }}>
           <Button
-            icon={isLight() ? settings_white : settings_black}
+            icon={isLight() ? settings_black : settings_white}
             title={""}
-            type={"neutral"}
+            type={"clear"}
             onClick={() => setShowingSettingsModal(true)}
-            width={"flexible"}
           />
         </div>
       }
@@ -107,37 +107,22 @@ export function GamePage() {
         />
       )}
       {gameLoading && <Loader />}
-      {!gameLoading && (
-        <>
-          <div className={styles.punkte}>
-            {user && game && scores && (
-              <>
-                <Toggler
-                  items={[
-                    {
-                      name: "Graph",
-                      component: (
-                        <>
-                          <ColorUpdater
-                            user={user}
-                            onUpdated={() => {
-                              refetchGame(true);
-                            }}
-                          />
-                          <ScoreLine game={game} scores={scores} />
-                        </>
-                      ),
-                    },
-                    {
-                      name: "Tabelle",
-                      component: <ScoreList game={game} scores={scores} />,
-                    },
-                  ]}
-                />
-              </>
-            )}
-          </div>
-        </>
+      {!gameLoading && user && game && scores && (
+
+        <Toggler
+          items={[
+            {
+              nameComponent: <><Trophy size={18} /> Graph </>,
+              component:
+                  <ScoreLine game={game} scores={scores} />,
+            },
+            {
+              nameComponent: <><TableIcon size={18} /> Tabelle</>,
+              component: <ScoreList game={game} scores={scores} />,
+            },
+          ]}
+        />
+
       )}
       {game && (
         <>
@@ -169,5 +154,6 @@ export function GamePage() {
         </>
       )}
     </NavPage>
+  </>
   );
 }

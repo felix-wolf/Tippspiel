@@ -13,6 +13,8 @@ type TextFieldProps = {
   placeholder: string;
   onInput: (input: string) => void;
   initialValue?: string;
+  icon?: React.ReactElement;
+  autoComplete?: "off" | "on" | "username" | "current-password" | "new-password";
 };
 
 export type TextFieldHandle = {
@@ -33,6 +35,8 @@ export const TextField = React.forwardRef<TextFieldHandle, TextFieldProps>(
       placeholder,
       onInput: _onInput,
       initialValue = "",
+      autoComplete = "off",
+      icon = undefined
     }: TextFieldProps,
     ref,
   ) {
@@ -58,15 +62,23 @@ export const TextField = React.forwardRef<TextFieldHandle, TextFieldProps>(
     }, [_onInput, type, input]);
 
     return (
-      <input
-        id={id}
-        className={styles.textField}
-        type={type == "number" ? "text" : type}
-        ref={input}
-        value={value}
-        onInput={onInput}
-        placeholder={placeholder}
-      />
+      <div className="relative">
+        {icon}
+        <input
+          id={id}
+          autoComplete={autoComplete}
+          className={`
+            w-full py-3 bg-white/70 rounded-xl border border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500
+            ${icon != undefined && "pl-10 pr-3"}
+            ${icon == undefined && "px-3"}
+          `}
+          type={type == "number" ? "text" : type}
+          ref={input}
+          value={value}
+          onInput={onInput}
+          placeholder={placeholder}
+        />
+      </div>
     );
   },
 );

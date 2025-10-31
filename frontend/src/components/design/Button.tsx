@@ -1,5 +1,3 @@
-import styles from "./Button.module.scss";
-import { cls } from "../../styles/cls";
 import { useCallback } from "react";
 
 type ButtonProps = {
@@ -8,8 +6,6 @@ type ButtonProps = {
   title: string;
   type?: "positive" | "negative" | "neutral" | "clear";
   isEnabled?: boolean;
-  width?: "fixed" | "flexible";
-  height?: "fixed" | "flexible";
   icon?: string;
   rounded?: boolean[];
 };
@@ -20,8 +16,6 @@ export function Button({
   onDisabledClick: _onDisClick,
   type = "neutral",
   isEnabled = true,
-  width = "fixed",
-  height = "fixed",
   icon,
   rounded = [true, true, true, true],
 }: ButtonProps) {
@@ -35,24 +29,17 @@ export function Button({
 
   return (
     <button
-      className={cls(
-        styles.button,
-        type == "positive" && styles.positive,
-        type == "negative" && styles.negative,
-        type == "neutral" && styles.neutral,
-        width == "flexible" && styles.flexible_width,
-        height == "flexible" && styles.flexible_height,
-        isEnabled && styles.enabled,
-        !isEnabled && styles.disabled,
-        rounded[0] && styles.topRight,
-        rounded[1] && styles.bottomRight,
-        rounded[2] && styles.bottomLeft,
-        rounded[3] && styles.topLeft,
-      )}
+      className={`
+        w-full py-2 px-3 mt-2 rounded-lg transition-all duration-200 cursor-pointer
+        ${type == "positive" && "font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-700 hover:to-blue-800 text-white"}
+        ${type == "negative" && "font-semibold bg-gradient-to-r from-red-700 to-rose-800 hover:from-red-800 hover:to-rose-900 text-white"}
+        ${type == "neutral" && "bg-sky-700 hover:from-red-800 hover:to-rose-900 text-white"}
+        ${type == "clear" && "text-black bg-white/30 hover:from-red-800 hover:to-rose-900"}
+        `}
       onClick={onClick}
     >
-      <div className={styles.container}>
-        {icon && <img className={styles.icon} src={icon} />}
+      <div className="flex items-center justify-center w-full h-full gap-2">
+        {icon && <img className="h-8/10" src={icon} />}
         {title}
       </div>
     </button>

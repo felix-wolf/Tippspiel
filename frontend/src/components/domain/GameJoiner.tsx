@@ -1,64 +1,37 @@
-import styles from "./GameJoiner.module.scss";
 import { TextField } from "../design/TextField";
-import { useState } from "react";
-import { Button } from "../design/Button";
 import { Game } from "../../models/Game";
 import { Shakable } from "../design/Shakable";
 
 type GameJoinerProps = {
   game: Game;
-  onClose: () => void;
   shaking?: boolean;
-
-  onJoin: (password?: string) => void;
+  onEnterPassword: (password: string) => void;
 };
 
 export function GameJoiner({
   game,
-  onClose: _onClose,
-  onJoin: _onJoin,
   shaking = false,
+  onEnterPassword: _onEnterPassword,
 }: GameJoinerProps) {
-  const [password, setPassword] = useState("");
 
   return (
-    <div className={styles.container}>
-      <div className={styles.column}>
-        <div>Tippspiel beitreten?</div>
-      </div>
-      <div className={styles.textContainer}>
+      <div className="flex flex-col gap-1">
+        <div className="text-base mb-2 text-white">
         <div>Name: {game.name}</div>
         <div>Spieler: {game.players.length}</div>
         <div>Ersteller: {game.creator?.name}</div>
+        </div>
         {game.hasPassword && (
           <Shakable shaking={shaking}>
             <TextField
               placeholder={"password"}
               onInput={(i) => {
-                setPassword(i);
+                _onEnterPassword(i);
               }}
             />
           </Shakable>
         )}
-      </div>
-      <div className={styles.buttonContainer}>
-        <Button
-          onClick={_onClose}
-          title={"Schließen"}
-          type={"negative"}
-          width={"flexible"}
-          height={"flexible"}
-        />
-        <Button
-          onClick={() => {
-            _onJoin(password != "" ? password : undefined);
-          }}
-          title={"Beitreten"}
-          type={"positive"}
-          width={"flexible"}
-          isEnabled={!game.hasPassword || password != ""}
-        />
-      </div>
+
     </div>
   );
 }

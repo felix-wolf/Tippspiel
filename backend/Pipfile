@@ -16,6 +16,7 @@ selenium = "*"
 pytest = "*"
 inquirer = "*"
 firebase-admin = "*"
+beartype = "*"
 
 [dev-packages]
 

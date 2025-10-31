@@ -1,4 +1,3 @@
-import styles from "./DropDown.module.scss";
 import { ChangeEvent, useCallback } from "react";
 
 export type DropDownOption = {
@@ -24,10 +23,9 @@ export function DropDown({
     },
     [options],
   );
-
   return (
     <select
-      className={styles.container}
+      className="text-white text-l bg-sky-600 rounded-md p-2"
       onChange={(event) => onChange(event)}
       defaultValue={initial?.id}
     >

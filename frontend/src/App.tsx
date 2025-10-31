@@ -1,14 +1,15 @@
-import "./styles/main.scss";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { SiteRoutes } from "../SiteRoutes";
 import { GamePage } from "./pages/GamePage";
 import UserContextLayout from "./models/user/UserContext";
-import { Login } from "./components/domain/Login";
+import { LoginPage } from "./pages/LoginPage.tsx";
 import { HomePage } from "./pages/HomePage";
 import { PlaceBetPage } from "./pages/PlaceBetPage";
 import { ViewBetsPage } from "./pages/ViewBetsPage";
 import AppearanceContextLayout from "./contexts/AppearanceContext.tsx";
 import Debug from "./pages/Debug.tsx";
+import MainLayout from "./pages/MainLayout.tsx";
+import GamePag from "./pages/GamePag.tsx";
 
 /**
  * All available routes.
@@ -21,11 +22,13 @@ function AppRoutes() {
       <Route element={<UserContextLayout />}>
         <Route element={<AppearanceContextLayout />}>
           <Route path={SiteRoutes.Debug} element={<Debug />} />
-          <Route path={SiteRoutes.Login} element={<Login />} />
-          <Route path={SiteRoutes.Home} element={<HomePage />} />
-          <Route path={SiteRoutes.Game} element={<GamePage />} />
-          <Route path={SiteRoutes.PlaceBet} element={<PlaceBetPage />} />
-          <Route path={SiteRoutes.ViewBets} element={<ViewBetsPage />} />
+          <Route path={SiteRoutes.Login} element={<LoginPage />} />
+          <Route element={<MainLayout />}>
+            <Route path={SiteRoutes.Home} element={<HomePage />} />
+            <Route path={SiteRoutes.Game} element={<GamePage />} />
+            <Route path={SiteRoutes.PlaceBet} element={<PlaceBetPage />} />
+            <Route path={SiteRoutes.ViewBets} element={<ViewBetsPage />} />
+          </Route>
         </Route>
       </Route>
     </Routes>

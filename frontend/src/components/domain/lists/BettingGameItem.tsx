@@ -1,10 +1,9 @@
-import styles from "./BettingGameItem.module.scss";
-import plus from "../../../assets/icons/plus.svg";
-import { cls } from "../../../styles/cls";
 import { useCallback, useState } from "react";
-import { GameCreator } from "../GameCreator";
-import { GameJoiner } from "../GameJoiner";
 import { Game } from "../../../models/Game";
+import CreateGameModal from "../CreateGameModal";
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { DialogModal } from "../../design/Dialog";
+import { GameJoiner } from "../GameJoiner";
 
 export type BettingGameItemGame = {
   game?: Game;
@@ -28,87 +27,74 @@ export function BettingGameItem({
   onJoin: _onJoin,
   type,
 }: BettingGameItemProps) {
-  const [creating, setCreating] = useState(false);
-  const [joining, setJoining] = useState(false);
+  const [showCreateGameModal, setShowCreateGameModal] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [showJoiningModal, setShowJoiningModal] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordShaking, setPasswordShaking] = useState(false);
 
-  const onPlaceholderClick = useCallback(() => {
-    if (!creating) setCreating(true);
-  }, [creating]);
 
-  const onClick = useCallback(() => {
-    if (!creating) {
+  const onJoinGameClick = useCallback(() => {
+    if (!showCreateGameModal) {
       if (_onGameSelect && item) {
         if (joined && item.game?.id) {
           _onGameSelect(item.game.id);
         } else {
-          if (!joining) setJoining(true);
+          setShowJoiningModal(true)
         }
       }
     }
-  }, [type, item, creating, joined, joining]);
+  }, [type, item, showCreateGameModal, joined]);
 
-  const onJoinClicked = useCallback(
-    (password: string | undefined) => {
+  const onJoinClicked = useCallback(() => {
+    if (item?.game?.hasPassword && password == "") {
+      console.log
+      setPasswordShaking(true);
+      setTimeout(() => setPasswordShaking(false), 300);
+    } else {
+      
       if (_onJoin && item?.game?.id) {
         _onJoin(item.game.id, password).then((success) => {
-          setShaking(!success);
-          setTimeout(() => setShaking(false), 300);
+          setPasswordShaking(!success);
+          setTimeout(() => setPasswordShaking(false), 300);
         });
       }
-    },
-    [item],
+    }
+  }, [password, item, passwordShaking],
   );
-
   return (
     <>
-      {type != "add" && (
-        <div
-          className={cls(
-            styles.container,
-            styles.visible,
-            styles.game,
-            joining && styles.joining,
-            joined && styles.joined,
-          )}
-          onClick={onClick}
-        >
-          {!joining && item?.game?.name}
-          {joining && item?.game && (
-            <GameJoiner
-              shaking={shaking}
-              game={item?.game}
-              onClose={() => {
-                setJoining(false);
-              }}
-              onJoin={onJoinClicked}
-            />
-          )}
+      {type == "add" && (
+        <div onClick={() => setShowCreateGameModal(true)} className="bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-2xl p-4 flex flex-col items-center justify-center hover:opacity-90 cursor-pointer">
+          <span className="text-3xl font-bold">+</span>
+          <p className="mt-1 text-sm font-medium">Neu</p>
+          <CreateGameModal isOpen={showCreateGameModal} onClose={() => setShowCreateGameModal(false)} onCreate={_onCreate} />
         </div>
       )}
-      {type == "add" && (
+      {type != "add" && (
         <div
-          className={cls(
-            styles.container,
-            styles.visible,
-            creating && styles.creating,
-          )}
-          onClick={!creating ? onPlaceholderClick : undefined}
+          onClick={onJoinGameClick}
+          className="bg-white/70 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 border border-transparent hover:border-sky-300 cursor-pointer flex flex-col justify-center items-center text-center"
         >
-          {!creating && (
-            <>
-              <img alt={"icon"} className={styles.icon} src={plus} />
-              <div className={styles.text}>Neu</div>
-            </>
-          )}
-          {creating && (
-            <GameCreator
-              onCreate={(name, password, disciplineId) => {
-                _onCreate && _onCreate(name, password, disciplineId);
-              }}
-              onClose={() => setCreating(false)}
-            />
-          )}
+          <h3 className="font-medium text-gray-800 text-sm sm:text-base">
+            {item?.game?.name}
+          </h3>
+          <DialogModal
+            type="enter"
+            title="Spiel beitreten"
+            isOpened={showJoiningModal}
+            onClose={() => setShaking(false)}
+            actionButtonTitle="Betreten"
+            onActionClick={onJoinClicked}
+            neutralButtonTitle="Abbrechen"
+            onNeutralClick={() => {
+              setShowJoiningModal(false)
+              setPassword("")
+            }}
+          >
+
+            {item?.game && <GameJoiner onEnterPassword={(i) => setPassword(i)} game={item.game} shaking={passwordShaking} />}
+          </DialogModal>
         </div>
       )}
     </>

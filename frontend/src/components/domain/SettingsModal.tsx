@@ -211,7 +211,7 @@ export function SettingsModal({
       title={"Einstellungen"}
       isOpened={isOpen}
       onClose={_onClose}
-      style={{ height: 465 }}
+      type="edit"
     >
       {buildSettingsItems().map((item, index) => (
         <div className={styles.settingItem} key={index + "a"}>
@@ -230,7 +230,13 @@ export function SettingsModal({
           </div>
         </div>
       ))}
-
+      { user && <ColorUpdater
+                    user={user}
+                    onUpdated={() => {
+                      /*refetchGame(true);*/
+                    }}
+                  />
+                  }
       {isCreator && (
         <div className={styles.container}>
           <form
@@ -251,7 +257,6 @@ export function SettingsModal({
                 onClick={() => onUpdateGameName()}
                 title={"Speichern"}
                 type={"positive"}
-                width={"flexible"}
                 isEnabled={buttonEnabled()}
               />
               <div className={styles.button}>
@@ -259,7 +264,6 @@ export function SettingsModal({
                   onClick={_onClose}
                   title={"Abbrechen"}
                   type={"neutral"}
-                  width={"flexible"}
                 />
               </div>
             </div>
