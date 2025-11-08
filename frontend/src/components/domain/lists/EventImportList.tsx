@@ -1,18 +1,10 @@
-import TableList from "../../design/TableList.tsx";
-import { Checkbox } from "../../design/Checkbox.tsx";
 import { Event } from "../../../models/Event.ts";
 import { Utils } from "../../../utils.ts";
 import { useState } from "react";
-import styles from "../URLEventImporter.module.scss";
 import { Button } from "../../design/Button.tsx";
+import { Badge, BadgeCheck } from "lucide-react";
 
-type EventImportListProps = {
-  events: Event[];
-  onDismiss: () => void;
-  onImportEvents: (events: Event[]) => void;
-};
-
-type EventImportListItem = {
+export type EventImportListItem = {
   importCheckbox: undefined;
   name: string;
   datetime: string;
@@ -22,10 +14,14 @@ type EventImportListItem = {
   event: Event;
 };
 
+type EventImportListProps = {
+  events: Event[];
+  onSelectEventItems: (events: Event[]) => void
+};
+
 export function EventImportList({
   events,
-  onDismiss: _onDismiss,
-  onImportEvents: _onImportEvents,
+  onSelectEventItems: _onSelectEventItems
 }: EventImportListProps) {
   const [eventItems, setEventItems] = useState<EventImportListItem[]>(
     events.map((event: Event, idx) => {
@@ -44,69 +40,57 @@ export function EventImportList({
   return (
     !!eventItems &&
     eventItems?.length != 0 && (
-      <>
-        <div className={styles.buttonContainer}>
-          <Button
-            onClick={() => {
-              setEventItems(
-                eventItems.map((event) => {
-                  return { ...event, isChecked: true }; // Return a new object with updated isChecked
-                }),
-              );
-            }}
-            title={"Alle auswählen"}
-          />
-          <Button
-            onClick={() => {
-              setEventItems(
-                eventItems.map((event) => {
-                  return { ...event, isChecked: false }; // Return a new object with updated isChecked
-                }),
-              );
-            }}
-            title={"Alle abwählen"}
-          />
-          <Button
-            onClick={() =>
-              _onImportEvents(
-                eventItems.filter((e) => e.isChecked).map((e) => e.event),
-              )
-            }
-            type={"positive"}
-            title={`${
-              eventItems.filter((e) => e.isChecked).length
-            } Events importieren`}
-            isEnabled={eventItems.filter((e) => e.isChecked).length > 0}
-          />
-          <Button onClick={_onDismiss} type={"negative"} title={"Abbrechen"} />
-        </div>
-        <TableList
-          onClick={(item) => {
-            setEventItems(
-              eventItems.map((event, idx) => {
-                if (idx === item.index) {
-                  return { ...event, isChecked: !item.isChecked };
-                }
-                return event;
-              }),
-            );
+      <div className="flex flex-col gap-2">
+        <Button
+          onClick={() => {
+            const items: EventImportListItem[] = eventItems.map((event) => {
+              return { ...event, isChecked: true };
+            })
+            setEventItems(items);
+            _onSelectEventItems(items.filter((e) => e.isChecked).map(e => e.event));
           }}
-          items={eventItems}
-          headers={{
-            importCheckbox: "",
-            name: "Name",
-            datetime: "Zeit",
-            eventType: "Art",
-            isChecked: "",
-          }}
-          customRenderers={{
-            importCheckbox: (it) => (
-              <Checkbox checked={it.isChecked} onChange={() => {}} />
-            ),
-          }}
-          displayNextArrow={false}
+          title={"Alle auswählen"}
         />
-      </>
+        <Button
+          onClick={() => {
+            const items: EventImportListItem[] = eventItems.map((event) => {
+              return { ...event, isChecked: false };
+            })
+            setEventItems(items);
+            _onSelectEventItems(items.filter((e) => e.isChecked).map(e => e.event));
+          }}
+          title={"Alle abwählen"}
+        />
+        <div className="flex flex-col max-h-100 overflow-y-auto gap-1">
+          {eventItems.map((event, idx) =>
+          (<div
+            onClick={() => {
+              const items: EventImportListItem[] = eventItems.map((e) => {
+                if (idx === e.index) {
+                  return { ...e, isChecked: !event.isChecked };
+                }
+                return e;
+              })
+              setEventItems(items);
+              _onSelectEventItems(items.filter((e) => e.isChecked).map(e => e.event));
+            }}
+            key={event.name}
+            className={`
+                grid grid-row-2 grid-col-2 gap-2 justify-start items-start bg-white/70 rounded-xl p-2 shadow-sm
+                `}
+          >
+            {event.isChecked ? <BadgeCheck className="row-span-2" /> : <Badge className="row-span-2" />}
+            <p className={`
+                    font-medium flex
+                    ${event.isChecked ? "text-black-500" : "text-gray-400"}
+                    `}>
+              {event.name}</p>
+
+            <p className={"text-sm text-gray-600 col-start-2"}>{event.datetime}</p>
+          </div>)
+          )}
+        </div>
+      </div>
     )
   );
 }

@@ -1,4 +1,3 @@
-import styles from "./Checkbox.module.scss";
 import checkbox_checked_black from "../../assets/icons/checkbox_checked_black.svg";
 import checkbox_unchecked_black from "../../assets/icons/checkbox_unchecked_black.svg";
 import checkbox_checked_white from "../../assets/icons/checkbox_checked_white.svg";
@@ -13,24 +12,25 @@ type CheckboxProps = {
 export function Checkbox({ checked, onChange: _onChange }: CheckboxProps) {
   const { isLight } = useAppearance();
   return (
-    <div
-      className={styles.container}
-      onClick={() => {
-        _onChange(!checked);
-      }}
-    >
+    <>
       {checked && (
         <img
+          onClick={() => {
+            _onChange(!checked);
+          }}
           alt={"checkbox"}
-          src={isLight() ? checkbox_checked_black : checkbox_checked_white}
+          src={isLight() ? checkbox_checked_white : checkbox_checked_black}
         />
       )}
       {checked == false && (
         <img
+          onClick={() => {
+            _onChange(!checked);
+          }}
           alt={"checkbox"}
-          src={isLight() ? checkbox_unchecked_black : checkbox_unchecked_white}
+          src={isLight() ? checkbox_unchecked_white : checkbox_unchecked_black}
         />
       )}
-    </div>
+    </>
   );
 }

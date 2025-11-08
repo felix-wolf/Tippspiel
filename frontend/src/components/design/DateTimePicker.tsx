@@ -2,7 +2,6 @@ import { useState } from "react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import de from "date-fns/locale/de"; // the locale you want
 import "react-datepicker/dist/react-datepicker.css";
-import styles from "./DateTimePicker.module.scss";
 
 registerLocale("de", de);
 
@@ -21,10 +20,11 @@ export function DateTimePicker({
 }: DateTimePickerProps) {
   const [date, setDate] = useState(initialDate ?? new Date());
   return (
-    <>
-      <div className={styles.container}>
+    <div>
+      <div className="z-2">
         <DatePicker
-          wrapperClassName={styles.date}
+          className="text-white"
+          wrapperClassName="w100"
           dateFormat={"dd.MM.yyyy"}
           locale={"de"}
           selected={date}
@@ -37,7 +37,7 @@ export function DateTimePicker({
         />
       </div>
       <input
-        className={styles.time}
+        className="text-white"
         type={"time"}
         onChange={(ev) => _onTimeSet(ev.target.value)}
         min="00:00"
@@ -46,6 +46,6 @@ export function DateTimePicker({
         //value={time}
         defaultValue={initialTime}
       />
-    </>
+    </div>
   );
 }

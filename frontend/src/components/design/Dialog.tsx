@@ -1,6 +1,7 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { Plus, LogIn, Wrench } from "lucide-react";
 import { Button } from "./Button";
+import { Shakable } from './Shakable';
 
 type Props = React.PropsWithChildren<{
   title: string;
@@ -10,7 +11,9 @@ type Props = React.PropsWithChildren<{
   onNeutralClick?: () => void;
   actionButtonTitle?: string;
   onActionClick?: () => void;
+  actionButtonEnabled: boolean;
   type: "add" | "enter" | "edit"
+  shakingActionButton: boolean
 }>;
 
 export function DialogModal({
@@ -18,10 +21,12 @@ export function DialogModal({
   isOpened,
   onClose: _onClose,
   actionButtonTitle,
-  neutralButtonTitle,
   onActionClick: _onActionClick,
+  actionButtonEnabled,
+  neutralButtonTitle,
   onNeutralClick: _onNeutralClick,
   type,
+  shakingActionButton,
   children,
 }: Props) {
 
@@ -41,9 +46,9 @@ export function DialogModal({
             <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div className="sm:flex sm:items-start">
                 <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-blue-500/10 sm:mx-0 sm:size-10">
-                  {type == "add" &&  <Plus className="size-6 text-blue-500" aria-hidden="true" />}
-                  {type == "enter" &&  <LogIn className="size-6 text-blue-500" aria-hidden="true" />}
-                  {type == "edit" &&  <Wrench className="size-6 text-blue-500" aria-hidden="true" />}
+                  {type == "add" && <Plus className="size-6 text-blue-500" aria-hidden="true" />}
+                  {type == "enter" && <LogIn className="size-6 text-blue-500" aria-hidden="true" />}
+                  {type == "edit" && <Wrench className="size-6 text-blue-500" aria-hidden="true" />}
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                   <DialogTitle as="h3" className="text-base font-semibold text-white">
@@ -55,9 +60,18 @@ export function DialogModal({
                 </div>
               </div>
             </div>
-            <div className="bg-gray-700/25 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-3 justify-center">
-              {_onActionClick && actionButtonTitle &&  <Button title={actionButtonTitle} onClick={_onActionClick} type="positive" />}
-              {_onNeutralClick && neutralButtonTitle && <Button title={neutralButtonTitle} onClick={_onNeutralClick} type="neutral" />}
+            <div className="bg-gray-700/25 px-4 py-3 grid grid-cols-2 px-6 gap-3 justify-center">
+            {_onNeutralClick && neutralButtonTitle && <Button title={neutralButtonTitle} onClick={_onNeutralClick} type="neutral" />}
+              {_onActionClick && actionButtonTitle &&
+                <Shakable shaking={shakingActionButton}>
+                  <Button
+                    title={actionButtonTitle}
+                    onClick={_onActionClick}
+                    type="positive"
+                    isEnabled={actionButtonEnabled}
+                  />
+                </Shakable>
+                }
             </div>
           </DialogPanel>
         </div>

@@ -1,4 +1,3 @@
-import styles from "./URLEventImporter.module.scss";
 import { Shakable } from "../design/Shakable.tsx";
 import { TextField } from "../design/TextField.tsx";
 import { Button } from "../design/Button.tsx";
@@ -10,17 +9,15 @@ import { EventImportList } from "./lists/EventImportList.tsx";
 type URLEventImporterProps = {
   eventsUrl: string;
   game: Game;
-  onEventsFetched: (events: Event[]) => void;
-  onDismiss: () => void;
-  onEventsSaved: () => void;
+  onSelectEvents: (events: Event[]) => void;
+  onSelectingEventsToImport: (selecting: boolean) => void;
 };
 
 export function URLEventImporter({
   game,
   eventsUrl,
-  onEventsFetched: _onEventsFetched,
-  onDismiss: _onDismiss,
-  onEventsSaved: _onEventsSaved,
+  onSelectEvents: _onSelectEvents,
+  onSelectingEventsToImport: _onSelectingEventsToImport
 }: URLEventImporterProps) {
   const [shaking, setShaking] = useState(false);
   const [url, setUrl] = useState("");
@@ -28,43 +25,24 @@ export function URLEventImporter({
   const [events, setEvents] = useState<Event[]>([]);
   const [selectingEventsToImport, setSelectingEventsToImport] = useState(false);
 
-  const uploadResults = useCallback(() => {
+  const searchForEvents = useCallback(() => {
     if (game) {
       setIsProcessing(true);
       game
         .processUrlForEvents(url)
         .then((events) => {
           setEvents(events);
-          _onEventsFetched(events);
+          _onSelectEvents(events);
           setSelectingEventsToImport(true);
+          _onSelectingEventsToImport(true);
         })
         .catch((_) => {
-          //setNumberOfErrors(numberOfErrors + 1);
           setIsProcessing(false);
           setShaking(true);
           setTimeout(() => setShaking(false), 300);
         });
     }
   }, [game, url]);
-
-  const importSelectedEvents = useCallback(
-    (events: Event[]) => {
-      if (game) {
-        setIsProcessing(true);
-        Event.saveImportedEvents(events)
-          .then(() => {
-            setSelectingEventsToImport(false);
-            _onEventsSaved();
-          })
-          .catch((_) => {
-            //setNumberOfErrors(numberOfErrors + 1);
-            setSelectingEventsToImport(false);
-            _onDismiss();
-          });
-      }
-    },
-    [game],
-  );
 
   return (
     <>
@@ -73,39 +51,27 @@ export function URLEventImporter({
           onSubmit={(event) => {
             event.preventDefault();
           }}
-          className={styles.container}
+          className="grid grid-cols-3 gap-4 justify-center items-center"
         >
-          <Shakable shaking={shaking}>
-            <TextField placeholder={eventsUrl} onInput={(i) => setUrl(i)} />
-          </Shakable>
-          <div className={styles.row}>
-            <div className={styles.wide}>
-              <Button
-                onClick={() => uploadResults()}
-                title={"Nach Events suchen"}
-                isEnabled={url != "" && !isProcessing}
-                type={"positive"}
-                width={"flexible"}
-              />
-            </div>
-            <div className={styles.narrow}>
-              <Button
-                onClick={() => {
-                  _onDismiss();
-                }}
-                title={"Abbrechen"}
-                type={"negative"}
-                width={"flexible"}
-              />
-            </div>
+          <div className="col-span-2">
+            <Shakable shaking={shaking}>
+              <TextField placeholder={eventsUrl} onInput={(i) => setUrl(i)} />
+            </Shakable>
+          </div>
+          <div className="w-full">
+            <Button
+              onClick={() => searchForEvents()}
+              title={"suchen"}
+              isEnabled={url != "" && !isProcessing}
+              type={"positive"}
+            />
           </div>
         </form>
       )}
       {selectingEventsToImport && events && events.length > 0 && (
         <EventImportList
           events={events}
-          onDismiss={() => setSelectingEventsToImport(false)}
-          onImportEvents={(events) => importSelectedEvents(events)}
+          onSelectEventItems={_onSelectEvents}
         />
       )}
     </>

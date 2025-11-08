@@ -4,7 +4,6 @@ import { Game } from "../models/Game";
 import { EventList } from "../components/domain/lists/EventList";
 import { useCurrentUser } from "../models/user/UserContext";
 import { NavPage } from "./NavPage";
-import styles from "./GamePage.module.scss";
 import { ScoreLine } from "../components/domain/ScoreLine";
 import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
@@ -17,7 +16,8 @@ import settings_black from "../assets/icons/settings_black.svg";
 import { useAppearance } from "../contexts/AppearanceContext.tsx";
 import { SettingsModal } from "../components/domain/SettingsModal.tsx";
 import { useCache } from "../contexts/CacheContext.tsx";
-import { Trophy, Calendar, Table as TableIcon } from "lucide-react";
+import { Trophy, Table as TableIcon } from "lucide-react";
+import { motion } from "motion/react";
 
 
 export function GamePage() {
@@ -56,20 +56,6 @@ export function GamePage() {
     }
     setIsCreator(game?.creator?.id == user?.id);
   }, [user, game]);
-
-  const showUserBets = useCallback(
-    (event_id: string, page_num: string) => {
-      navigate(SiteRoutes.PlaceBet, { game_id, event_id, page_num });
-    },
-    [game_id],
-  );
-
-  const showAllBets = useCallback(
-    (event_id: string) => {
-      navigate(SiteRoutes.ViewBets, { game_id, event_id });
-    },
-    [game_id],
-  );
 
   return (<>
     <NavPage
@@ -114,7 +100,7 @@ export function GamePage() {
             {
               nameComponent: <><Trophy size={18} /> Graph </>,
               component:
-                  <ScoreLine game={game} scores={scores} />,
+                <ScoreLine game={game} scores={scores} />,
             },
             {
               nameComponent: <><TableIcon size={18} /> Tabelle</>,
@@ -125,33 +111,24 @@ export function GamePage() {
 
       )}
       {game && (
-        <>
-          <div className={styles.listContainer}>
-            <EventList
-              game={game}
-              type={"upcoming"}
-              placeholderWhenEmpty={
-                <div className={styles.empty_text}>
-                  Es sind noch keine Events eingetragen...
-                </div>
-              }
-              showUserBets={showUserBets}
-              isCreator={isCreator}
-            />
-          </div>
-          <div className={styles.listContainer}>
-            <EventList
-              game={game}
-              type={"past"}
-              placeholderWhenEmpty={
-                <div className={styles.empty_text}>
-                  Es hat noch kein Event stattgefunden...
-                </div>
-              }
-              showAllBets={showAllBets}
-            />
-          </div>
-        </>
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-6 flex flex-col"
+        >
+          <EventList
+            game={game}
+            type={"upcoming"}
+            placeholderText={"Es sind noch keine Events eingetragen..."}
+            isCreator={isCreator}
+          />
+          <EventList
+            game={game}
+            type={"past"}
+            placeholderText={"Es hat noch kein Event stattgefunden..."}
+          />
+        </motion.section>
       )}
     </NavPage>
   </>

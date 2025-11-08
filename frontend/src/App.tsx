@@ -9,7 +9,6 @@ import { ViewBetsPage } from "./pages/ViewBetsPage";
 import AppearanceContextLayout from "./contexts/AppearanceContext.tsx";
 import Debug from "./pages/Debug.tsx";
 import MainLayout from "./pages/MainLayout.tsx";
-import GamePag from "./pages/GamePag.tsx";
 
 /**
  * All available routes.

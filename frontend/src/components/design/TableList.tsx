@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import styles from "./TableList.module.scss";
 import next from "../../assets/icons/plus.svg";
 import { cls } from "../../styles/cls";
 
@@ -76,28 +75,6 @@ type CustomRenderers<T extends ListElement> = Partial<
 
 type ListElement = Record<string, any>;
 
-type ListTitleProps = React.PropsWithChildren<{
-  /**
-   * The title of the list title object.
-   */
-  title: string;
-}>;
-
-/**
- * A list title, offering the possibility to have complex table titles instead of just plain text.
- * Title is wrapped around custom element, title has to be provided.
- */
-export function ListTitle({ title, children }: ListTitleProps) {
-  return (
-    <caption className={styles.caption}>
-      <div className={styles.listTitle}>
-        {title}
-        {children}
-      </div>
-    </caption>
-  );
-}
-
 /**
  Creates a generic list that is used in many screens. It will require a list of Objects, headers that should be displayed on the top,
  a select function that is called on the object of a selected row and optional custom renderers.
@@ -110,9 +87,6 @@ export default function TableList<T extends ListElement>({
   headers,
   displayNextArrow = true,
   items,
-  cellHeight = "tall",
-  alignLastRight = false,
-  maxHeight = 99999,
 }: ListProps<T>) {
   const [scrolled, setScrolled] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -138,7 +112,7 @@ export default function TableList<T extends ListElement>({
     return (
       <tr
         key={key}
-        className={styles.tableRow}
+        className="hover:bg-white/50 transition"
         onClick={() => (onClick ? onClick(item) : undefined)}
       >
         {Object.entries(sortItemsByHeader(item, Object.keys(headers))).map(
@@ -148,12 +122,7 @@ export default function TableList<T extends ListElement>({
             // TODO is `isPrimitiveValue` really the right condition? do we want to print booleans like that?
             return (
               <td
-                className={cls(
-                  cellHeight == "short" && styles.tdShort,
-                  index == Object.keys(headers).length - 1 &&
-                    alignLastRight &&
-                    styles.alignRight,
-                )}
+                className="py-2 px-3"
                 key={index}
               >
                 {customRenderer?.(item) ??
@@ -165,9 +134,10 @@ export default function TableList<T extends ListElement>({
         {displayNextArrow && (
           <td
             key={Object.keys(item).length + 1}
-            className={styles.buttonDataEntry}
+            // text-align: right
+            className="text-right"
           >
-            <img className={styles.icon} src={next} alt={""}></img>
+            <img className="w20 h20" src={next} alt={""}></img>
           </td>
         )}
       </tr>
@@ -175,30 +145,21 @@ export default function TableList<T extends ListElement>({
   }
 
   return (
-    <div className={styles.scrollDivParent} ref={container}>
-      <div style={{ maxHeight: maxHeight }} className={styles.scrollDiv}>
-        <table
-          className={cls(
-            styles.table,
-            cellHeight == "short" ? styles.tableShort : styles.tableTall,
-          )}
-        >
-          {captionElement}
-          {!captionElement && (
-            <caption className={styles.caption}>{caption}</caption>
-          )}
-          <thead className={cls(scrolled && styles.scrolled)}>
-            <tr>
-              {Object.values(headers).map((headerValue, index) => (
-                <th key={index} className={styles.tableHead}>
-                  {headerValue}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>{items.map(renderRow)}</tbody>
-        </table>
-      </div>
-    </div>
+    <table className="w-full text-left text-gray-800">
+      {captionElement}
+      {!captionElement && (
+        <caption className="text-start">{caption}</caption>
+      )}
+      <thead>
+        <tr className="border-b border-white/60">
+          {Object.values(headers).map((headerValue, index) => (
+            <th key={index} className="py-2 px-3">
+              {headerValue}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>{items.map(renderRow)}</tbody>
+    </table>
   );
 }

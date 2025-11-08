@@ -7,6 +7,7 @@ export type TogglerItem = {
   nameComponent?: React.ReactNode;
   component?: React.ReactNode;
   highlight?: boolean;
+  isEnabled?: boolean
 };
 
 type TogglerProps = {
@@ -14,7 +15,7 @@ type TogglerProps = {
   items: TogglerItem[];
   highlight?: boolean;
   didSelect?: (item: TogglerItem) => void;
-  sharedContent?: React.ReactNode
+  sharedContent?: React.ReactNode;
 };
 
 type TogglerItemProps = {
@@ -33,16 +34,22 @@ export function Toggler({
 }: TogglerProps) {
   const [itemIndex, setItemIndex] = useState(initialIndex);
   return (<>
-    <div className="flex items-center bg-white/40 backdrop-blur-md border border-white/40 rounded-2xl shadow-sm overflow-hidden mb-6">
+    <div className="flex items-center bg-white/40 backdrop-blur-md border border-white/40 rounded-2xl shadow-sm overflow-hidden my-3">
       {items.map((item, index) => (
         <button
-          className={`flex items-center gap-2 px-5 py-2 font-medium transition ${itemIndex == index ? "bg-sky-600 text-white" : "text-gray-700 hover:bg-white/50"
-            }`}
+          className={`
+            flex items-center gap-2 px-5 py-2 font-medium transition
+            ${highlight && itemIndex == index && "bg-sky-600 text-white"}
+            ${highlight && itemIndex != index && "text-gray-700 hover:bg-white/50"}
+            ${!item.isEnabled && "text-gray-400"}
+            `}
           key={index}
           onClick={() => {
-            setItemIndex(index);
-            if (_didSelect) {
-              _didSelect(items[index]);
+            if (item.isEnabled) {
+              setItemIndex(index);
+              if (_didSelect) {
+                _didSelect(items[index]);
+              }
             }
           }}
         >
@@ -68,7 +75,7 @@ export function Toggler({
                 >
                   <TogglerItem key={index} component={item.component} />
                 </motion.div>
-              ),
+              )
           )}
         </AnimatePresence>
       </motion.section>

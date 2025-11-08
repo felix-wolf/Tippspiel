@@ -28,7 +28,6 @@ export function ScoreList({ game, scores }: ScoreListProps) {
       items={items}
       headers={{ place: "Platz", name: "Name", score: "Punkte" }}
       customRenderers={{}}
-      caption={"Punktestand"}
       displayNextArrow={false}
       cellHeight={"short"}
     />
