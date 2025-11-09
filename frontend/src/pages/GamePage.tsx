@@ -16,7 +16,7 @@ import settings_black from "../assets/icons/settings_black.svg";
 import { useAppearance } from "../contexts/AppearanceContext.tsx";
 import { SettingsModal } from "../components/domain/SettingsModal.tsx";
 import { useCache } from "../contexts/CacheContext.tsx";
-import { Trophy, Table as TableIcon } from "lucide-react";
+import { Trophy, Table as TableIcon, Settings } from "lucide-react";
 import { motion } from "motion/react";
 
 
@@ -63,7 +63,7 @@ export function GamePage() {
       navBarLeftItem={
         <div style={{ width: 50 }}>
           <Button
-            icon={isLight() ? settings_black : settings_white}
+            icon={isLight() ? <Settings size={18} color="black"/> : <Settings size={18} />}
             title={""}
             type={"clear"}
             onClick={() => setShowingSettingsModal(true)}
@@ -101,10 +101,12 @@ export function GamePage() {
               nameComponent: <><Trophy size={18} /> Graph </>,
               component:
                 <ScoreLine game={game} scores={scores} />,
+                isEnabled: true,
             },
             {
               nameComponent: <><TableIcon size={18} /> Tabelle</>,
               component: <ScoreList game={game} scores={scores} />,
+              isEnabled: true,
             },
           ]}
         />

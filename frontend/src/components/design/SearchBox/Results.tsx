@@ -1,7 +1,4 @@
 import { MouseEvent, ReactNode } from "react";
-import { SearchIcon } from "./SearchIcon";
-import styles from "./Results.module.scss";
-import { cls } from "../../../styles/cls";
 
 export type Item<T> = T & { [key: string]: any };
 
@@ -12,7 +9,6 @@ export interface ResultsProps<T> {
   setHighlightedItem: Function;
   setSearchString: Function;
   formatResult?: Function;
-  showIcon: boolean;
   maxResults: number;
   resultStringKeyName: string;
   showNoResultsFlag?: boolean;
@@ -23,7 +19,6 @@ export default function Results<T>({
   results = [] as any,
   onClick,
   setSearchString,
-  showIcon,
   maxResults,
   resultStringKeyName = "name",
   highlightedItem,
@@ -59,8 +54,7 @@ export default function Results<T>({
   if (showNoResultsFlag) {
     return (
       <ResultsWrapper>
-        <li data-test="no-results-message">
-          <SearchIcon showIcon={showIcon} />
+        <li data-test="no-results-message" className="flex flex-row px-3 py-2">
           <div className="ellipsis">{showNoResultsText}</div>
         </li>
       </ResultsWrapper>
@@ -75,16 +69,15 @@ export default function Results<T>({
     <ResultsWrapper>
       {results.slice(0, maxResults).map((result, index) => (
         <li
-          className={cls(highlightedItem === index && styles.selected)}
+          className={`${highlightedItem === index && "hover:bg-sky-100 rounded-xl"}`}
           onMouseEnter={() => setHighlightedItem({ index })}
           data-test="result"
           key={`rsa-result-${result.id}`}
           onMouseDown={(event) => handleMouseDown({ event, result })}
           onClick={() => handleClick(result)}
         >
-          <SearchIcon showIcon={showIcon} />
           <div
-            className={styles.ellipsis}
+            className="text-lg py-2 px-3 cursor-pointer ellipsis"
             title={result[resultStringKeyName] as string}
           >
             {formatResultWithKey(result)}
@@ -97,9 +90,8 @@ export default function Results<T>({
 
 const ResultsWrapper = ({ children }: { children: ReactNode }) => {
   return (
-    <div>
-      <div className={styles.line} />
-      <ul className={styles.ul}>{children}</ul>
+    <div className="backdrop-blur-md bg-sky-50 border border-white/20 shadow-xl rounded-2xl">
+      <ul className="">{children}</ul>
     </div>
   );
 };

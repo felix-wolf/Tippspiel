@@ -48,7 +48,6 @@ export function EventEditorModal({
             });
         } else if (event) {
           const updatedEvent = events[0];
-          console.log("EDITING EVENT", updatedEvent)
           Event.update(
             event.id,
             updatedEvent.name,
@@ -62,6 +61,7 @@ export function EventEditorModal({
             .then((_) => {
               _onEventsChanged();
               resolve(true);
+              _onClose()
             })
             .catch((error) => {
               reject();
@@ -80,6 +80,7 @@ export function EventEditorModal({
             .then((_) => {
               _onEventsChanged();
               resolve(true);
+              _onClose()
             })
             .catch((error) => {
               reject();

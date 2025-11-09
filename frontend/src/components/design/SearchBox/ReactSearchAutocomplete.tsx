@@ -11,7 +11,6 @@ import {
 import { defaultFuseOptions } from "./config";
 import Results, { Item } from "./Results";
 import SearchInput from "./SearchInput";
-import styles from "./ReactSearchAutocomplete.module.scss";
 export const MAX_RESULTS = 10;
 
 export interface ReactSearchAutocompleteProps<T> {
@@ -23,7 +22,6 @@ export interface ReactSearchAutocompleteProps<T> {
   onSelect?: (result: T) => void;
   onFocus?: FocusEventHandler<HTMLInputElement>;
   onClear?: Function;
-  showIcon?: boolean;
   showClear?: boolean;
   maxResults?: number;
   placeholder?: string;
@@ -42,12 +40,11 @@ export interface ReactSearchAutocompleteProps<T> {
 export default function ReactSearchAutocomplete<T>({
   items = [],
   fuseOptions = defaultFuseOptions,
-  onSearch = () => {},
-  onHover = () => {},
-  onSelect = () => {},
-  onFocus = () => {},
-  onClear = () => {},
-  showIcon = true,
+  onSearch = () => { },
+  onHover = () => { },
+  onSelect = () => { },
+  onFocus = () => { },
+  onClear = () => { },
   showClear = true,
   maxResults = MAX_RESULTS,
   placeholder = "",
@@ -73,18 +70,6 @@ export default function ReactSearchAutocomplete<T>({
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [showNoResultsFlag, setShowNoResultsFlag] = useState<boolean>(false);
   const [hasFocus, setHasFocus] = useState<boolean>(false);
-
-  /*
-  useEffect(() => {
-    setSearchString(inputSearchString);
-    const timeoutId = setTimeout(
-      () => setResults(fuseResults(inputSearchString)),
-      0,
-    );
-
-    return () => clearTimeout(timeoutId);
-  }, [inputSearchString]);
-   */
 
   useEffect(() => {
     searchString?.length > 0 &&
@@ -242,8 +227,8 @@ export default function ReactSearchAutocomplete<T>({
   };
 
   return (
-    <div className={styles.div}>
-      <div className={styles.wrapper} style={{ zIndex: z_index }}>
+    <div className={"relative h-10"} data-test="react-search-autocomplete">
+      <div className={"absolute flex flex-col w-full bg-white/70  hover:shadow-md active:shadow-md focus-within:shadow-md border border-white rounded rounded-2xl z-0"} style={{ zIndex: z_index }}>
         <SearchInput
           searchString={searchString}
           setSearchString={handleSetSearchString}
@@ -252,7 +237,6 @@ export default function ReactSearchAutocomplete<T>({
           onFocus={handleOnFocus}
           onClear={onClear}
           placeholder={placeholder}
-          showIcon={showIcon}
           showClear={showClear}
           setHighlightedItem={handleSetHighlightedItem}
           maxLength={maxLength}
@@ -261,7 +245,6 @@ export default function ReactSearchAutocomplete<T>({
           results={results}
           onClick={handleOnClick}
           setSearchString={setSearchString}
-          showIcon={showIcon}
           maxResults={maxResults}
           resultStringKeyName={resultStringKeyName}
           formatResult={formatResult}

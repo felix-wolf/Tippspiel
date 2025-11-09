@@ -6,7 +6,7 @@ type ButtonProps = {
   title: string;
   type?: "positive" | "negative" | "neutral" | "clear";
   isEnabled?: boolean;
-  icon?: string;
+  icon?: React.ReactNode;
   rounded?: boolean[];
 };
 
@@ -40,7 +40,7 @@ export function Button({
       onClick={onClick}
     >
       <div className="flex items-center justify-center w-full h-full gap-2">
-        {icon && <img className="h-8/10" src={icon} />}
+        {icon && icon}
         {title}
       </div>
     </button>

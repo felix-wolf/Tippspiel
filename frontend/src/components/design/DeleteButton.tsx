@@ -1,4 +1,3 @@
-import styles from "./DeleteButton.module.scss";
 import { Shakable } from "./Shakable.tsx";
 import { Button } from "./Button.tsx";
 import { useState } from "react";
@@ -14,14 +13,13 @@ export function DeleteButton({
 }: DeleteButtonProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
-    <div className={styles.button}>
+    <div className={"w-40"}>
       <Shakable shaking={shaking}>
         {!confirmDelete && (
           <Button
             onClick={() => setConfirmDelete(true)}
             title={"Löschen"}
             type={"negative"}
-            width={"flexible"}
           />
         )}
         {confirmDelete && (
@@ -32,7 +30,6 @@ export function DeleteButton({
             }}
             title={"Wirklich löschen"}
             type={"negative"}
-            width={"flexible"}
           />
         )}
       </Shakable>

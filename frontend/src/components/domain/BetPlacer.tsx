@@ -152,7 +152,7 @@ export function BetPlacer({
 
   return (
     <form
-      className={styles.container}
+      className="backdrop-blur-md bg-white/40 border border-white/40 shadow-xl rounded-3xl px-4 sm:px-8 py-6 space-y-6 w-full max-w-6xl"
       onSubmit={(event) => {
         event.preventDefault();
       }}
@@ -180,14 +180,12 @@ export function BetPlacer({
           />
         ))}
 
-      {completed && (
-        <Button
-          isEnabled={saveEnabled}
-          onClick={onSave}
-          title={"Speichern"}
-          type={"positive"}
-        />
-      )}
+      <Button
+        isEnabled={completed && saveEnabled}
+        onClick={onSave}
+        title={"Speichern"}
+        type={"positive"}
+      />
     </form>
   );
 }

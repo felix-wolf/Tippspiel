@@ -191,7 +191,7 @@ export class Event {
             score: prediction.score,
           };
         }),
-      } ?? {},
+      },
     );
   }
 

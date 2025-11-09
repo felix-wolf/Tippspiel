@@ -4,9 +4,8 @@ import {
   FocusEventHandler,
   useRef,
 } from "react";
-import styles from "./SearchInput.module.scss";
 import { ClearIcon } from "./ClearIcon";
-import { SearchIcon } from "./SearchIcon";
+import { Search } from "lucide-react";
 
 interface SearchInputProps {
   searchString: string;
@@ -17,7 +16,6 @@ interface SearchInputProps {
   onFocus: FocusEventHandler<HTMLInputElement>;
   onClear: Function;
   placeholder: string;
-  showIcon: boolean;
   showClear: boolean;
   maxLength: number;
 }
@@ -31,7 +29,6 @@ export default function SearchInput({
   onFocus,
   onClear,
   placeholder,
-  showIcon = true,
   showClear = true,
   maxLength,
 }: SearchInputProps) {
@@ -52,10 +49,11 @@ export default function SearchInput({
   const maxLengthProperty = maxLength ? { maxLength } : {};
 
   return (
-    <div className={styles.container}>
-      <SearchIcon showIcon={showIcon} />
+    <div className={"min-h-10 flex items-center w-full"}>
+      <Search className="m-2" color="gray"/>
       <input
-        className={styles.input}
+        className={`w-full h-10 pl-[13px] pr-0 py-0 border-0 outline-none focus:outline-none bg-transparent
+         text-black placeholder:[color:grey] placeholder:opacity-100`}
         type="text"
         ref={ref}
         spellCheck={false}
