@@ -9,8 +9,6 @@ import { ViewBetsPage } from "./pages/ViewBetsPage";
 import AppearanceContextLayout from "./contexts/AppearanceContext.tsx";
 import Debug from "./pages/Debug.tsx";
 import MainLayout from "./pages/MainLayout.tsx";
-import PlaceBetPag from "./pages/PlaceBetsPag.tsx";
-
 /**
  * All available routes.
  * To be able to navigate to a page, the page must be registered here.

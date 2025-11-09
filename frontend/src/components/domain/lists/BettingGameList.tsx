@@ -3,7 +3,6 @@ import { BettingGameItem, BettingGameItemGame } from "./BettingGameItem";
 import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes";
 import { User } from "../../../models/user/User";
 import { Game } from "../../../models/Game";
-import { List } from "../../design/List";
 import { GamesContext } from "../../../contexts/GameContext.ts";
 import { motion } from "motion/react";
 
@@ -92,9 +91,9 @@ export function BettingGameList({
         transition={{ duration: 0.5 }}
         className="backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg w-full max-w-5xl p-6 mb-8"
       >
-        <List
-          title={show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}
-          items={games
+        <div className="text-xl font-semibold text-gray-800 mb-4">{show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {games.length != 0 && games
             .sort((a, b) =>
               !!a.game?.name && !!b.game?.name
                 ? a.game?.name > b.game?.name
@@ -115,7 +114,7 @@ export function BettingGameList({
                 type={item.type}
               />
             ))}
-        />
+        </div>
       </motion.section>
     )
   );

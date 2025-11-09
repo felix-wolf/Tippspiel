@@ -50,7 +50,7 @@ export function URLResultUploader({
   }
 
   return (
-    <div>
+    <div className="mb-4">
       {!expanded && (
         <Button
           onClick={() => setExpanded(true)}
@@ -75,7 +75,6 @@ export function URLResultUploader({
                 title={"Hochladen"}
                 isEnabled={url != "" && !isProcessing}
                 type={"positive"}
-                width={"flexible"}
               />
             </div>
             <div className={styles.narrow}>
@@ -86,7 +85,6 @@ export function URLResultUploader({
                 }}
                 title={"Abbrechen"}
                 type={"negative"}
-                width={"flexible"}
               />
             </div>
           </div>

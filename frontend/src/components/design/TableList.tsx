@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import next from "../../assets/icons/plus.svg";
 import { cls } from "../../styles/cls";
+import { max } from "date-fns";
 
 /**
  * Determines whether the provided value is a primitive type.
@@ -87,6 +88,7 @@ export default function TableList<T extends ListElement>({
   headers,
   displayNextArrow = true,
   items,
+  maxHeight
 }: ListProps<T>) {
   const [scrolled, setScrolled] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -144,8 +146,14 @@ export default function TableList<T extends ListElement>({
     );
   }
 
+  console.log(maxHeight);
+
   return (
-    <table className="w-full text-left text-gray-800">
+    <div className={`
+      text-left text-gray-800
+      ${maxHeight != undefined ? "max-h-110 overflow-y-scroll" : "h-full"}
+      `}>
+    <table className="w-full">
       {captionElement}
       {!captionElement && (
         <caption className="text-start">{caption}</caption>
@@ -161,5 +169,6 @@ export default function TableList<T extends ListElement>({
       </thead>
       <tbody>{items.map(renderRow)}</tbody>
     </table>
+    </div>
   );
 }

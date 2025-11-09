@@ -157,6 +157,9 @@ export function BetPlacer({
         event.preventDefault();
       }}
     >
+      <p className="text-sm text-slate-700">
+        Wähle deine Top-5 für dieses Rennen. Je genauer dein Tipp, desto mehr Punkte bekommst du.
+      </p>
       {placedPredictions?.map((item, index) => (
         <BetInput
           key={`${index} ${item.id} ${item.name}`}

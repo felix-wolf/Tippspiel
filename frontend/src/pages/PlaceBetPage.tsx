@@ -41,7 +41,7 @@ export function PlaceBetPage() {
     <>
       {loading && <Loader />}
       {!loading && (
-        <NavPage title={<>Tippen für: <span className="text-sky-800">{data?.name}</span></>}>
+        <NavPage title={<span className="text-sky-800">{data?.name}</span>}>
           {data && (
             <BetPlacer
               user={user}

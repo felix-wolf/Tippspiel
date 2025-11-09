@@ -53,12 +53,13 @@ export function ScoreLine({ game, scores }: ScoreLineProps) {
     let i = 5;
     let incrementsIndex = 0;
     while (i < numEvents) {
-      tabs = [{ name: i.toString() }].concat(tabs);
+      const newTabs: TogglerItem[] = [{ name: i.toString(), isEnabled: true }];
+      tabs = newTabs.concat(tabs);
 
       i += increments[incrementsIndex];
       incrementsIndex += 1;
     }
-    return tabs.reverse().concat({ name: "Alle" });
+    return tabs.reverse().concat({ name: "Alle", isEnabled: true });
   }
 
   return (

@@ -57,7 +57,7 @@ export function ViewBetsPage() {
     <>
       {eventLoading && <Loader />}
       {!eventLoading && (
-        <NavPage title={"Tipps von Event: " + event?.name}>
+        <NavPage title={<span className="text-sky-800">{event?.name}</span>}>
           {isCreator && game?.discipline?.resultUrl && (
             <URLResultUploader
               resultUrl={game.discipline.resultUrl}
