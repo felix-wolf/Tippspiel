@@ -19,7 +19,7 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
         ${navBarLeftItem && "flex items-center justify-between"}
         ${!navBarLeftItem && "grid grid-cols-10 items-center"}
         `}>
-        <div>
+        <div className="min-w-18">
           <Button
             onClick={() => navigate(-1)}
             title={"Zurück"}

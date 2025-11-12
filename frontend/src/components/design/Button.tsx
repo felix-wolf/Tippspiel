@@ -17,7 +17,6 @@ export function Button({
   type = "neutral",
   isEnabled = true,
   icon,
-  rounded = [true, true, true, true],
 }: ButtonProps) {
   const onClick = useCallback(() => {
     if (isEnabled) {

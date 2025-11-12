@@ -18,6 +18,7 @@ import { SettingsModal } from "../components/domain/SettingsModal.tsx";
 import { useCache } from "../contexts/CacheContext.tsx";
 import { Trophy, Table as TableIcon, Settings } from "lucide-react";
 import { motion } from "motion/react";
+import SettingsModa from "../components/domain/SettingsModa.tsx";
 
 
 export function GamePage() {

@@ -1,4 +1,3 @@
-import styles from "./TextField.module.scss";
 import React, {
   useCallback,
   useId,
@@ -68,7 +67,7 @@ export const TextField = React.forwardRef<TextFieldHandle, TextFieldProps>(
           id={id}
           autoComplete={autoComplete}
           className={`
-            w-full py-3 bg-white/70 rounded-xl border border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500
+            w-full py-3 bg-slate-800 rounded-xl border border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500
             ${icon != undefined && "pl-10 pr-3"}
             ${icon == undefined && "px-3"}
           `}

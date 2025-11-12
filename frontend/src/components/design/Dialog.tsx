@@ -1,10 +1,11 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
-import { Plus, LogIn, Wrench } from "lucide-react";
+import { Plus, LogIn, Wrench, X } from "lucide-react";
 import { Button } from "./Button";
 import { Shakable } from './Shakable';
 
 type Props = React.PropsWithChildren<{
   title: string;
+  subtitle?: string;
   isOpened: boolean;
   onClose: () => void;
   neutralButtonTitle?: string;
@@ -13,11 +14,12 @@ type Props = React.PropsWithChildren<{
   onActionClick?: () => void;
   actionButtonEnabled: boolean;
   type: "add" | "enter" | "edit"
-  shakingActionButton: boolean
+  shakingActionButton?: boolean
 }>;
 
 export function DialogModal({
   title,
+  subtitle,
   isOpened,
   onClose: _onClose,
   actionButtonTitle,
@@ -41,38 +43,47 @@ export function DialogModal({
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            className="relative transform overflow-hidden rounded-3xl bg-slate-900/95 text-slate-50 shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
           >
-            <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-blue-500/10 sm:mx-0 sm:size-10">
-                  {type == "add" && <Plus className="size-6 text-blue-500" aria-hidden="true" />}
-                  {type == "enter" && <LogIn className="size-6 text-blue-500" aria-hidden="true" />}
-                  {type == "edit" && <Wrench className="size-6 text-blue-500" aria-hidden="true" />}
+            {/* Header */}
+            <div className="bg-slate-900/95 flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-sky-700 flex items-center justify-center">
+                  {type == "add" && <Plus size={20} color="white" />}
+                  {type == "enter" && <LogIn size={20} color="white" />}
+                  {type == "edit" && <Wrench size={20} color="white" />}
                 </div>
-                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <DialogTitle as="h3" className="text-base font-semibold text-white">
-                    {title}
-                  </DialogTitle>
-                  <div className="mt-2">
-                    {children}
-                  </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">{title}</h2>
+                  <p className="text-xs text-slate-400">{subtitle}</p>
                 </div>
               </div>
+              <button
+                onClick={_onClose}
+                className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <div className="bg-gray-700/25 px-4 py-3 grid grid-cols-2 px-6 gap-3 justify-center">
-            {_onNeutralClick && neutralButtonTitle && <Button title={neutralButtonTitle} onClick={_onNeutralClick} type="neutral" />}
-              {_onActionClick && actionButtonTitle &&
-                <Shakable shaking={shakingActionButton}>
-                  <Button
-                    title={actionButtonTitle}
-                    onClick={_onActionClick}
-                    type="positive"
-                    isEnabled={actionButtonEnabled}
-                  />
-                </Shakable>
+
+            <div className="px-6 py-5 space-y-6 text-sm">
+              {children}
+            </div>
+            {((_onNeutralClick && neutralButtonTitle) || (_onActionClick && actionButtonTitle)) && (
+              <div className="bg-gray-700/25 px-4 py-3 grid grid-cols-2 px-6 gap-3 justify-center">
+                {_onNeutralClick && neutralButtonTitle && <Button title={neutralButtonTitle} onClick={_onNeutralClick} type="neutral" />}
+                {_onActionClick && actionButtonTitle &&
+                  <Shakable shaking={shakingActionButton ?? false}>
+                    <Button
+                      title={actionButtonTitle}
+                      onClick={_onActionClick}
+                      type="positive"
+                      isEnabled={actionButtonEnabled}
+                    />
+                  </Shakable>
                 }
-            </div>
+              </div>
+            )}
           </DialogPanel>
         </div>
       </div>

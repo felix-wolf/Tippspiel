@@ -2,24 +2,15 @@ import { DialogModal } from "../design/Dialog.tsx";
 import { TextField } from "../design/TextField.tsx";
 import { useState } from "react";
 import { Game } from "../../models/Game.ts";
-import styles from "./SettingsModal.module.scss";
-import { Button } from "../design/Button.tsx";
-import { DeleteButton } from "../design/DeleteButton.tsx";
 import {
   NotificationHelper,
   NotificationSettings,
 } from "../../models/NotificationHelper.ts";
 import { Shakable } from "../design/Shakable.tsx";
-import checked_white from "../../assets/icons/checkbox_checked_white.svg";
-import checked_black from "../../assets/icons/checkbox_checked_black.svg";
-import unchecked_white from "../../assets/icons/checkbox_unchecked_white.svg";
-import unchecked_black from "../../assets/icons/checkbox_unchecked_black.svg";
-import { useAppearance } from "../../contexts/AppearanceContext.tsx";
 import { ColorUpdater } from "./ColorUpdater.tsx";
 import { useCurrentUser } from "../../models/user/UserContext.tsx";
-import { cls } from "../../styles/cls.ts";
-import { IconToggler } from "../design/IconToggler.tsx";
 import useFetch from "../../useFetch.tsx";
+import { Bell, Check, Palette } from "lucide-react";
 
 type SettingsModalProps = {
   isOpen: boolean;
@@ -52,10 +43,9 @@ export function SettingsModal({
   const [resultsShaking, setResultsShaking] = useState(false);
   const [notificationRegisterSuccess, setNotificationRegisterSuccess] =
     useState(false);
-  const { isLight } = useAppearance();
-  function buttonEnabled(): boolean {
-    return gameName !== game.name;
-  }
+  const [sendTestNotificationSuccess, setSendTestNotificationSuccess] =
+    useState(false);
+
 
   const settingsFetchValues = useFetch<NotificationSettings>({
     key: "notificationSettings",
@@ -63,128 +53,7 @@ export function SettingsModal({
     args: [user],
   });
 
-  const { data: settings } = settingsFetchValues;
-
-  function buildSettingsItems(): SettingsItem[] {
-    const colorSettingsitem: SettingsItem = {
-      title: "Graph",
-      subitems: [
-        <ColorUpdater user={user!!} onUpdated={() => console.log("TEST")} />,
-      ],
-    };
-
-    const pushSettingsItem: SettingsItem = {
-      title: "Benachrichtigungen",
-      subitems: [
-        <>
-          <Shakable shaking={pushShaking}>
-            <Button
-              onClick={() => {
-                NotificationHelper.registerDevice()
-                  .then(() => {
-                    setNotificationRegisterSuccess(true);
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                    setPushShaking(true);
-                    setNotificationRegisterSuccess(false);
-                    setTimeout(() => setPushShaking(false), 300);
-                  });
-              }}
-              type={"positive"}
-              title={"Push Benachrichtigungen aktivieren"}
-            />
-          </Shakable>
-          {notificationRegisterSuccess && (
-            <img
-              src={isLight() ? checked_black : checked_white}
-              alt={"checkbox"}
-            />
-          )}
-        </>,
-        <Shakable shaking={testPushShaking}>
-          <Button
-            onClick={() => {
-              NotificationHelper.sendTestNotification(user)
-                .then(() => {
-                  setNotificationRegisterSuccess(true);
-                })
-                .catch((error) => {
-                  console.log(error);
-                  setTimeout(() => setTestPushShaking(false), 300);
-                });
-            }}
-            type={"positive"}
-            title={"Testbenachrichtigung senden"}
-          />
-        </Shakable>,
-        <div className={styles.text}>Benachrichtungen erhalten bei...</div>,
-        <div className={styles.notificationToggle}>
-          <div className={cls(styles.settingsItemText)}>neuen Ergebnissen</div>
-          <Shakable shaking={resultsShaking}>
-            {settings?.reminder}
-            <IconToggler
-              icons={
-                isLight()
-                  ? [unchecked_black, checked_black]
-                  : [unchecked_white, checked_white]
-              }
-              initialState={!!settings?.results ? 1 : 0}
-              didChange={(number): Promise<void> => {
-                return new Promise((resolve, reject) => {
-                  console.log(number);
-                  NotificationHelper.saveNotificationSetting(
-                    user,
-                    "results",
-                    number,
-                  )
-                    .then(() => {
-                      resolve();
-                    })
-                    .catch(() => {
-                      reject();
-                      setResultsShaking(true);
-                      setTimeout(() => setResultsShaking(false), 300);
-                    });
-                });
-              }}
-            />
-          </Shakable>
-        </div>,
-        <div className={styles.notificationToggle}>
-          <div className={cls(styles.settingsItemText)}>
-            fehlenden Tipps (1h vorher)
-          </div>
-          <Shakable shaking={reminderShaking}>
-            <IconToggler
-              icons={
-                isLight()
-                  ? [unchecked_black, checked_black]
-                  : [unchecked_white, checked_white]
-              }
-              initialState={!!settings?.reminder ? 1 : 0}
-              didChange={(number): Promise<void> => {
-                return new Promise((resolve, reject) => {
-                  NotificationHelper.saveNotificationSetting(
-                    user,
-                    "reminder",
-                    number,
-                  )
-                    .then(() => resolve())
-                    .catch(() => {
-                      reject();
-                      setReminderShaking(true);
-                      setTimeout(() => setReminderShaking(false), 300);
-                    });
-                });
-              }}
-            />
-          </Shakable>
-        </div>,
-      ],
-    };
-    return [colorSettingsitem, pushSettingsItem];
-  }
+  const { data: settings, refetch: refetchSettings } = settingsFetchValues;
 
   function onDeleteGame() {
     game
@@ -199,7 +68,10 @@ export function SettingsModal({
   function onUpdateGameName() {
     game
       .saveNewName(gameName)
-      .then(_onGameUpdated)
+      .then(() => {
+        _onGameUpdated()
+        _onClose()
+      })
       .catch(() => {
         setDeleteShaking(true);
         setTimeout(() => setDeleteShaking(false), 300);
@@ -209,75 +81,179 @@ export function SettingsModal({
   return (
     <DialogModal
       title={"Einstellungen"}
+      subtitle="Tippspiel & Benachrichtigungen"
       isOpened={isOpen}
       onClose={_onClose}
       type="edit"
+      onActionClick={() => onUpdateGameName()}
+      actionButtonTitle={isCreator ? "Speichern" : undefined}
+      actionButtonEnabled={gameName !== game.name}
+      neutralButtonTitle={isCreator ? "Abbrechen" : undefined}
+      onNeutralClick={_onClose}
     >
-      {buildSettingsItems().map((item, index) => (
-        <div className={styles.settingItem} key={index + "a"}>
-          <div className={cls(styles.settingsItemText)} key={index + "b"}>
-            {item.title}
+      {/* GRAPH SECTION */}
+      <section>
+        <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+          <Palette size={14} />
+          Graph
+        </h3>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-slate-200">
+            <span className="inline-block w-4 h-4 rounded-full bg-gradient-to-r from-sky-400 to-blue-500" />
+            <span>Farbschema für den Punktestand-Graphen</span>
           </div>
-          <div className={styles.innerItems} key={index + "c"}>
-            {item.subitems?.map((innerItem, innerIndex) => (
-              <div
-                className={cls(styles.row, styles.innerItem)}
-                key={innerIndex + "d"}
-              >
-                {innerItem}
-              </div>
-            ))}
-          </div>
+          {user && (
+            <ColorUpdater
+              user={user}
+              onUpdated={_onGameUpdated}
+            />
+          )}
         </div>
-      ))}
-      { user && <ColorUpdater
-                    user={user}
-                    onUpdated={() => {
-                      /*refetchGame(true);*/
-                    }}
-                  />
-                  }
-      {isCreator && (
-        <div className={styles.container}>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
+      </section>
+
+      {/* DIVIDER */}
+      <div className="border-t border-white/10" />
+
+      {/* NOTIFICATIONS */}
+      <section>
+        <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+          <Bell size={14} />
+          Benachrichtigungen
+        </h3>
+
+        <div className="space-y-3">
+          {/* Push enable */}
+          <Shakable shaking={pushShaking}>
+            <button onClick={() => {
+              NotificationHelper.registerDevice()
+                .then(() => {
+                  setNotificationRegisterSuccess(true);
+                })
+                .catch((error) => {
+                  console.log(error);
+                  setPushShaking(true);
+                  setNotificationRegisterSuccess(false);
+                  setTimeout(() => setPushShaking(false), 300);
+                });
+            }} className="flex flex-row justify-center items-center gap-2 w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-center shadow-md hover:from-sky-400 hover:to-blue-500 transition">
+              Push-Benachrichtigungen aktivieren {notificationRegisterSuccess && (<Check className="" />)}
+            </button>
+          </Shakable>
+          <Shakable shaking={testPushShaking}>
+            <button onClick={() => {
+              NotificationHelper.sendTestNotification(user)
+                .then(() => {
+                  setSendTestNotificationSuccess(true);
+                })
+                .catch((error) => {
+                  console.log(error);
+                  setTimeout(() => setTestPushShaking(false), 300);
+                });
             }}
-            className={styles.form}
-          >
-            <div className={styles.row}>
-              <TextField
-                onInput={(text) => setGameName(text)}
-                placeholder={gameName}
-                initialValue={gameName}
-              />
-            </div>
-            <div className={styles.row}>
-              <Button
-                onClick={() => onUpdateGameName()}
-                title={"Speichern"}
-                type={"positive"}
-                isEnabled={buttonEnabled()}
-              />
-              <div className={styles.button}>
-                <Button
-                  onClick={_onClose}
-                  title={"Abbrechen"}
-                  type={"neutral"}
-                />
-              </div>
-            </div>
-          </form>
-          <div className={styles.row}>
-            <div className={styles.deleteButtonContainer}>
-              <DeleteButton
-                shaking={deleteShaking}
-                onFinalClick={() => onDeleteGame()}
-              />
-            </div>
+              className="flex flex-row justify-center items-center gap-2  w-full rounded-xl bg-slate-800 py-2 text-xs font-medium text-slate-100 hover:bg-slate-700 transition">
+              Testbenachrichtigung senden {sendTestNotificationSuccess && (<Check className="" />)}
+            </button>
+          </Shakable>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Benachrichtigungen erhalten bei…
+          </p>
+
+          {/* Triggers */}
+          <div className="space-y-2">
+            <NotificationOption
+              label="neuen Ergebnissen"
+              enabled={settings?.results}
+              shaking={resultsShaking}
+              onStateChange={(newValue) => {
+                NotificationHelper.saveNotificationSetting(
+                  user,
+                  "results",
+                  newValue ? 1 : 0,
+                )
+                  .then(() => {
+                    refetchSettings(true);
+                  })
+                  .catch(() => {
+                    setResultsShaking(true);
+                    setTimeout(() => setResultsShaking(false), 300);
+                  });
+              }} />
+            <NotificationOption
+              label="fehlenden Tipps (1h vorher)"
+              enabled={settings?.reminder}
+              shaking={reminderShaking}
+              onStateChange={(newValue) => {
+                NotificationHelper.saveNotificationSetting(
+                  user,
+                  "reminder",
+                  newValue ? 1 : 0,
+                )
+                  .then(() => {
+                    refetchSettings(true);
+                  })
+                  .catch(() => {
+                    setReminderShaking(true);
+                    setTimeout(() => setReminderShaking(false), 300);
+                  });
+              }} />
           </div>
         </div>
+      </section>
+
+
+      {/* GAME META */}
+      {isCreator && (
+        <>
+          {/* DIVIDER */}
+          <div className="border-t border-white/10" />
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+              Spiel
+            </h3>
+            <label className="block text-xs mb-1 text-slate-300">
+              Name des Tippspiels
+            </label>
+            <TextField
+              onInput={(text) => setGameName(text)}
+              placeholder={gameName}
+              initialValue={gameName}
+            />
+            {/* DISABLE DELETE FOR NOW */}
+            {/* <div className="w-full flex items-center justify-center">
+            <DeleteButton
+              shaking={deleteShaking}
+              onFinalClick={() => onDeleteGame()}
+            />
+          </div> */}
+          </section>
+        </>
       )}
     </DialogModal>
+  );
+}
+
+type NotificationOptionProps = {
+  label: string;
+  enabled?: boolean;
+  onStateChange: (newValue: boolean) => void;
+  shaking: boolean;
+};
+
+// small helper component for the notification list
+function NotificationOption({ label, enabled, onStateChange, shaking }: NotificationOptionProps) {
+  return (
+    <Shakable shaking={shaking}>
+      <div onClick={() => onStateChange(!enabled)} className="flex items-center justify-between rounded-xl bg-slate-800 px-3 py-2">
+        <span className="text-xs text-slate-100">{label}</span>
+        {enabled ? (
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-500 text-slate-900">
+            <Check size={14} />
+          </span>
+        ) : (
+          <span className="inline-block w-4 h-4 rounded-full border border-slate-500" />
+        )}
+      </div>
+    </Shakable>
   );
 }

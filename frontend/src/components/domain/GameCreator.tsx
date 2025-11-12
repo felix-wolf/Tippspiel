@@ -30,7 +30,10 @@ export function GameCreator({
             return { id: d.id, label: d.name };
           });
           setDisciplines(options);
-          if (options.length > 0) setSelectedDiscipline(options[0]);
+          if (options.length > 0) {
+            setSelectedDiscipline(options[0]);
+            _onSetDisciplineId(options[0]);
+          }
         })
         .catch((error) => console.log(error));
     }

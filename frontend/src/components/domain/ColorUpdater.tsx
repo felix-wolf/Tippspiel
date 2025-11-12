@@ -2,8 +2,6 @@ import { useState } from "react";
 import { User } from "../../models/user/User";
 import Colorful from "@uiw/react-color-colorful";
 import { Button } from "../design/Button";
-import styles from "./ColorUpdater.module.scss";
-import { cls } from "../../styles/cls";
 
 type ColorUpdaterProps = {
   user: User;
@@ -31,19 +29,17 @@ export function ColorUpdater({
   }
 
   return (
-    <div className={styles.container}>
+    <div className="">
       {!isPicking && (
-        <div className={styles.buttonContainer}>
+        <div className={""}>
           <Button
             onClick={() => setIsPicking(true)}
             title={"Farbe ändern"}
-            width={"flexible"}
-            height={"flexible"}
           />
         </div>
       )}
       {isPicking && (
-        <div className={styles.column}>
+        <div className={""}>
           <Colorful
             color={color}
             disableAlpha={true}
@@ -51,20 +47,17 @@ export function ColorUpdater({
               setColor(color.hex);
             }}
           />
-          <div className={cls(styles.column, styles.buttons)}>
+          <div className={"flex flex-row gap-2"}>
             <Button
               onClick={() => saveChoice()}
               title={"Speichern"}
               type={"positive"}
-              width={"flexible"}
             />
             <div style={{ height: 16 }}>
               <Button
                 onClick={() => reset()}
                 title={"Abbrechen"}
                 type={"negative"}
-                width={"flexible"}
-                height={"flexible"}
               />
             </div>
           </div>

@@ -24,7 +24,7 @@ export default function CreateGameModal({ isOpen, onClose: _onClose, onCreate: _
             _onCreate(name, password, disciplineId);
         }
     }
-
+    console.log(disciplineId)
     return (
 
         <DialogModal
@@ -36,6 +36,7 @@ export default function CreateGameModal({ isOpen, onClose: _onClose, onCreate: _
             neutralButtonTitle={"Abbrechen"}
             onActionClick={onCreate}
             onNeutralClick={_onClose}
+            actionButtonEnabled={name.length > 0 && disciplineId !== undefined}
         >
             <GameCreator
                 shake={shake}

@@ -83,7 +83,10 @@ export function BettingGameItem({
             type="enter"
             title="Spiel beitreten"
             isOpened={showJoiningModal}
-            onClose={() => setShaking(false)}
+            onClose={() => {
+              setShaking(false)
+              setShowJoiningModal(false)
+            }}
             actionButtonTitle="Betreten"
             onActionClick={onJoinClicked}
             neutralButtonTitle="Abbrechen"
@@ -91,6 +94,7 @@ export function BettingGameItem({
               setShowJoiningModal(false)
               setPassword("")
             }}
+            actionButtonEnabled={password.length > 0 || !item?.game?.hasPassword}
           >
 
             {item?.game && <GameJoiner onEnterPassword={(i) => setPassword(i)} game={item.game} shaking={passwordShaking} />}

@@ -1,6 +1,7 @@
 import { Shakable } from "./Shakable.tsx";
 import { Button } from "./Button.tsx";
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 
 type DeleteButtonProps = {
   shaking: boolean;
@@ -19,6 +20,7 @@ export function DeleteButton({
           <Button
             onClick={() => setConfirmDelete(true)}
             title={"Löschen"}
+            icon={<Trash2 size={16} />}
             type={"negative"}
           />
         )}
@@ -30,6 +32,7 @@ export function DeleteButton({
             }}
             title={"Wirklich löschen"}
             type={"negative"}
+            icon={<Trash2 size={16} />}
           />
         )}
       </Shakable>

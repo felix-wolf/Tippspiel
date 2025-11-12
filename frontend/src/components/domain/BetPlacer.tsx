@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bet, Prediction } from "../../models/Bet";
 import { BetInput, BetInputItem } from "../design/BetInput";
-import styles from "./BetPlacer.module.scss";
 import { Button } from "../design/Button";
 import { Event } from "../../models/Event";
 import { EventType } from "../../models/user/EventType";
@@ -158,7 +157,7 @@ export function BetPlacer({
       }}
     >
       <p className="text-sm text-slate-700">
-        Wähle deine Top-5 für dieses Rennen. Je genauer dein Tipp, desto mehr Punkte bekommst du.
+        Wähle deine Top-{placedPredictions.length} für dieses Rennen. Je genauer dein Tipp, desto mehr Punkte bekommst du.
       </p>
       {placedPredictions?.map((item, index) => (
         <BetInput
