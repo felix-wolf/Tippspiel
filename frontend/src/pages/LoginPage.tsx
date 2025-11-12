@@ -75,7 +75,9 @@ export function LoginPage() {
           onLoginClick();
         }, 5000);
       })
-      .catch((error) => {
+      .catch(() => {
+        setLoginShake(true);
+        setTimeout(() => setLoginShake(false), 300);
       });
   }, [name, password]);
 

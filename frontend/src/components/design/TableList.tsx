@@ -1,7 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import next from "../../assets/icons/plus.svg";
-import { cls } from "../../styles/cls";
-import { max } from "date-fns";
 
 /**
  * Determines whether the provided value is a primitive type.
@@ -90,19 +88,19 @@ export default function TableList<T extends ListElement>({
   items,
   maxHeight
 }: ListProps<T>) {
-  const [scrolled, setScrolled] = useState(false);
-  const container = useRef<HTMLDivElement>(null);
+  // const [scrolled, setScrolled] = useState(false);
+  // const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const listener = (event: Event) => {
-      const scroll = (event.target as HTMLDivElement).scrollTop;
-      setScrolled(scroll > (caption ? 70 : 32));
-    };
+    // const listener = (event: Event) => {
+    //   const scroll = (event.target as HTMLDivElement).scrollTop;
+    //   setScrolled(scroll > (caption ? 70 : 32));
+    // };
 
-    const parent = container.current?.parentElement;
-    if (!parent) return;
+    // const parent = container.current?.parentElement;
+    // if (!parent) return;
 
-    parent.addEventListener("scroll", listener);
-    return () => parent.removeEventListener("scroll", listener);
+    // parent.addEventListener("scroll", listener);
+    // return () => parent.removeEventListener("scroll", listener);
   }, []);
 
   /**

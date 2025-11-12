@@ -8,7 +8,6 @@ import { ScoreLine } from "../components/domain/ScoreLine";
 import { Toggler } from "../components/design/Toggler";
 import { ScoreList } from "../components/domain/lists/ScoreList";
 import useFetch from "../useFetch";
-import Loader from "../components/design/Loader";
 import { EventScore } from "../models/EventScore";
 import { Button } from "../components/design/Button.tsx";
 import { useAppearance } from "../contexts/AppearanceContext.tsx";

@@ -7,7 +7,6 @@ import { GamesContext } from "../contexts/GameContext";
 import { Game } from "../models/Game";
 import useFetch from "../useFetch";
 import { useCache } from "../contexts/CacheContext";
-import Loader from "../components/design/Loader";
 import { AnimatePresence, motion } from "motion/react";
 
 export function HomePage() {
