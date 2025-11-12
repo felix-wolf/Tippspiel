@@ -2,7 +2,6 @@ import React, { ReactNode } from "react";
 import { Button } from "../components/design/Button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { col } from "motion/react-client";
 
 type NavPageProps = React.PropsWithChildren<{
   title: string | ReactNode | undefined;

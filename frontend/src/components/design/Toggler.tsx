@@ -1,6 +1,5 @@
+import { AnimatePresence, motion } from "motion/react";
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-
 
 export type TogglerItem = {
   name?: string;
@@ -34,11 +33,12 @@ export function Toggler({
 }: TogglerProps) {
   const [itemIndex, setItemIndex] = useState(initialIndex);
   return (<>
-    <div className="flex items-center bg-white/40 backdrop-blur-md border border-white/40 rounded-2xl shadow-sm overflow-hidden my-3">
+  <div className="w-full flex flex-row justify-center px-2">
+    <div className="flex items-center bg-white/40 backdrop-blur-md border border-white/40 rounded-xl shadow-sm  my-3">
       {items.map((item, index) => (
         <button
           className={`
-            flex items-center gap-2 px-5 py-2 font-medium transition
+            flex items-center gap-2 px-5 py-2 font-medium transition rounded-xl
             ${highlight && itemIndex == index && "bg-sky-600 text-white"}
             ${highlight && itemIndex != index && "text-gray-700 hover:bg-white/50"}
             ${!item.isEnabled && "text-gray-400"}
@@ -56,6 +56,7 @@ export function Toggler({
           {item.nameComponent ? item.nameComponent : item.name}
         </button>
       ))}
+    </div>
     </div>
     { /* Render selected item */}
     {items.filter((item) => item.component != null).length != 0 && (

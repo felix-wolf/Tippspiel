@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { DialogModal } from "../design/Dialog";
 import { GameCreator } from "./GameCreator";
-import { set } from "date-fns";
-import { Shakable } from "../design/Shakable";
 
 type CreateGameModalProps = {
     isOpen: boolean;

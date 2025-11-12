@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { Game } from "../../../models/Game";
 import CreateGameModal from "../CreateGameModal";
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { DialogModal } from "../../design/Dialog";
 import { GameJoiner } from "../GameJoiner";
 
@@ -95,6 +94,7 @@ export function BettingGameItem({
               setPassword("")
             }}
             actionButtonEnabled={password.length > 0 || !item?.game?.hasPassword}
+            shakingActionButton={shaking}
           >
 
             {item?.game && <GameJoiner onEnterPassword={(i) => setPassword(i)} game={item.game} shaking={passwordShaking} />}

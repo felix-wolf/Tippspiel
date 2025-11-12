@@ -21,11 +21,6 @@ type SettingsModalProps = {
   onGameUpdated: () => void;
 };
 
-type SettingsItem = {
-  title: string;
-  subitems?: React.ReactNode[];
-};
-
 export function SettingsModal({
   isOpen,
   onClose: _onClose,
@@ -36,11 +31,12 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const user = useCurrentUser();
   const [gameName, setGameName] = useState(game.name);
-  const [deleteShaking, setDeleteShaking] = useState(false);
+  // const [deleteShaking, setDeleteShaking] = useState(false);
   const [pushShaking, setPushShaking] = useState(false);
   const [testPushShaking, setTestPushShaking] = useState(false);
   const [reminderShaking, setReminderShaking] = useState(false);
   const [resultsShaking, setResultsShaking] = useState(false);
+  const [actionButtonShaking, setActionButtonShaking] = useState(false);
   const [notificationRegisterSuccess, setNotificationRegisterSuccess] =
     useState(false);
   const [sendTestNotificationSuccess, setSendTestNotificationSuccess] =
@@ -55,15 +51,15 @@ export function SettingsModal({
 
   const { data: settings, refetch: refetchSettings } = settingsFetchValues;
 
-  function onDeleteGame() {
-    game
-      .delete()
-      .then(_onGameDeleted)
-      .catch(() => {
-        setDeleteShaking(true);
-        setTimeout(() => setDeleteShaking(false), 300);
-      });
-  }
+  // function onDeleteGame() {
+  //   game
+  //     .delete()
+  //     .then(_onGameDeleted)
+  //     .catch(() => {
+  //       setDeleteShaking(true);
+  //       setTimeout(() => setDeleteShaking(false), 300);
+  //     });
+  // }
 
   function onUpdateGameName() {
     game
@@ -73,8 +69,8 @@ export function SettingsModal({
         _onClose()
       })
       .catch(() => {
-        setDeleteShaking(true);
-        setTimeout(() => setDeleteShaking(false), 300);
+        setActionButtonShaking(true);
+        setTimeout(() => setActionButtonShaking(false), 300);
       });
   }
 
@@ -90,6 +86,7 @@ export function SettingsModal({
       actionButtonEnabled={gameName !== game.name}
       neutralButtonTitle={isCreator ? "Abbrechen" : undefined}
       onNeutralClick={_onClose}
+      shakingActionButton={actionButtonShaking}
     >
       {/* GRAPH SECTION */}
       <section>

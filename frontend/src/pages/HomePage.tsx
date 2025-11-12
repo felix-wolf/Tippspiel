@@ -8,8 +8,7 @@ import { Game } from "../models/Game";
 import useFetch from "../useFetch";
 import { useCache } from "../contexts/CacheContext";
 import Loader from "../components/design/Loader";
-import { useAppearance } from "../contexts/AppearanceContext.tsx";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 export function HomePage() {
   const logout = useLogout();
@@ -17,7 +16,6 @@ export function HomePage() {
   const user = useCurrentUser();
 
   const { setCache } = useCache();
-  const { appearance } = useAppearance();
 
   const { loading, data } = useFetch<Game[]>({
     func: Game.fetchAll,
@@ -48,13 +46,57 @@ export function HomePage() {
         </div>
       </header>
 
-      {loading && <Loader />}
-      {!loading && (
-        <GamesContext.Provider value={data}>
-          <BettingGameList user={user} show_games={"user"} />
-          <BettingGameList user={user} show_games={"other"} />
-        </GamesContext.Provider>
-      )}
+      <AnimatePresence mode="wait">
+        {!loading ? (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full"
+          >
+            <GamesContext.Provider value={data}>
+              <BettingGameList user={user} show_games={"user"} />
+              <BettingGameList user={user} show_games={"other"} />
+            </GamesContext.Provider>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full"
+          >
+            <EventsSkeleton />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
+  );
+}
+
+
+function EventsSkeleton() {
+  return (
+    <div className="w-full max-w-6xl backdrop-blur-md bg-white/30 border border-white/40 rounded-3xl shadow-lg p-6 animate-pulse">
+      <div className="h-5 w-52 bg-slate-200/70 rounded mb-4" />
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex justify-between items-center bg-white/70 rounded-2xl px-4 py-3"
+          >
+            <div className="space-y-1">
+              <div className="h-4 w-52 bg-slate-200/80 rounded" />
+              <div className="h-3 w-32 bg-slate-200/70 rounded" />
+            </div>
+            <div className="h-8 w-24 bg-slate-200/80 rounded-xl" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

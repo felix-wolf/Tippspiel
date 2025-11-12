@@ -1,4 +1,4 @@
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react'
 import { Plus, LogIn, Wrench, X } from "lucide-react";
 import { Button } from "./Button";
 import { Shakable } from './Shakable';
