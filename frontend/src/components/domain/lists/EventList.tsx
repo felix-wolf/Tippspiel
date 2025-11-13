@@ -129,6 +129,7 @@ export function EventList({
               isUpcoming={type == "upcoming"}
               onViewEventClicked={() => handleEventClick(e.id, currPage.toString())}
               onEditEventClicked={() => setEventEditId(e.id)}
+              isCreator={isCreator}
               />
             ))}
           </div>

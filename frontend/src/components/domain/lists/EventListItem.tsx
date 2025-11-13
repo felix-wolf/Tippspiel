@@ -8,13 +8,15 @@ type EventListItemProps = {
     onViewEventClicked: () => void
     onEditEventClicked: () => void
     isUpcoming: boolean
+    isCreator?: boolean
 }
 
 export function EventListItem({
     event,
     isUpcoming,
     onViewEventClicked: _onViewEventClicked,
-    onEditEventClicked: _onEditEventClicked
+    onEditEventClicked: _onEditEventClicked,
+    isCreator = false,
 }: EventListItemProps) {
     const user = useCurrentUser()
 
@@ -40,7 +42,7 @@ export function EventListItem({
                 <p className={"text-sm text-gray-600"}>{Utils.dateToString(event.datetime)}</p>
             </div>
             <div className="flex flex-row gap-2">
-                {isUpcoming && (
+                {isUpcoming && isCreator && (
                 <button className="bg-sky-500 text-white px-4 py-1 rounded-lg hover:bg-sky-600" onClick={() => _onEditEventClicked()}>
                     bearbeiten
                 </button>
