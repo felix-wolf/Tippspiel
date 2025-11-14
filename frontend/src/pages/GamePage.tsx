@@ -99,12 +99,13 @@ export function GamePage() {
             transition={{ duration: 0.4 }}
             className="w-full max-w-6xl"
           >
+            {scores.map((score) => score.scores.size > 0).filter((item) => item).length > 0 && (
             <Toggler
               items={[
                 {
                   nameComponent: <><Trophy size={18} /> Graph </>,
                   component:
-                    <ScoreLine game={game} scores={scores} />,
+                    <ScoreLine game={game} eventScores={scores} />,
                   isEnabled: true,
                 },
                 {
@@ -114,6 +115,7 @@ export function GamePage() {
                 },
               ]}
             />
+            )}
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -140,7 +142,7 @@ export function GamePage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="w-full"
+            className="w-full max-w-6xl"
           >
             <ScoreboardSkeleton />
             <EventsSkeleton />

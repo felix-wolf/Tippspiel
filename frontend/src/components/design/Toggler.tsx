@@ -33,30 +33,30 @@ export function Toggler({
 }: TogglerProps) {
   const [itemIndex, setItemIndex] = useState(initialIndex);
   return (<>
-  <div className="w-full flex flex-row justify-center px-2">
-    <div className="flex items-center bg-white/40 backdrop-blur-md border border-white/40 rounded-xl shadow-sm  my-3">
-      {items.map((item, index) => (
-        <button
-          className={`
+    <div className="w-full flex flex-row justify-center px-2">
+      <div className="flex items-center bg-white/40 backdrop-blur-md border border-white/40 rounded-xl shadow-sm  my-3">
+        {items.map((item, index) => (
+          <button
+            className={`
             flex items-center gap-2 px-5 py-2 font-medium transition rounded-xl
             ${highlight && itemIndex == index && "bg-sky-600 text-white"}
             ${highlight && itemIndex != index && "text-gray-700 hover:bg-white/50"}
             ${!item.isEnabled && "text-gray-400"}
             `}
-          key={index}
-          onClick={() => {
-            if (item.isEnabled) {
-              setItemIndex(index);
-              if (_didSelect) {
-                _didSelect(items[index]);
+            key={index}
+            onClick={() => {
+              if (item.isEnabled) {
+                setItemIndex(index);
+                if (_didSelect) {
+                  _didSelect(items[index]);
+                }
               }
-            }
-          }}
-        >
-          {item.nameComponent ? item.nameComponent : item.name}
-        </button>
-      ))}
-    </div>
+            }}
+          >
+            {item.nameComponent ? item.nameComponent : item.name}
+          </button>
+        ))}
+      </div>
     </div>
     { /* Render selected item */}
     {items.filter((item) => item.component != null).length != 0 && (

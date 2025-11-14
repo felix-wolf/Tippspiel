@@ -32,7 +32,6 @@ export function HomePage() {
     logout().then();
     navigate(SiteRoutes.Login, {});
   }, []);
-  console.log(data?.filter((game) => game.players.some((p) => p.id == user?.id)))
   return (
     <>
       {/* Header */}

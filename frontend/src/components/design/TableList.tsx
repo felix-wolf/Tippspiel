@@ -144,8 +144,6 @@ export default function TableList<T extends ListElement>({
     );
   }
 
-  console.log(maxHeight);
-
   return (
     <div className={`
       text-left text-gray-800

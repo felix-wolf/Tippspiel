@@ -25,6 +25,7 @@ export function ScoreList({ game, scores }: ScoreListProps) {
 
   return (
     <TableList
+      caption={"Punktestand"}
       items={items}
       headers={{ place: "Platz", name: "Name", score: "Punkte" }}
       customRenderers={{}}

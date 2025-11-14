@@ -15,8 +15,7 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
       {/* Header */}
       <header className={`
        w-full max-w-6xl mb-8
-        ${navBarLeftItem && "flex items-center justify-between"}
-        ${!navBarLeftItem && "grid grid-cols-10 items-center"}
+        flex items-center justify-between
         `}>
         <div className="min-w-18">
           <Button
@@ -27,12 +26,12 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
           />
         </div>
         <h1 className={`
-          text-2xl sm:text-3xl font-semibold text-gray-800 text-center
-          ${!navBarLeftItem && "col-span-8"}
+          text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 text-center min-w-20 max-w-2xl
         `}>
           {title}
         </h1>
         {navBarLeftItem && navBarLeftItem}
+        {!navBarLeftItem && <div className="min-w-18" />}
       </header>
       {children}
     </>

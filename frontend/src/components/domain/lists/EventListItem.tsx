@@ -41,7 +41,7 @@ export function EventListItem({
                     {isUpcoming && (eventHasBetsForUser(event) ? <BadgeCheck /> : <Badge />)}</p>
                 <p className={"text-sm text-gray-600"}>{Utils.dateToString(event.datetime)}</p>
             </div>
-            <div className="flex flex-row gap-2">
+            <div className="flex flex-col md:flex-row gap-2">
                 {isUpcoming && isCreator && (
                 <button className="bg-sky-500 text-white px-4 py-1 rounded-lg hover:bg-sky-600" onClick={() => _onEditEventClicked()}>
                     bearbeiten

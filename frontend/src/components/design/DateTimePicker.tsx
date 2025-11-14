@@ -20,11 +20,10 @@ export function DateTimePicker({
 }: DateTimePickerProps) {
   const [date, setDate] = useState(initialDate ?? new Date());
   return (
-    <div>
+    <div className="flex flex-col justify-start pl-2">
       <div className="z-2">
         <DatePicker
           className="text-white"
-          wrapperClassName="w100"
           dateFormat={"dd.MM.yyyy"}
           locale={"de"}
           selected={date}
