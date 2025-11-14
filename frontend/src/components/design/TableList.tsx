@@ -149,8 +149,8 @@ export default function TableList<T extends ListElement>({
       text-left text-gray-800
       ${maxHeight != undefined ? "max-h-110 overflow-y-scroll" : "h-full"}
       `}>
-    <table className="w-full">
       {captionElement}
+    <table className="w-full">
       {!captionElement && (
         <caption className="text-start">{caption}</caption>
       )}

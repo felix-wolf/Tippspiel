@@ -1,6 +1,7 @@
 import TableList from "../../design/TableList";
 import { Game } from "../../../models/Game";
 import { EventScore } from "../../../models/EventScore";
+import { Medal } from "lucide-react";
 
 type ScoreListItem = {
   place: number;
@@ -25,7 +26,7 @@ export function ScoreList({ game, scores }: ScoreListProps) {
 
   return (
     <TableList
-      caption={"Punktestand"}
+      captionElement={<div className="flex flex-row gap-2"><Medal/><span className="font-bold">Punktestand</span></div>}
       items={items}
       headers={{ place: "Platz", name: "Name", score: "Punkte" }}
       customRenderers={{}}
