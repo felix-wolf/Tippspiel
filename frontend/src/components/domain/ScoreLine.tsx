@@ -155,7 +155,7 @@ export function ScoreLine({ game, eventScores }: ScoreLineProps) {
         <LineChart data={buildDataset()}>
           <XAxis
             dataKey="race"
-            tickFormatter={(tick, index) => `${sortedEventScores.length - (numEvents - index)}`}
+            tickFormatter={(_, index) => `${sortedEventScores.length - (numEvents - index)}`}
             label={{ value: 'Rennen', position: 'insideBottom' }}
             height={50}
           />
