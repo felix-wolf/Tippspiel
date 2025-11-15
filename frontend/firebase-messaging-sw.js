@@ -1,24 +1,31 @@
-async function messageClient(event, messageType, data = {}) {
-  console.log('[Service Worker]: Sending message to app', messageType);
+const SW_VERSION = 'v2'; // Increment this each deploy to force update
 
-  let message = {
-    type: messageType,
-    data: data,
-  };
+// Ensure the new worker activates immediately
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+});
 
-  if (!event.clientId) {
-    const clients = await self.clients.matchAll({ type: 'window' });
-    for (const client of clients) {
-      client.postMessage(message);
-      console.log('[Service Worker]: Sent message to app', client);
+// Take control of existing clients and tell them to refresh
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    await self.clients.claim();
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of list) {
+      client.postMessage({ type: 'SW_ACTIVATED', version: SW_VERSION });
     }
-  } else {
-    const client = await clients.get(event.clientId);
-    if (!client) return;
+  })());
+});
 
-    client.postMessage(message);
-    console.log('[Service Worker]: Sent message to app', client);
+// Send a message to one or all clients
+async function messageClient(event, messageType, data = {}) {
+  const message = { type: messageType, version: SW_VERSION, data };
+  if (!event.clientId) {
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of list) client.postMessage(message);
+    return;
   }
+  const client = await self.clients.get(event.clientId);
+  if (client) client.postMessage(message);
 }
 
 self.addEventListener("install", (event) => {
