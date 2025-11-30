@@ -109,7 +109,7 @@ def execute(sql, params=None, commit=True):
         return True
     except Exception as e:
         print(e, sql, params)
-        return False
+        raise e
     finally:
         if conn is not None:
             conn.close()
@@ -129,7 +129,8 @@ def execute_many(sql, params=None, commit=True):
             conn.commit()
         return True
     except Exception as e:
-        print(e)
+        print(e, sql, params)
+        raise e
     finally:
         if conn is not None:
             conn.close()
@@ -144,12 +145,15 @@ def execute_script(script_name):
         cursor = conn.cursor()
         cursor.executescript(sql_script)
         conn.commit()
-        conn.close()
     except sqlite3.IntegrityError as err:
-        print(err)
+        print(err, sql_script)
+        raise err
     except Exception as err:
-        print(err)
-
+        print(err, sql_script)
+        raise err
+    finally:
+        if conn is not None:
+            conn.close()
 
 def load_csv(file_name, generate_id=False):
     """Loads a CSV file from the resources folder and returns a list of dictionaries."""
