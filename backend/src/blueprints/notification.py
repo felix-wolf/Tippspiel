@@ -19,10 +19,10 @@ def register_device():
         platform = request.get_json().get("platform")
         if any([x is None for x in [token, user_id, platform]]):
             return "missing param", 400
-        
+
         NotificationHelper.save_to_db(token=token, user_id=user_id, platform=platform)
         return {'token': token }
-    
+
 @notification_blueprint.route("/api/notification/test", methods=['POST'])
 @login_required
 def send_test_notification():
@@ -31,7 +31,7 @@ def send_test_notification():
         platform = request.get_json().get("platform")
         if any([x is None for x in [user_id, platform]]):
             return "missing param", 400
-        
+
         response = NotificationHelper.get_token(user_id=user_id, platform=platform)
         if not response:
             return "No token found", 404
@@ -54,7 +54,7 @@ def send_notification():
             for res in result:
                 try:
                     NotificationHelper.send_push_notification(
-                        res['device_token'], 
+                        res['device_token'],
                         event.name,
                         f"Rennen startet in einer Stunde um {pytz.timezone('CET').localize(event.dt).strftime('%H:%M')}!"
                     )
@@ -62,7 +62,7 @@ def send_notification():
                     return jsonify({'success': False, 'error': str(e)}), 500
             break
     return "Success", 200
-    
+
 
 @notification_blueprint.route('/api/notification/settings', methods=['GET', 'POST'])
 def settings():

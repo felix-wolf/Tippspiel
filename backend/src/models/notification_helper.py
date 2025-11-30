@@ -32,15 +32,22 @@ class NotificationHelper(BaseModel):
             f"SELECT device_token FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id = ? AND platform = ?",
             [user_id, platform]
             )
-    
+
     @staticmethod
     def get_tokens_for_users(user_ids, check_reminder=False, check_results=False):
-        sql = f"SELECT device_token FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id IN ({', '.join(map(repr, user_ids))})"
+        # Guard empty lists to avoid invalid SQL
+        if not user_ids:
+            return []
+        # Deduplicate and build parameterized IN clause
+        ids = list(dict.fromkeys(user_ids))
+        placeholders = ", ".join(["?"] * len(ids))
+        sql = f"SELECT device_token FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id IN ({placeholders})"
+        params = ids
         if check_reminder:
             sql += " AND reminder_notification = 1"
         if check_results:
             sql += " AND results_notification = 1"
-        return db_manager.query(sql)
+        return db_manager.query(sql, params)
 
     @staticmethod
     def get_notification_settings_for_user(user_id, platform):
@@ -48,7 +55,7 @@ class NotificationHelper(BaseModel):
             sql=f"SELECT results_notification, reminder_notification FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id = ? and platform = ?",
             params=[user_id, platform]
         )
-    
+
     @staticmethod
     def save_setting(user_id, platform, setting, value):
         # check for existing token
@@ -57,7 +64,7 @@ class NotificationHelper(BaseModel):
             return False
 
         result = db_manager.execute(
-            sql=f"UPDATE {db_manager.TABLE_DEVICE_TOKENS} SET {setting}_notification = ? WHERE user_id = ? and platform = ?", 
+            sql=f"UPDATE {db_manager.TABLE_DEVICE_TOKENS} SET {setting}_notification = ? WHERE user_id = ? and platform = ?",
             params=[value, user_id, platform]
         )
         return result is not None
@@ -69,7 +76,7 @@ class NotificationHelper(BaseModel):
             f"SELECT * FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE user_id = ? AND platform = ?",
             [user_id, platform]
             )
-        
+
         if result is not None:
             db_manager.execute(
             f"DELETE FROM {db_manager.TABLE_DEVICE_TOKENS} WHERE id = ?",
@@ -78,12 +85,12 @@ class NotificationHelper(BaseModel):
 
         id = utils.generate_id([token, user_id, platform])
         sql = f"""
-                INSERT INTO {db_manager.TABLE_DEVICE_TOKENS} 
+                INSERT INTO {db_manager.TABLE_DEVICE_TOKENS}
                 (id, user_id, device_token, platform, created_at, updated_at)
                 VALUES (?,?,?,?,?,?)
             """
         return db_manager.execute(sql, [id, user_id, token, platform, datetime.now(), datetime.now(),])
-    
+
 
     @staticmethod
     def send_push_notification(token, title, body):
