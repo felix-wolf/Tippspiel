@@ -1,13 +1,19 @@
+from dataclasses import dataclass
+
 from src.database import db_manager
 from src.models.base_model import BaseModel
 
 
+@dataclass
 class Country(BaseModel):
 
-    def __init__(self, code, name, flag):
-        self.code = code
-        self.name = name
-        self.flag = flag
+    code: str
+    name: str
+    flag: str
+
+    def __post_init__(self):
+        if not all([self.code, self.name, self.flag]):
+            raise ValueError("Country requires code, name and flag")
 
     def to_dict(self):
         return {

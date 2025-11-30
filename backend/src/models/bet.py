@@ -18,11 +18,11 @@ class Prediction(BaseModel):
         self.actual_place = actual_place
         self.score = score
 
-    def delete(self):
-        sql = f"""
-            DELETE FROM {db_manager.TABLE_PREDICTIONS} 
-            WHERE id = ?
-        """
+    def delete(self, conn=None):
+        sql = f"DELETE FROM {db_manager.TABLE_PREDICTIONS} WHERE id = ?"
+        if conn:
+            conn.execute(sql, [self.id])
+            return True, self.id
         success = db_manager.execute(sql, [self.id])
         return success, self.id
 
@@ -91,26 +91,30 @@ class Prediction(BaseModel):
                 return None
         else:
             return None
-        
 
-    def save_to_db(self):
+
+    def save_to_db(self, conn=None, commit=True):
         sql = f"""
-                INSERT INTO {db_manager.TABLE_PREDICTIONS} 
-                (id, bet_id, predicted_place, object_id, actual_place)
-                VALUES (?,?,?,?,?)
-            """
-        return db_manager.execute(sql, [
+            INSERT INTO {db_manager.TABLE_PREDICTIONS}
+            (id, bet_id, predicted_place, object_id, actual_place)
+            VALUES (?,?,?,?,?)
+        """
+        params = [
             self.id, self.bet_id, self.predicted_place,
             self.object_id, self.actual_place
-        ])
-    
+        ]
+        if conn:
+            conn.execute(sql, params)
+            return True
+        return db_manager.execute(sql, params, commit=commit)
+
     @staticmethod
     def get_all():
-        pass
+        raise NotImplementedError("Prediction.get_all is not implemented")
 
     @staticmethod
     def get_base_data():
-        pass
+        raise NotImplementedError("Prediction.get_base_data is not implemented")
 
 
 class Bet(BaseModel):
@@ -159,13 +163,28 @@ class Bet(BaseModel):
         return db_manager.execute(sql, [self.score, self.id], commit=commit)
 
     def update_predictions(self, new_predictions):
-        if len(self.predictions) > 0:
-            for prediction in self.predictions:
-                prediction.delete()
+        conn = None
+        try:
+            conn = db_manager.open_connection()
+            if len(self.predictions) > 0:
+                for prediction in self.predictions:
+                    prediction.delete(conn=conn)
 
-        predictions = [Prediction.from_dict(pred, self.id) for pred in new_predictions]
-        self.predictions = predictions
-        return self.save_to_db()
+            predictions = [Prediction.from_dict(pred, self.id) for pred in new_predictions]
+            self.predictions = predictions
+
+            # ensure bet row exists and insert new predictions in one transaction
+            if not self.save_to_db(conn=conn, commit=False):
+                raise Exception("Bet could not be saved")
+            db_manager.commit_transaction(conn)
+            return True
+        except Exception as e:
+            if conn:
+                db_manager.rollback_transaction(conn)
+            return False
+        finally:
+            if conn:
+                conn.close()
 
     @staticmethod
     def get_by_event_id_user_id(event_id, user_id):
@@ -209,18 +228,23 @@ class Bet(BaseModel):
         else:
             return None
 
-    def save_to_db(self):
+    def save_to_db(self, conn=None, commit=True):
+        """ Inserts the bet and its predictions into the database.
+        If the bet already exists, it is not updated."""
         sql = f"""
-            INSERT OR IGNORE INTO {db_manager.TABLE_BETS} 
+            INSERT OR IGNORE INTO {db_manager.TABLE_BETS}
             (id, event_id, user_id, score)
             VALUES (?,?,?,?)
         """
+        params = [self.id, self.event_id, self.user_id, self.score]
+        if conn:
+            conn.execute(sql, params)
+            return True
         success = db_manager.execute(
-            sql, [
-                self.id, self.event_id, self.user_id, self.score
-            ])
+            sql, params, commit=commit)
+
         for prediction in self.predictions:
-            result = prediction.save_to_db()
+            result = prediction.save_to_db(conn=conn, commit=commit)
             if not result:
                 return False
         return success
@@ -231,12 +255,12 @@ class Bet(BaseModel):
 
     @staticmethod
     def get_all():
-        pass
+        raise NotImplementedError("Bet.get_all is not implemented")
 
     @staticmethod
     def get_base_data():
-        pass
-    
+        raise NotImplementedError("Bet.get_base_data is not implemented")
+
     @staticmethod
     def get_by_id():
-        pass
+        raise NotImplementedError("Bet.get_by_id is not implemented")

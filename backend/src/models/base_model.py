@@ -5,28 +5,28 @@ class BaseModel(ABC):
 
     @abstractmethod
     def save_to_db(self):
-        return
+        raise NotImplementedError()
 
     @abstractmethod
     def to_dict(self):
-        return
+        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
     def from_dict(**kwargs):
-        return
+        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
     def get_by_id(i):
-        return
+        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
     def get_all():
-        return
+        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
     def get_base_data():
-        return
+        raise NotImplementedError()

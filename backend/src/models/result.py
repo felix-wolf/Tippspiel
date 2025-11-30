@@ -84,8 +84,8 @@ class Result(BaseModel):
     
     @staticmethod
     def get_base_data():
-        pass
+        raise NotImplementedError("Result.get_base_data is not implemented")
     
     @staticmethod
     def get_by_id():
-        pass
+        raise NotImplementedError("Result.get_by_id is not implemented")

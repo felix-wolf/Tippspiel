@@ -101,11 +101,11 @@ class User(BaseModel):
 
     @staticmethod
     def get_all():
-        pass
+        raise NotImplementedError("User.get_all is not implemented")
 
     @staticmethod
     def get_base_data():
-        pass
+        raise NotImplementedError("User.get_base_data is not implemented")
 
     def save_to_db(self):
-        pass
+        raise NotImplementedError("Use User.create to persist new users")

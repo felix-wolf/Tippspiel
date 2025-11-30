@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from src.models.event import Event
+from src.models.game import Game
 from src.models.event_type import EventType
 import json
 from datetime import datetime
@@ -38,6 +39,7 @@ def handle_event_request():
         else:
             return "No game_id specified", 404
     elif request.method == "POST":
+        requester_id = current_user.get_id()
         # posting a list of events
         events = request.get_json().get("events")
         if events is not None:
@@ -62,6 +64,9 @@ def handle_event_request():
         points_correct_bet = request.get_json().get("points_correct_bet")
         if not name or not game_id or not event_type or not dt or not num_bets or not points_correct_bet or allow_partial_points is None:
             return "Required params not spefified", 500
+        game = Game.get_by_id(game_id)
+        if not game or game.creator.id != requester_id:
+            return "Not authorized", 403
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
         success, event_id, event = Event.create(
             name=name, game_id=game_id, event_type_id=event_type, dt=dt, 
@@ -72,6 +77,7 @@ def handle_event_request():
         else:
             return "Fehler...", 500
     elif request.method == "PUT":
+        requester_id = current_user.get_id()
         name = request.get_json().get("name")
         game_id = request.get_json().get("game_id")
         event_type = request.get_json().get("type")
@@ -82,6 +88,9 @@ def handle_event_request():
         allow_partial_points = bool(request.get_json().get("allow_partial_points"))
         if not name or not game_id or not event_type or not dt or not num_bets or not points_correct_bet or allow_partial_points is None:
             return "Required params not spefified", 500
+        game = Game.get_by_id(game_id)
+        if not game or game.creator.id != requester_id:
+            return "Not authorized", 403
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
         success, event = Event.get_by_id(event_id).update(name=name, event_type_id=event_type, dt=dt, num_bets=num_bets, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points)
         if success:
@@ -98,6 +107,9 @@ def delete_event():
         event = Event.get_by_id(event_id)
         if not event:
             return "Event konnte nicht gefunden werden", 404
+        game = Game.get_by_id(event.game_id)
+        if not game or game.creator.id != current_user.get_id():
+            return "Not authorized", 403
         success = event.delete()
         if success:
             return {"deleted_id": event_id}
@@ -117,6 +129,10 @@ def save_bets():
         event = Event.get_by_id(event_id)
         if not event:
             return "Event not found", 404
+        game = Game.get_by_id(event.game_id)
+        # Only members of the game can place bets for themselves
+        if not game or user_id != current_user.get_id() or user_id not in [p.id for p in game.players]:
+            return "Not authorized", 403
         success, event_id = event.save_bet(user_id, predictions)
         if not success:
             return "Error saving bet", 400

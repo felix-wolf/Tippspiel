@@ -21,6 +21,9 @@ def handle_game_request():
         else:
             return [game.to_dict() for game in Game.get_all()]
     elif request.method == "POST":
+        current_user_id = current_user.get_id()
+        if not current_user_id:
+            return "Not authenticated", 401
         name = request.get_json().get("name", None)
         pw = request.get_json().get("password", None)
         discipline = request.get_json().get("discipline", None)
@@ -29,8 +32,7 @@ def handle_game_request():
         pw_hash = None
         if pw:
             pw_hash = hash_password(pw, current_app.config["SALT"])
-        user_id = current_user.get_id()
-        success, game_id = Game.create(user_id=user_id, name=name, pw_hash=pw_hash, discipline_name=discipline)
+        success, game_id = Game.create(user_id=current_user_id, name=name, pw_hash=pw_hash, discipline_name=discipline)
         if success:
             return Game.get_by_id(game_id).to_dict()
         else:
@@ -44,6 +46,8 @@ def handle_events_import_url():
         game = Game.get_by_id(game_id)
         if not game:
             return "Game nicht gefunden", 400
+        if game.creator.id != current_user.get_id():
+            return "Not authorized", 403
         url = request.args.get("url", None)
         if url:
             # check if discipline allows fetching events from url matches events_url
@@ -68,6 +72,9 @@ def join_game():
         return "Passwort falsch", 400
     user = User.get_by_id(user_id)
     if game and user:
+        if user_id in [p.id for p in game.players]:
+            # User is already a player
+            return "Beitreten nicht erfolgreich!", 400
         success = game.add_player(user)
         if success:
             return game.to_dict()
@@ -81,6 +88,8 @@ def delete_game():
     game_id = request.args.get("game_id")
     game = Game.get_by_id(game_id)
     if game:
+        if game.creator.id != current_user.get_id():
+            return "Not authorized", 403
         success = game.delete()
         if success:
             return {"deleted_id": game_id}
@@ -94,6 +103,8 @@ def update():
     name = request.get_json().get("name", None)
     game = Game.get_by_id(game_id)
     if game:
+        if game.creator.id != current_user.get_id():
+            return "Not authorized", 403
         success, updated_game = game.update(name)
         if success:
             return updated_game.to_dict()

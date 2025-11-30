@@ -3,8 +3,6 @@ from datetime import datetime, timedelta
 
 from src.models.event import Event
 from src.models.game import Game
-from src.utils import hash_password
-from src.models.user import User
 
 
 def _create_game(app, base_data):

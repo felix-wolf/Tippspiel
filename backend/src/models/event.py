@@ -292,4 +292,4 @@ class Event(BaseModel):
 
     @staticmethod
     def get_base_data():
-        return
+        raise NotImplementedError("Event.get_base_data is not implemented")

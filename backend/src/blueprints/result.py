@@ -19,6 +19,9 @@ def process_results():
         game = Game.get_by_id(event.game_id)
         if not game:
             return "Game zu Event nicht gefunden", 500
+        # only game owner can submit results
+        if game.creator.id != current_user.get_id():
+            return "Not authorized", 403
         url = request.get_json().get("url", None)
         results_json = request.get_json().get("results", None)
         if url:

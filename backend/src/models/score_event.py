@@ -56,15 +56,15 @@ class ScoreEvent(BaseModel):
     
     @staticmethod
     def get_all():
-        pass
+        raise NotImplementedError("ScoreEvent.get_all is not implemented")
     
     @staticmethod
     def get_base_data():
-        pass
+        raise NotImplementedError("ScoreEvent.get_base_data is not implemented")
     
     @staticmethod
     def get_by_id():
-        pass 
+        raise NotImplementedError("ScoreEvent.get_by_id is not implemented")
     
-    def save_to_db():
-        pass
+    def save_to_db(self):
+        raise NotImplementedError("ScoreEvent.save_to_db is not implemented")

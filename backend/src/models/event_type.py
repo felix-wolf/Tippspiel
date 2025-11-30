@@ -1,19 +1,24 @@
+from dataclasses import dataclass
+
 import src.utils as utils
 from src.models.base_model import BaseModel
 from src.database import db_manager
 
 
+@dataclass
 class EventType(BaseModel):
 
-    def __init__(self, name: str, display_name: str, discipline_id: str, betting_on: str, event_type_id: str = None):
-        if event_type_id:
-            self.id = event_type_id
-        else:
-            self.id = utils.generate_id([name, display_name, discipline_id, betting_on])
-        self.name = name
-        self.display_name = display_name
-        self.discipline_id = discipline_id
-        self.betting_on = betting_on
+    name: str
+    display_name: str
+    discipline_id: str
+    betting_on: str
+    id: str = None
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = utils.generate_id([self.name, self.display_name, self.discipline_id, self.betting_on])
+        if not all([self.name, self.display_name, self.discipline_id, self.betting_on]):
+            raise ValueError("EventType requires name, display_name, discipline_id and betting_on")
 
     def save_to_db(self):
         sql = f"""
@@ -37,7 +42,7 @@ class EventType(BaseModel):
 
             try:
                 return EventType(
-                    event_type_id=event_type_id, name=d['name'], display_name=d['display_name'],
+                    id=event_type_id, name=d['name'], display_name=d['display_name'],
                     discipline_id=d['discipline_id'], betting_on=d['betting_on']
                 )
             except KeyError as e:
@@ -57,7 +62,7 @@ class EventType(BaseModel):
 
     @staticmethod
     def get_all():
-        pass
+        raise NotImplementedError("EventType.get_all is not implemented")
 
     @staticmethod
     def get_by_id(event_type_id):

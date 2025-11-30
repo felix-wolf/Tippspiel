@@ -1,22 +1,30 @@
+from dataclasses import dataclass
+
 from src.database import db_manager
 from src.models.base_model import BaseModel
 import src.utils as utils
 import src.chrome_manager as chrome_manager
 
 
+@dataclass(eq=False)
 class Athlete(BaseModel):
 
+    id: str
+    first_name: str
+    last_name: str
+    country_code: str
+    gender: str
+    discipline: str
+    flag: str = None
+
     def __init__(self, athlete_id, first_name, last_name, country_code, gender, discipline, flag=None):
-        if athlete_id is None:
-            self.id = utils.generate_id([last_name, first_name, country_code])
-        else:
-            self.id = athlete_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.country_code = country_code
-        self.gender = gender
-        self.discipline = discipline
-        self.flag = flag
+        object.__setattr__(self, "id", athlete_id or utils.generate_id([last_name, first_name, country_code]))
+        object.__setattr__(self, "first_name", first_name)
+        object.__setattr__(self, "last_name", last_name)
+        object.__setattr__(self, "country_code", country_code)
+        object.__setattr__(self, "gender", gender)
+        object.__setattr__(self, "discipline", discipline)
+        object.__setattr__(self, "flag", flag or "🏴‍☠️")
 
     def __eq__(self, other):
         if isinstance(other, Athlete):
