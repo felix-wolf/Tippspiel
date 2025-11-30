@@ -17,13 +17,7 @@ from src.blueprints.notification import notification_blueprint
 import firebase_admin
 from firebase_admin import messaging, credentials
 
-
-
 login_manager = LoginManager()
-
-cred = credentials.Certificate("firebase_backend_admin_cred.json")
-
-firebase_admin.initialize_app(cred)
 
 
 @login_manager.user_loader
@@ -36,6 +30,7 @@ def hash_password(pw, salt):
 
 
 def create_app(env):
+    print("Starting app in", env, "environment")
     config_file = f'config_{env}.py'
     app = Flask(__name__)
     try:
@@ -44,6 +39,14 @@ def create_app(env):
         print("config file not found.")
         sys.exit()
     app.secret_key = app.config["SECRET_KEY"]
+    # Initialize firebase once; skip in tests if credentials are unavailable.
+    if not firebase_admin._apps:
+        try:
+            cred = credentials.Certificate("firebase_backend_admin_cred.json")
+            firebase_admin.initialize_app(cred)
+        except Exception as err:
+            if not app.config.get("TESTING"):
+                raise err
     login_manager.init_app(app)
     app.register_blueprint(athlete_blueprint)
     app.register_blueprint(country_blueprint)

@@ -200,18 +200,34 @@ class Event(BaseModel):
         :param results: list if result objects
         :return: True and None if successful, False and error string if error
         """
-        # delete existing results
-        if not Result.delete_by_event_id(self.id):
-            return False, "Bestehende Ergebnisse konnten nicht gelöscht werden"
-        for result in results:
-            success, result_id = result.save_to_db()
-            if not success:
-                return False, "Ergebnisse konnten nicht gespeichert werden"
-
-        for bet in self.bets:
-            if not bet.calc_score(results, self.points_correct_bet, self.allow_partial_points):
-                return False, "Ergebnisse konnten nicht gespeichert werden"
-        return True, None
+        conn = None
+        try:
+            conn = db_manager.start_transaction()
+            # delete existing results
+            if not Result.delete_by_event_id(self.id, commit=False, conn=conn):
+                raise Exception("Bestehende Ergebnisse konnten nicht gelöscht werden")
+            for result in results:
+                success, result_id = result.save_to_db(commit=False, conn=conn)
+                if not success:
+                    raise Exception("Ergebnisse konnten nicht gespeichert werden")
+            for bet in self.bets:
+                if not bet.calc_score(
+                    results,
+                    self.points_correct_bet,
+                    self.allow_partial_points,
+                    commit=False,
+                    conn=conn
+                ):
+                    raise Exception("Ergebnisse konnten nicht gespeichert werden")
+            db_manager.commit_transaction(conn)
+            return True, None
+        except Exception as e:
+            if conn:
+                db_manager.rollback_transaction(conn)
+            return False, str(e)
+        finally:
+            if conn:
+                conn.close()
 
     def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool):
         """Update an event's information. If the type is changed, all bets are deleted :("""

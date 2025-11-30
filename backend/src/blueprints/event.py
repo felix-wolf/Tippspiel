@@ -116,9 +116,9 @@ def save_bets():
             return "Missing parameters", 400
         event = Event.get_by_id(event_id)
         if not event:
-            return "Fehler...", 500
+            return "Event not found", 404
         success, event_id = event.save_bet(user_id, predictions)
+        if not success:
+            return "Error saving bet", 400
         if success:
             return Event.get_by_id(event_id).to_dict()
-        else:
-            return "Fehler...", 500

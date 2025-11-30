@@ -74,7 +74,7 @@ def select_objects_to_bet_on(event):
     for place in range(1, event['num_bets'] + 1):
         print("Place: ", place)
         if event_type.betting_on == 'countries':
-            sql = f"SELECT * FROM Countries ORDER BY code"
+            sql = f"SELECT * FROM Countries ORDER BY name"
             objects = db_manager.query(sql)
             all_objects = [{"id": o['code'], "name": o['name']} for o in objects]
             choices = [o['name'] for o in all_objects]

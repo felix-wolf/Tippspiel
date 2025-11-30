@@ -80,5 +80,5 @@ def settings():
         value = request.get_json().get("value")
         success = NotificationHelper.save_setting(user_id=user_id, platform=platform, setting=setting, value=bool(int(value)))
         if not success:
-            return "Error", 500
+            return "User has not yet registered a device", 400
     return {"Code": 200}

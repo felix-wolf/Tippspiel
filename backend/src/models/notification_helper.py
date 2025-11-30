@@ -51,6 +51,11 @@ class NotificationHelper(BaseModel):
     
     @staticmethod
     def save_setting(user_id, platform, setting, value):
+        # check for existing token
+        existing_token = NotificationHelper.get_token(user_id, platform)
+        if not existing_token:
+            return False
+
         result = db_manager.execute(
             sql=f"UPDATE {db_manager.TABLE_DEVICE_TOKENS} SET {setting}_notification = ? WHERE user_id = ? and platform = ?", 
             params=[value, user_id, platform]

@@ -53,12 +53,9 @@ def handle_events_import_url():
             if not discipline.validate_events_url(url):
                 return "Disziplin erlaubt keine URL Events / URL falsch", 400
             results, error = discipline.process_events_url(url, game_id=game.id)
-            if error:
+            if error or not results:
                 return error, 500
             return [e.to_dict() for e in results]
-
-        if not results:
-            return "Missing parameters", 400
 
 @game_blueprint.route("/api/game/join")
 @login_required

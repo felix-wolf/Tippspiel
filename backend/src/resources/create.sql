@@ -38,6 +38,7 @@ CREATE TABLE if not EXISTS Games (
     discipline TEXT NOT NULL,
     pw_hash TEXT,
     owner_id TEXT NOT NULL,
+    visible INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY(owner_id) REFERENCES Users(id) ON DELETE CASCADE
     FOREIGN KEY(discipline) REFERENCES Disciplines(id) ON DELETE CASCADE
 );
@@ -145,7 +146,7 @@ CREATE TABLE if not EXISTS DeviceTokens (
     user_id TEXT NOT NULL,
     device_token TEXT NOT NULL,
     platform TEXT,
-    result_notification INTEGER DEFAULT 0,
+    results_notification INTEGER DEFAULT 0,
     reminder_notification INTEGER DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -40,9 +40,12 @@ class Result(BaseModel):
         return [Result.from_dict(r) for r in results]
 
     @staticmethod
-    def delete_by_event_id(event_id):
+    def delete_by_event_id(event_id, commit=True, conn=None):
         sql = f"DELETE FROM {db_manager.TABLE_RESULTS} WHERE event_id = ?"
-        return db_manager.execute(sql, [event_id])
+        if conn:
+            conn.execute(sql, [event_id])
+            return True
+        return db_manager.execute(sql, [event_id], commit=commit)
 
     def to_dict(self):
         return {
@@ -55,13 +58,21 @@ class Result(BaseModel):
             "behind": self.behind
         }
 
-    def save_to_db(self):
+    def save_to_db(self, commit=True, conn=None):
         sql = f"""
             INSERT INTO {db_manager.TABLE_RESULTS} 
             (id, event_id, place, object_id, time, behind)
             VALUES (?,?,?,?,?,?)
         """
-        success = db_manager.execute(sql, [self.id, self.event_id, self.place, self.object_id, self.time, self.behind])
+        params = [self.id, self.event_id, self.place, self.object_id, self.time, self.behind]
+        if conn:
+            conn.execute(sql, params)
+            return True, self.id
+        success = db_manager.execute(
+            sql,
+            params,
+            commit=commit
+        )
         return success, self.id
 
     @staticmethod

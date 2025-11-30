@@ -28,7 +28,31 @@ def start():
     execute_script("create.sql")
 
 
+def start_transaction():
+    """Starts a transaction and returns the connection object."""
+    conn = open_connection()
+    conn.execute("BEGIN")
+    return conn
+
+
+def commit_transaction(conn):
+    """Commits the transaction."""
+    try:
+        conn.commit()
+    except Exception as e:
+        print(e)
+        conn.rollback()
+
+def rollback_transaction(conn):
+    """Rolls back the transaction."""
+    try:
+        conn.rollback()
+    except Exception as e:
+        print(e)
+
+
 def query(sql, params=None):
+    """Executes a query and returns all results as a list of dictionaries."""
     conn = None
     try:
         conn = open_connection()
@@ -47,6 +71,7 @@ def query(sql, params=None):
 
 
 def query_one(sql, params=None):
+    """Executes a query and returns the first result as a dictionary."""
     conn = None
     try:
         conn = open_connection()
@@ -69,6 +94,7 @@ def query_one(sql, params=None):
 
 
 def execute(sql, params=None, commit=True):
+    """Executes a statement (INSERT, UPDATE, DELETE)."""
     conn = None
     try:
         conn = open_connection()
@@ -82,12 +108,15 @@ def execute(sql, params=None, commit=True):
         conn.close()
         return True
     except Exception as e:
-        conn.close()
         print(e, sql, params)
         return False
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 def execute_many(sql, params=None, commit=True):
+    """Executes a statement (INSERT, UPDATE, DELETE) for multiple parameter sets."""
     conn = None
     try:
         conn = open_connection()
@@ -107,6 +136,7 @@ def execute_many(sql, params=None, commit=True):
 
 
 def execute_script(script_name):
+    """Executes a SQL script from the resources folder."""
     with open(f'src/resources/{script_name}', 'r') as sql_file:
         sql_script = sql_file.read()
     try:
@@ -122,6 +152,7 @@ def execute_script(script_name):
 
 
 def load_csv(file_name, generate_id=False):
+    """Loads a CSV file from the resources folder and returns a list of dictionaries."""
     values = []
     with open(f'src/resources/{file_name}', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";")

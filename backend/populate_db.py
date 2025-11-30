@@ -25,7 +25,7 @@ def populate_db(db_path):
                 event_type.id, event_type.name, event_type.display_name,
                 event_type.discipline_id, event_type.betting_on
             ], db_path=db_path)
-    
+
     print("Inserting disciplines types")
     disciplines = Discipline.get_base_data()
     for discipline in disciplines:
@@ -35,7 +35,7 @@ def populate_db(db_path):
                 VALUES (?,?,?,?)
                 """
         execute(sql, [discipline.id, discipline.name, discipline.result_url, discipline.events_url], db_path=db_path)
-    
+
     print("Inserting countries types")
     countries = Country.get_base_data()
     for country in countries:
@@ -45,7 +45,7 @@ def populate_db(db_path):
             VALUES (?,?,?)
             """
         execute(sql, [country.code, country.name, country.flag], db_path=db_path)
-    
+
     print("Inserting athletes types")
     athletes = Athlete.get_base_data()
     for athlete in athletes:

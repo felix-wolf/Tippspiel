@@ -26,7 +26,7 @@ class Prediction(BaseModel):
         success = db_manager.execute(sql, [self.id])
         return success, self.id
 
-    def set_actual_place(self, place, points_correct_bet: int, allow_partial_points: bool):
+    def set_actual_place(self, place, points_correct_bet: int, allow_partial_points: bool, conn=None):
         if type(place) == str:
             place = int(place)
         self.actual_place = place
@@ -35,6 +35,9 @@ class Prediction(BaseModel):
         else:
             self.score = points_correct_bet if self.actual_place == self.predicted_place else 0
         sql = f"UPDATE {db_manager.TABLE_PREDICTIONS} SET score = ?, actual_place = ? WHERE id = ?"
+        if conn:
+            conn.execute(sql, [self.score, self.actual_place, self.id])
+            return True
         return db_manager.execute(sql, [self.score, self.actual_place, self.id])
 
     def to_dict(self):
@@ -136,16 +139,24 @@ class Bet(BaseModel):
             "score": self.score
         }
 
-    def calc_score(self, results, points_correct_bet, allow_partial_points):
+    def calc_score(self, results, points_correct_bet, allow_partial_points, commit=True, conn=None):
         for pred in self.predictions:
             actual_place = 9999
             if pred.object_id in [r.object_id for r in results]:
                 actual_place = next((item.place for item in results if item.object_id == pred.object_id))
-            if not pred.set_actual_place(place=actual_place, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points):
+            if not pred.set_actual_place(
+                place=actual_place,
+                points_correct_bet=points_correct_bet,
+                allow_partial_points=allow_partial_points,
+                conn=conn
+            ):
                 return False
         self.score = sum([p.score for p in self.predictions])
         sql = f"UPDATE {db_manager.TABLE_BETS} SET score = ? WHERE id = ?"
-        return db_manager.execute(sql, [self.score, self.id])
+        if conn:
+            conn.execute(sql, [self.score, self.id])
+            return True
+        return db_manager.execute(sql, [self.score, self.id], commit=commit)
 
     def update_predictions(self, new_predictions):
         if len(self.predictions) > 0:
