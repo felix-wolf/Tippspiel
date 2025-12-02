@@ -176,6 +176,9 @@ class Bet(BaseModel):
             # ensure bet row exists and insert new predictions in one transaction
             if not self.save_to_db(conn=conn, commit=False):
                 raise Exception("Bet could not be saved")
+            for prediction in self.predictions:
+                if not prediction.save_to_db(conn=conn, commit=False):
+                    raise Exception("Prediction could not be saved")
             db_manager.commit_transaction(conn)
             return True
         except Exception as e:
@@ -240,14 +243,7 @@ class Bet(BaseModel):
         if conn:
             conn.execute(sql, params)
             return True
-        success = db_manager.execute(
-            sql, params, commit=commit)
-
-        for prediction in self.predictions:
-            result = prediction.save_to_db(conn=conn, commit=commit)
-            if not result:
-                return False
-        return success
+        return db_manager.execute(sql, params, commit=commit)
 
     def delete(self):
         sql = f"DELETE FROM {db_manager.TABLE_BETS} WHERE event_id = ? "

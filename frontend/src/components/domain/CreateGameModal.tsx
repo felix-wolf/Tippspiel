@@ -22,7 +22,6 @@ export default function CreateGameModal({ isOpen, onClose: _onClose, onCreate: _
             _onCreate(name, password, disciplineId);
         }
     }
-    console.log(disciplineId)
     return (
 
         <DialogModal
