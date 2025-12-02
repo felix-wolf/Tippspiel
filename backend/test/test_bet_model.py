@@ -31,6 +31,7 @@ def _create_event(base_data):
 def test_bet_save_and_score(base_data, app):
     with app.app_context():
         event = _create_event(base_data)
+        athlete = base_data["athlete"]
         bet = Bet(
             user_id=base_data["user"].id,
             event_id=event.id,
@@ -40,8 +41,8 @@ def test_bet_save_and_score(base_data, app):
         bet.predictions = [
             Prediction(
                 bet_id=bet.id,
-                object_id="athlete-1",
-                object_name="Athlete",
+                object_id=athlete.id,
+                object_name=athlete.last_name,
                 predicted_place=1,
             )
         ]

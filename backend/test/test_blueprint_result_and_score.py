@@ -37,7 +37,7 @@ def _create_event_with_bet(app, base_data):
             Prediction(
                 bet_id=bet.id,
                 object_id=base_data["athlete"].id,
-                object_name="Athlete",
+                object_name=base_data["athlete"].last_name,
                 predicted_place=1,
             )
         ]
