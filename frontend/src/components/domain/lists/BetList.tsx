@@ -46,7 +46,7 @@ function BetItem({ playerName, bet }: BetItemProp) {
           <div className="text-lg font-semibold text-sky-700">
             Score:{" "}
             <span className="text-slate-900 tabular-nums">
-              LEL{bet?.score ?? 0}
+              {bet?.score ?? 0}
             </span>
           </div>
         )}
