@@ -32,16 +32,6 @@ function BetItem({ playerName, bet }: BetItemProp) {
     );
   }, [bet]);
 
-  function getScoreText(bet: Bet | undefined) {
-    if (!bet) {
-      return "nicht getippt";
-    }
-    if (bet?.hasPredictions() && !bet.hasResults()) {
-      return "Ergebnis ausstehend";
-    }
-    return `Score: ${bet.score}`;
-  }
-
   return (
     <motion.div
       key={playerName}
@@ -52,17 +42,22 @@ function BetItem({ playerName, bet }: BetItemProp) {
         <h3 className="text-base sm:text-lg font-semibold text-slate-900">
           {playerName}
         </h3>
-        {bet && (
+        {bet?.hasPredictions() && bet.hasResults() && (
           <div className="text-lg font-semibold text-sky-700">
             Score:{" "}
             <span className="text-slate-900 tabular-nums">
-              {bet?.score ?? 0}
+              LEL{bet?.score ?? 0}
             </span>
+          </div>
+        )}
+        {bet?.hasPredictions() && !bet.hasResults() && (
+          <div className="text-lg font-semibold text-slate-500 italic">
+            Ergebnis ausstehend
           </div>
         )}
         {!bet && (
           <div className="text-lg font-semibold text-slate-500 italic">
-            {getScoreText(bet)}
+            Nicht getippt
           </div>
         )}
       </div>
