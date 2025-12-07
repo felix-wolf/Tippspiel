@@ -1,10 +1,6 @@
 from src.models.bet import Bet
 from src.models.bet import Prediction
-from src.models.event import Event
 from src.models.event_type import EventType
-from src.models.user import User
-from src.models.athlete import Athlete
-from src.models.country import Country
 from src.database import db_manager
 from main import create_app
 import inquirer

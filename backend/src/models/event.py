@@ -81,10 +81,10 @@ class Event(BaseModel):
         event_type = EventType.get_by_id(event_data["event_type_id"])
         event = Event.from_dict(event_data, event_type)
         event = event.get_bets()
+        event = event.getResults()
         if not get_full_object:
             event.bets = []
             return event
-        event = event.getResults()
         # check for unprocessed events
         unprocessed_bets = [bet for bet in event.bets if not bet.score]
         if len(unprocessed_bets) > 0 and event.results is not None and event.results != []:
@@ -233,7 +233,7 @@ class Event(BaseModel):
             if conn:
                 conn.close()
 
-    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool):
+    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, url: str = None):
         """Update an event's information. If the type is changed, all bets are deleted :("""
         success = True
         if name != self.name:
@@ -262,6 +262,10 @@ class Event(BaseModel):
             self.num_bets = num_bets
         if points_correct_bet != self.points_correct_bet:
             self.points_correct_bet = points_correct_bet
+        if allow_partial_points != self.allow_partial_points:
+            self.allow_partial_points = allow_partial_points
+        if url != self.url:
+            self.url = url
         if success:
             sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
                     name = ?,
@@ -269,12 +273,13 @@ class Event(BaseModel):
                     datetime = ?,
                     num_bets = ?,
                     points_correct_bet = ?,
-                    allow_partial_points = ?
+                    allow_partial_points = ?,
+                    url = ?
                     WHERE id = ?
                 """
             success = db_manager.execute(
                 sql,
-                [self.name, self.event_type.id, Event.datetime_to_string(self.dt), num_bets, points_correct_bet, 1 if allow_partial_points else 0, self.id]
+                [self.name, self.event_type.id, Event.datetime_to_string(self.dt), num_bets, points_correct_bet, 1 if allow_partial_points else 0, self.url, self.id]
             )
         return success, self
 

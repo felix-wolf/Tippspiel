@@ -10,7 +10,6 @@ from src.models.country import Country
 import src.utils as utils
 import src.chrome_manager as chrome_manager
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.common import NoSuchElementException
 from datetime import datetime
 import pandas as pd
@@ -111,31 +110,6 @@ class Discipline(BaseModel):
         return disciplines
 
 class Biathlon(Discipline):
-
-    def __add_event_urls(self, driver, url, events):
-        events_with_url = events
-        try:
-            driver.get(url)
-            back_button = driver.find_element(by=By.XPATH, value='//*[@id="Previousbutton2"]')
-            next_button = driver.find_element(by=By.XPATH, value='//*[@id="Nextbutton2"]')
-            next_button.click()
-            back_button.click()
-            event_url = None
-            while True:
-                if event_url is not None and event_url == driver.current_url:
-                    break
-                event_url = driver.current_url
-                event_name = driver.find_element(by=By.XPATH, value="/html/body/div[1]/nav/div/div[2]/h4").get_attribute('innerHTML').strip()
-                # find matching event and set event_url
-                for event in events_with_url:
-                    if event.name == event_name.replace("|","-"):
-                        event.url = event_url
-                        break
-                next_button.click()
-            return events_with_url
-        except Exception as exc:
-            print("Error occurred while adding event URLs:", exc)
-            return events
 
     def process_events_url(self, url, game_id):
         driver = chrome_manager.configure_driver()
