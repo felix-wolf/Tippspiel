@@ -43,16 +43,23 @@ export function ManualEventCreator({
   useEffect(() => {
     if (event) {
       if (
-        JSON.stringify(eventDetails) !== JSON.stringify(createEventDetails(event)) && 
+        JSON.stringify(eventDetails) !== JSON.stringify(createEventDetails(event)) && eventDetails &&
         eventDetails.name != "" &&
         eventDetails.type
       ) {
+        const d = eventDetails.date;
+        d.setHours(
+          Number(eventDetails.time.split(":")[0]),
+          Number(eventDetails.time.split(":")[1]),
+          0,
+          0,
+        );
         const updatedEvent = new Event(
           event.id,
           eventDetails.name,
           event.game_id,
           eventDetails.type,
-          Utils.dateToString(eventDetails.date),
+          Utils.dateToString(d),
           eventDetails.numBets,
           eventDetails.pointsCorrectBet,
           eventDetails.allowPartialPoints,
