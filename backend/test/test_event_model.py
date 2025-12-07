@@ -29,11 +29,13 @@ def test_event_create_and_get(base_data, app):
             num_bets=1,
             points_correct_bet=5,
             allow_partial_points=True,
+            url="http://example.com/event"
         )
         assert success
         fetched = Event.get_by_id(event_id, get_full_object=False)
         assert fetched is not None
         assert fetched.name == "Qualifier"
+        assert fetched.url == "http://example.com/event"
         assert isinstance(fetched.event_type, EventType)
 
 

@@ -14,7 +14,7 @@ class Event(BaseModel):
     def __init__(
             self, name: str, game_id: str, event_type: EventType, dt: datetime,
             allow_partial_points: bool, num_bets: int = None, points_correct_bet: int = None,
-            event_id: str = None, bets: list[Bet] = None, results: list[Result] = None
+            event_id: str = None, bets: list[Bet] = None, results: list[Result] = None, url: str = None
             ):
         if bets is None:
             bets = []
@@ -38,6 +38,7 @@ class Event(BaseModel):
         self.points_correct_bet = points_correct_bet
         self.bets = bets
         self.results = results
+        self.url = url
 
     def to_dict(self):
         bets = []
@@ -57,7 +58,8 @@ class Event(BaseModel):
             "allow_partial_points": self.allow_partial_points,
             "bets": bets,
             "results": results,
-            "has_bets_for_users": self.has_bets_for_users
+            "has_bets_for_users": self.has_bets_for_users,
+            "url": self.url,
 
         }
 
@@ -68,7 +70,7 @@ class Event(BaseModel):
     @staticmethod
     def string_to_datetime(dt_string):
         return datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
-    
+
     @staticmethod
     def get_by_id(event_id, get_full_object: bool = True):
         sql = f"SELECT e.* FROM VIEW_{db_manager.TABLE_EVENTS} e WHERE e.id = ?"
@@ -111,6 +113,7 @@ class Event(BaseModel):
                     num_bets=num_bets,
                     points_correct_bet=points_correct_bet,
                     dt=datetime.strptime(e_dict['datetime'], "%Y-%m-%d %H:%M:%S"),
+                    url=e_dict.get("url")
                 )
             except KeyError as e:
                 print("Could not instantiate event with given values:", e_dict, e)
@@ -134,39 +137,40 @@ class Event(BaseModel):
         return []
 
     @staticmethod
-    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool):
+    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, url: str = None):
         # insert event
         event_type = EventType.get_by_id(event_type_id)
         if not event_type:
             return False, None, None
         event = Event(
             name=name, game_id=game_id, event_type=event_type, dt=dt, allow_partial_points=allow_partial_points,
-            num_bets=num_bets, points_correct_bet=points_correct_bet
+            num_bets=num_bets, points_correct_bet=points_correct_bet, url=url
             )
         success, event_id = event.save_to_db()
         return success, event_id, event
 
     @staticmethod
     def save_events(events):
-        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime) VALUES (?,?,?,?,?)"
+        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime, url) VALUES (?,?,?,?,?,?)"
         success = db_manager.execute_many(
             sql=sql,
-            params=[(event.id, event.name, event.game_id,
-                event.event_type.id, Event.datetime_to_string(event.dt)) for event in events],
+            params=[
+                (event.id, event.name, event.game_id, event.event_type.id, Event.datetime_to_string(event.dt), event.url) for event in events],
             )
         return success
 
     def save_to_db(self, commit=True):
         sql = f"""
-        INSERT INTO {db_manager.TABLE_EVENTS} 
-            (id, name, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points) 
-            VALUES (?,?,?,?,?,?,?, ?)
+        INSERT INTO {db_manager.TABLE_EVENTS}
+            (id, name, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, url)
+            VALUES (?,?,?,?,?,?,?,?,?)
         """
         success = db_manager.execute(
             sql, [
                 self.id, self.name, self.game_id,
                 self.event_type.id, Event.datetime_to_string(self.dt),
-                self.num_bets, self.points_correct_bet, self.allow_partial_points
+                self.num_bets, self.points_correct_bet, self.allow_partial_points,
+                self.url
             ],
             commit=commit)
         return success, self.id
@@ -273,7 +277,7 @@ class Event(BaseModel):
                 [self.name, self.event_type.id, Event.datetime_to_string(self.dt), num_bets, points_correct_bet, 1 if allow_partial_points else 0, self.id]
             )
         return success, self
-    
+
     def delete(self):
         return db_manager.execute(
             sql=f"DELETE FROM {db_manager.TABLE_EVENTS} WHERE id = ?",

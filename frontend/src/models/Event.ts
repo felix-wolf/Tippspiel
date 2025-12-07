@@ -25,6 +25,7 @@ export class Event {
   private readonly _datetime: Date;
   private readonly _hasBetsForUsers: string[];
   private readonly _results: Result[];
+  private readonly _eventUrl?: string;
   constructor(
     id: string,
     name: string,
@@ -38,6 +39,7 @@ export class Event {
     results: Result[],
     hasBetsForUsers: string[],
     date?: Date,
+    eventUrl?: string,
   ) {
     this._id = id;
     this._name = name;
@@ -49,6 +51,7 @@ export class Event {
     this._allowPartialPoints = allowPartialPoints;
     this._results = results;
     this._hasBetsForUsers = hasBetsForUsers;
+    this._eventUrl = eventUrl;
     if (date) {
       this._datetime = date;
     } else {
@@ -96,6 +99,10 @@ export class Event {
     return this._results;
   }
 
+  get eventUrl(): string | undefined {
+    return this._eventUrl;
+  }
+
   get datetime(): Date {
     return this._datetime;
   }
@@ -126,7 +133,8 @@ export class Event {
       "allow_partial_points": "${this.allowPartialPoints ? 1 : 0}",
       "results": [${this._results.map((result) => result.toJson()).join(",")}],
       "bets": [${this._bets.map((bet) => bet.toJson()).join(",")}],
-      "event_type": ${this._eventType.toJson()}
+      "event_type": ${this._eventType.toJson()},
+      "url": "${this._eventUrl}"
       }`;
   }
 
@@ -161,6 +169,8 @@ export class Event {
       json["bets"].map((bet: any) => Bet.fromJson(bet)),
       json["results"].map((result: any) => Result.fromJson(result)),
       json["has_bets_for_users"],
+      undefined,
+      json["url"],
     );
   }
 

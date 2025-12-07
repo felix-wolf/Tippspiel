@@ -69,6 +69,8 @@ CREATE TABLE if not EXISTS Events (
     num_bets INTEGER NOT NULL DEFAULT 5,
     points_correct_bet INTEGER NOT NULL DEFAULT 5,
     allow_partial_points INTEGER NOT NULL DEFAULT 1,
+    url TEXT DEFAULT NULL,
+    FOREIGN KEY(event_type_id) REFERENCES EventTypes(id) ON DELETE CASCADE,
     FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
 );
 

@@ -10,6 +10,7 @@ from src.models.country import Country
 import src.utils as utils
 import src.chrome_manager as chrome_manager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.common import NoSuchElementException
 from datetime import datetime
 import pandas as pd
@@ -95,7 +96,7 @@ class Discipline(BaseModel):
 
     def save_to_db(self):
         sql = f"""
-            INSERT OR IGNORE INTO {db_manager.TABLE_DISCIPLINES} 
+            INSERT OR IGNORE INTO {db_manager.TABLE_DISCIPLINES}
             (id, name, result_url, events_url)
             VALUES (?,?,?,?)
             """
@@ -110,7 +111,32 @@ class Discipline(BaseModel):
         return disciplines
 
 class Biathlon(Discipline):
-        
+
+    def __add_event_urls(self, driver, url, events):
+        events_with_url = events
+        try:
+            driver.get(url)
+            back_button = driver.find_element(by=By.XPATH, value='//*[@id="Previousbutton2"]')
+            next_button = driver.find_element(by=By.XPATH, value='//*[@id="Nextbutton2"]')
+            next_button.click()
+            back_button.click()
+            event_url = None
+            while True:
+                if event_url is not None and event_url == driver.current_url:
+                    break
+                event_url = driver.current_url
+                event_name = driver.find_element(by=By.XPATH, value="/html/body/div[1]/nav/div/div[2]/h4").get_attribute('innerHTML').strip()
+                # find matching event and set event_url
+                for event in events_with_url:
+                    if event.name == event_name.replace("|","-"):
+                        event.url = event_url
+                        break
+                next_button.click()
+            return events_with_url
+        except Exception as exc:
+            print("Error occurred while adding event URLs:", exc)
+            return events
+
     def process_events_url(self, url, game_id):
         driver = chrome_manager.configure_driver()
         driver.implicitly_wait(3)
@@ -124,7 +150,6 @@ class Biathlon(Discipline):
                 location_name = t.find_element(by=By.TAG_NAME, value='h4').get_attribute('innerHTML').strip()
                 table = chrome_manager.read_table_into_df(url=url, table_element_key=By.ID, table_element_value="thistable", element=t)
                 for _, row in table.iterrows():
-                    event_type_names = [et.name for et in self.event_types]
 
                     def get_correct_event_type(event_description):
                         if "relay" in event_description.lower():
@@ -146,6 +171,7 @@ class Biathlon(Discipline):
                         )
                     events.append(e)
 
+            #events = self.__add_event_urls(driver, url, events)
 
             return events, None
 
@@ -177,9 +203,9 @@ class Biathlon(Discipline):
                     country = Country(nation, country_name, "🏴‍☠️")
                     country.save_to_db()
                 result = Result(
-                    event_id=event.id, 
-                    place=utils.validate_int(place), 
-                    object_id=country.code, 
+                    event_id=event.id,
+                    place=utils.validate_int(place),
+                    object_id=country.code,
                     object_name=country.name,
                     time=time,
                     behind=behind
@@ -204,16 +230,16 @@ class Biathlon(Discipline):
                 a_id = utils.generate_id([last_name, first_name, country_code])
                 a_name = " ".join([first_name, last_name])
                 r = Result(
-                    event_id=event.id, 
-                    place=utils.validate_int(place), 
-                    object_id=a_id, 
+                    event_id=event.id,
+                    place=utils.validate_int(place),
+                    object_id=a_id,
                     object_name=a_name,
                     time=time,
                     behind=behind
                     )
                 results.append(r)
                 a = Athlete(
-                    athlete_id=a_id, 
+                    athlete_id=a_id,
                     first_name=first_name,
                     last_name=last_name,
                     country_code=country_code,
@@ -229,7 +255,7 @@ class Biathlon(Discipline):
 
     def process_athletes(self, athletes: list[Athlete]):
         """
-        Saves all athletes (existing as well as new) to database. 
+        Saves all athletes (existing as well as new) to database.
         Gender is inferred from other competing, known athletes.
         """
         # find gender
@@ -245,7 +271,7 @@ class Biathlon(Discipline):
             a.gender = first_existing_althlete.gender
             a.save_to_db()
 
-    
+
     def process_countries(self, countries):
         for c in countries:
             c.save_to_db()
