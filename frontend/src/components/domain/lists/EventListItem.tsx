@@ -31,7 +31,7 @@ export function EventListItem({
                 flex justify-between gap-2 items-center bg-white/70 rounded-xl p-4 shadow-sm
                 ${isUpcoming && !eventHasBetsForUser(event) && "border border-sky-400"}
                 `}
-                onClick={(c) => {
+                onClick={() => {
                     // prevent click when screen is larger than md
                     if (window.innerWidth < 768) _onViewEventClicked()
                 }}
