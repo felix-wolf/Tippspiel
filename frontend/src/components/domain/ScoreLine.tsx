@@ -160,7 +160,7 @@ export function ScoreLine({ game, eventScores }: ScoreLineProps) {
             height={50}
           />
           <YAxis
-            domain={([dataMin, dataMax]) => showingCumulativeScores ? [showingAllEvents ? 0 : Math.max(dataMin - 50, 0), dataMax] : [dataMin, dataMax]}
+            domain={([dataMin, dataMax]) => showingCumulativeScores ? [showingAllEvents ? 0 : Math.max(dataMin - 10, 0), dataMax] : [dataMin, dataMax]}
             label={{ value: 'Punkte', angle: -90, position: 'insideLeft' }}
             />
           <Tooltip content={CustomTooltip} />
