@@ -19,6 +19,7 @@ export function ScoreLine({ game, eventScores }: ScoreLineProps) {
   const [numEvents, setNumEvents] = useState(sortedEventScores.length);
   const [showingAllEvents, setShowingAllEvents] = useState(true);
   const [showingCumulativeScores, setShowingCumulativeScores] = useState(true);
+  const [lineProps, setLineProps] = useState<{ [key: string]: boolean | null }>({ hover: null });
 
   const buildDataset = useCallback(() => {
     type player_score_type = { name: string; scores: number[] };
@@ -76,6 +77,13 @@ export function ScoreLine({ game, eventScores }: ScoreLineProps) {
     return data;
   }, [game, numEvents, showingAllEvents, sortedEventScores, showingCumulativeScores]);
 
+   const handleLegendClick = (e: any) => {
+    setLineProps({
+      ...lineProps,
+      [e.dataKey]: !lineProps[e.dataKey],
+      hover: null
+    });
+  };
 
   function buildTogglerTabs(numEvents: number): TogglerItem[] {
     const increments = [5, 10, 20, 10, 20];
@@ -164,13 +172,16 @@ export function ScoreLine({ game, eventScores }: ScoreLineProps) {
             label={{ value: 'Punkte', angle: -90, position: 'insideLeft' }}
             />
           <Tooltip content={CustomTooltip} />
-          <Legend />
+          <Legend
+            onClick={handleLegendClick}
+          />
           {game?.players.map((player) => (
             <Line
               key={player.id}
               type={"monotone"}
               dataKey={player.name}
               stroke={player.color}
+              hide={lineProps[player.name] === true}
             />
           ))}
         </LineChart>
