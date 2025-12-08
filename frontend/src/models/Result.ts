@@ -34,7 +34,7 @@ export class Result {
       "object_id": "${this.object_id}",
       "object_name": "${this.object_name}",
       "time": "${this.time}",
-      "behind": "${this.behind}",
+      "behind": "${this.behind}"
     }`;
   }
 

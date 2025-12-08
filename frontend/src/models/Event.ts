@@ -134,7 +134,7 @@ export class Event {
       "results": [${this._results.map((result) => result.toJson()).join(",")}],
       "bets": [${this._bets.map((bet) => bet.toJson()).join(",")}],
       "event_type": ${this._eventType.toJson()},
-      "url": "${this._eventUrl}"
+      "url": ${this._eventUrl ? `"${this._eventUrl}"` : null}
       }`;
   }
 
