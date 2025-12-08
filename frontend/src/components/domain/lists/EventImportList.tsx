@@ -76,17 +76,18 @@ export function EventImportList({
             }}
             key={event.name}
             className={`
-                grid grid-row-2 grid-col-2 gap-2 justify-start items-start bg-white/70 rounded-xl p-2 shadow-sm
+                flex flex-row gap-4 items-center bg-sky-900 rounded-xl p-2 shadow-sm
                 `}
           >
             {event.isChecked ? <BadgeCheck className="row-span-2" /> : <Badge className="row-span-2" />}
-            <p className={`
+            <div className="flex flex-col items-start gap-2">
+              <p className={`
                     font-medium flex
                     ${event.isChecked ? "text-black-500" : "text-gray-400"}
                     `}>
               {event.name}</p>
-
-            <p className={"text-sm text-gray-600 col-start-2"}>{event.datetime}</p>
+              <p className={"text-sm text-gray-400 col-start-2"}>{event.datetime}</p>
+            </div>
           </div>)
           )}
         </div>
