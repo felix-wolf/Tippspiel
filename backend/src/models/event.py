@@ -233,7 +233,7 @@ class Event(BaseModel):
             if conn:
                 conn.close()
 
-    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, url: str = None):
+    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool):
         """Update an event's information. If the type is changed, all bets are deleted :("""
         success = True
         if name != self.name:
@@ -264,8 +264,6 @@ class Event(BaseModel):
             self.points_correct_bet = points_correct_bet
         if allow_partial_points != self.allow_partial_points:
             self.allow_partial_points = allow_partial_points
-        if url != self.url:
-            self.url = url
         if success:
             sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
                     name = ?,
@@ -273,13 +271,12 @@ class Event(BaseModel):
                     datetime = ?,
                     num_bets = ?,
                     points_correct_bet = ?,
-                    allow_partial_points = ?,
-                    url = ?
+                    allow_partial_points = ?
                     WHERE id = ?
                 """
             success = db_manager.execute(
                 sql,
-                [self.name, self.event_type.id, Event.datetime_to_string(self.dt), num_bets, points_correct_bet, 1 if allow_partial_points else 0, self.url, self.id]
+                [self.name, self.event_type.id, Event.datetime_to_string(self.dt), num_bets, points_correct_bet, 1 if allow_partial_points else 0, self.id]
             )
         return success, self
 
