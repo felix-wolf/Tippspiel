@@ -71,15 +71,7 @@ if __name__ == "__main__":
         for event in events:
             if event.url is not None:
                 print(f"Updating Event: {event.name} with URL: {event.url}")
-                event.update(
-                    name=event.name,
-                    event_type_id=event.event_type.id,
-                    dt=event.dt,
-                    num_bets=event.num_bets,
-                    points_correct_bet=event.points_correct_bet,
-                    allow_partial_points=event.allow_partial_points,
-                    url=event.url
-                    )
+                event.set_url(event.url)
             else:
                 print(f"Event not found in the provided data: {event.name}")
         print("Update completed.")

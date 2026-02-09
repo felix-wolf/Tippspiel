@@ -279,6 +279,18 @@ class Event(BaseModel):
                 [self.name, self.event_type.id, Event.datetime_to_string(self.dt), num_bets, points_correct_bet, 1 if allow_partial_points else 0, self.id]
             )
         return success, self
+    
+    def set_url(self, url: str):
+        self.url = url
+        sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
+                url = ?
+                WHERE id = ?
+            """
+        success = db_manager.execute(
+            sql,
+            [self.url, self.id]
+        )
+        return success
 
     def delete(self):
         return db_manager.execute(
