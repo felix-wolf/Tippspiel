@@ -3,6 +3,7 @@ from flask import Flask
 from flask_login import *
 from src.models.user import User
 import sys
+from config import load_config
 from src.blueprints.athlete import athlete_blueprint
 from src.blueprints.country import country_blueprint
 from src.blueprints.discipline import discipline_blueprint
@@ -15,7 +16,7 @@ from src.blueprints.status import status_blueprint
 from src.blueprints.user import user_blueprint
 from src.blueprints.notification import notification_blueprint
 import firebase_admin
-from firebase_admin import messaging, credentials
+from firebase_admin import credentials
 
 login_manager = LoginManager()
 
@@ -31,19 +32,25 @@ def hash_password(pw, salt):
 
 def create_app(env):
     print("Starting app in", env, "environment")
-    config_file = f'config_{env}.py'
     app = Flask(__name__)
     try:
-        app.config.from_pyfile(config_file)
-    except FileNotFoundError:
-        print("config file not found.")
+        app.config.update(load_config(env))
+    except RuntimeError as err:
+        print(err)
         sys.exit()
     app.secret_key = app.config["SECRET_KEY"]
     # Initialize firebase once; skip in tests if credentials are unavailable.
     if not firebase_admin._apps:
         try:
-            cred = credentials.Certificate("firebase_backend_admin_cred.json")
-            firebase_admin.initialize_app(cred)
+            cred_path = app.config.get("FIREBASE_CREDENTIALS_PATH")
+            if not cred_path:
+                if app.config.get("TESTING"):
+                    cred_path = None
+                else:
+                    raise RuntimeError("Missing required environment variable: TIPPSPIEL_FIREBASE_CREDENTIALS_PATH")
+            if cred_path is not None:
+                cred = credentials.Certificate(cred_path)
+                firebase_admin.initialize_app(cred)
         except Exception as err:
             if not app.config.get("TESTING"):
                 raise err
@@ -63,4 +70,4 @@ def create_app(env):
 
 
 if __name__ == '__main__':
-        create_app(env="dev").run(debug=True)
+    create_app(env="dev").run(debug=True)

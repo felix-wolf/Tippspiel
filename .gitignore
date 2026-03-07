@@ -7,6 +7,9 @@ backend/firebase_backend_admin_cred.json
 backend/database/*.db
 backend/config*.py
 backend/src/resources/chromedriver
+backend/.env
+backend/.env.*
+!backend/.env.example
 ### Flask ###
 instance/*
 !instance/.gitignore

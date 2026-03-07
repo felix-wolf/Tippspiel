@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -21,6 +22,11 @@ from src.utils import hash_password
 @pytest.fixture()
 def app(tmp_path):
     """Flask app with isolated temp DB per test."""
+    os.environ["TIPPSPIEL_SECRET_KEY"] = "test-secret-key"
+    os.environ["TIPPSPIEL_PASSWORD_SALT"] = "test-password-salt"
+    os.environ["TIPPSPIEL_TESTING"] = "1"
+    os.environ["TIPPSPIEL_DB_PATH"] = str(tmp_path / "tippspiel_test.db")
+    os.environ.pop("TIPPSPIEL_FIREBASE_CREDENTIALS_PATH", None)
     app = create_app("test")
     app.config.update(
         {
@@ -34,6 +40,7 @@ def app(tmp_path):
         yield app
     if (tmp_path / "tippspiel_test.db").exists():
         (tmp_path / "tippspiel_test.db").unlink()
+    os.environ.pop("TIPPSPIEL_DB_PATH", None)
 
 @pytest.fixture()
 def base_data(app):
