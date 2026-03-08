@@ -2,6 +2,7 @@ import { useState } from "react";
 import { User } from "../../models/user/User";
 import Colorful from "@uiw/react-color-colorful";
 import { Button } from "../design/Button";
+import { useSetCurrentUser } from "../../models/user/UserContext";
 
 type ColorUpdaterProps = {
   user: User;
@@ -14,10 +15,11 @@ export function ColorUpdater({
 }: ColorUpdaterProps) {
   const [color, setColor] = useState(user.color);
   const [isPicking, setIsPicking] = useState(false);
+  const setCurrentUser = useSetCurrentUser();
 
   function saveChoice() {
     User.updateColor(user.id, color).then((user) => {
-      user.saveToStorage();
+      setCurrentUser(user);
       setIsPicking(false);
       _onUpdated();
     });

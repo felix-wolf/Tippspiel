@@ -2,14 +2,21 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
 import { Outlet } from "react-router-dom";
 import { User } from "./User";
 
+type LoginError = {
+  status?: number;
+  text?: string;
+};
+
 type UserContext = {
-  setCurrent: (user: User) => void;
+  current: User | null;
+  setCurrent: (user: User | null) => void;
   login: (name: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -18,8 +25,35 @@ const UserContext = createContext<UserContext>(null!);
 
 type UserContextProviderProps = React.PropsWithChildren;
 
+export function loadInitialCurrentUser(): User | null {
+  return User.loadFromStorage();
+}
+
+export function syncCurrentUserStorage(current: User | null): void {
+  if (current) {
+    current.saveToStorage();
+    return;
+  }
+  User.removeFromStorage();
+}
+
+export function mapLoginError(error: LoginError): string {
+  switch (error.status) {
+    case 403:
+      return "Fehler. Backend kaputt?";
+    case 404:
+      return error.text ?? "Ein unbekannter Fehler ist aufgetreten!";
+    default:
+      return "Ein unbekannter Fehler ist aufgetreten!";
+  }
+}
+
 export function UserContextProvider({ children }: UserContextProviderProps) {
-  const [current, setCurrent] = useState<User | null>(null);
+  const [current, setCurrent] = useState<User | null>(loadInitialCurrentUser);
+
+  useEffect(() => {
+    syncCurrentUserStorage(current);
+  }, [current]);
 
   const login = useCallback(
     async (name: string, password: string) => {
@@ -29,20 +63,10 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
         User.login(name, password)
           .then((user) => {
             setCurrent(user);
-            user.saveToStorage();
             resolve();
           })
           .catch((error) => {
-            switch (error.status) {
-              case 403:
-                reject("Fehler. Backend kaputt?");
-                break;
-              case 404:
-                reject(error.text);
-                break;
-              default:
-                reject("Ein unbekannter Fehler ist aufgetreten!");
-            }
+            reject(mapLoginError(error));
             console.log(error);
             error.status;
           });
@@ -52,13 +76,12 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
     [current],
   );
   const logout = useCallback(async () => {
-    useCurrentUser()
+    current
       ?.logout()
       .then()
       .catch((error) => console.log("ERROR logging out", error));
-    User.removeFromStorage();
     setCurrent(null);
-  }, []);
+  }, [current]);
 
   const context = useMemo(
     () => ({ current, setCurrent, login, logout }),
@@ -74,15 +97,21 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
  * Hook to determine whether a user is currently logged in.
  */
 export function useIsLoggedIn(): boolean {
-  //const { current } = useContext(UserContext);
-  return useCurrentUser() != null;
+  const { current } = useContext(UserContext);
+  return current != null;
 }
 
 /**
  * Hook to retrieve the current user. Throws an error if no user is logged in.
  */
 export function useCurrentUser(): User | undefined {
-  return User.loadFromStorage() ?? undefined;
+  const { current } = useContext(UserContext);
+  return current ?? undefined;
+}
+
+export function useSetCurrentUser(): (user: User | null) => void {
+  const { setCurrent } = useContext(UserContext);
+  return setCurrent;
 }
 
 /**

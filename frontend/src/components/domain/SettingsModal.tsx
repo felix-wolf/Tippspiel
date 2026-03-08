@@ -122,7 +122,7 @@ export function SettingsModal({
           {/* Push enable */}
           <Shakable shaking={pushShaking}>
             <button onClick={() => {
-              NotificationHelper.registerDevice()
+              NotificationHelper.registerDevice(user)
                 .then(() => {
                   setNotificationRegisterSuccess(true);
                 })

@@ -15,6 +15,7 @@ type Mode = "login" | "register";
 
 export function LoginPage() {
   const login = useLogin();
+  const user = useCurrentUser();
   const navigate = useNavigateParams();
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
@@ -26,11 +27,10 @@ export function LoginPage() {
   const [backendStatus, setBackendStatus] = useState("No");
 
   useEffect(() => {
-    const u = useCurrentUser();
-    if (u) {
+    if (user) {
       navigate(SiteRoutes.Home, {});
     }
-  }, []);
+  }, [navigate, user]);
 
   useEffect(() => {
     NetworkHelper.getStatus()

@@ -1,7 +1,6 @@
 import { NetworkHelper } from "./NetworkHelper.ts";
 import { getToken } from "firebase/messaging";
 import { messaging } from "../main.tsx";
-import { useCurrentUser } from "./user/UserContext.tsx";
 import { User } from "./user/User.ts";
 
 type settingCategory = "results" | "reminder";
@@ -11,8 +10,7 @@ export type NotificationSettings = {
 };
 
 export class NotificationHelper {
-  public static registerDevice(): Promise<void> {
-    const user = useCurrentUser();
+  public static registerDevice(user: User | undefined): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         const permission = await Notification.requestPermission();
