@@ -10,7 +10,7 @@ RestartSec=1
 User=felix
 WorkingDirectory=/home/felix/tippspiel/backend/
 EnvironmentFile=/etc/tippspiel/backend.env
-ExecStart=python3 -m pipenv run gunicorn --bind 0.0.0.0:5000 'main:create_app(env="prod")' 2>&1 >/home/felix/tippspiel/gunicorn.log
+ExecStart=uv run gunicorn --bind 0.0.0.0:5000 'main:create_app(env="prod")' 2>&1 >/home/felix/tippspiel/gunicorn.log
 
 [Install]
 WantedBy=multi-user.target
