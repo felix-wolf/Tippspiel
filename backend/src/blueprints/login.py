@@ -3,16 +3,22 @@ from src.models.user import User
 from flask_login import *
 from src.utils import hash_user_password
 from src.blueprints.api_response import error_response
+from src.blueprints.route_helpers import parse_json_body
 
 login_blueprint = Blueprint('login', __name__)
 
 @login_blueprint.route('/api/login', methods=['POST'])
 def login():
     if request.method == "POST":
-        name = request.get_json().get("name")
-        pw = request.get_json().get("password")
-        if not name or not pw:
-            return error_response("Benutzername und Passwort sind erforderlich.", 400)
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["name", "password"],
+            missing_message="Benutzername und Passwort sind erforderlich.",
+        )
+        if error:
+            return error
+        name = payload.get("name")
+        pw = payload.get("password")
         user_object = User.authenticate(name, pw, current_app.config["SALT"])
         if not user_object:
             return error_response("Benutzername oder Passwort ist falsch.", 401)
@@ -23,10 +29,15 @@ def login():
 @login_blueprint.route('/api/register', methods=["POST"])
 def register_user():
     if request.method == "POST":
-        name = request.get_json().get("name")
-        pw = request.get_json().get("password")
-        if not name or not pw:
-            return error_response("Benutzername und Passwort sind erforderlich.", 400)
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["name", "password"],
+            missing_message="Benutzername und Passwort sind erforderlich.",
+        )
+        if error:
+            return error
+        name = payload.get("name")
+        pw = payload.get("password")
         pw_hash = hash_user_password(pw)
         success, user_id = User.create(name, pw_hash)
         if success:

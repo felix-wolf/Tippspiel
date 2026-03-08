@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta
 
+from src.models.discipline import Biathlon
 from src.models.bet import Bet, Prediction
 from src.models.event import Event
 from src.models.game import Game
@@ -71,4 +72,78 @@ def test_process_results_missing_event_returns_error(client):
         "/api/results",
         json={"event_id": "unknown", "results": [{"id": "a", "place": 1}]},
     )
+    assert resp.status_code == 404
+    assert resp.get_json()["error"] == "Das Event wurde nicht gefunden."
+
+
+def test_process_results_rejects_malformed_json(client):
+    resp = client.post(
+        "/api/results",
+        data="{broken",
+        content_type="application/json",
+    )
     assert resp.status_code == 400
+    assert resp.get_json()["error"] == "Ungültige oder fehlende JSON-Daten."
+
+
+def test_process_results_requires_result_payload(client, app, base_data):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Missing Results Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        event = Event(
+            name="Missing Results Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() + timedelta(hours=1),
+            allow_partial_points=True,
+        )
+        event.save_to_db()
+
+    resp = client.post("/api/results", json={"event_id": event.id})
+    assert resp.status_code == 400
+    assert resp.get_json()["error"] == "Es wurden keine Ergebnisse übermittelt."
+
+
+def test_scores_requires_game_id(client):
+    resp = client.get("/api/scores")
+    assert resp.status_code == 400
+    assert resp.get_json()["error"] == "Die Spiel-ID fehlt."
+
+
+def test_results_check_processes_due_event(client, app, base_data, monkeypatch):
+    def fake_process_results_url(self, url, event):
+        assert url == "https://example.com/results/world-cup"
+        return [Result(event.id, 1, base_data["athlete"].id)], None
+
+    monkeypatch.setattr(Biathlon, "process_results_url", fake_process_results_url)
+
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Auto Result Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        event = Event(
+            name="Auto Result Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() - timedelta(hours=2),
+            allow_partial_points=True,
+            url="https://example.com/results/world-cup",
+        )
+        event.save_to_db()
+
+    response = client.get("/api/results/check")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["name"] == "Auto Result Event"
+    assert payload["results"][0]["place"] == 1

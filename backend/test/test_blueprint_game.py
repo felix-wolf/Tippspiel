@@ -1,8 +1,11 @@
 import json
+from datetime import datetime, timedelta
 
 from flask_login import login_user
 
 from src.blueprints.game import join_game
+from src.models.discipline import Biathlon
+from src.models.event import Event
 from src.models.game import Game
 from src.models.user import User
 from src.utils import hash_game_password, hash_password, password_hash_needs_upgrade
@@ -137,3 +140,64 @@ def test_game_update_and_delete(app, base_data):
 
     delete_resp = client.delete("/api/game/delete", json={"game_id": game_id})
     assert delete_resp.status_code == 200
+
+
+def test_join_game_requires_password_field(client, base_data):
+    response = client.post("/api/game", json={"name": "Join Test", "password": "123", "discipline": base_data["discipline"].id})
+    assert response.status_code == 200
+    game_id = response.get_json()["id"]
+
+    other_client = _login_client(client.application, base_data["second_user"].name)
+    join_resp = other_client.post("/api/game/join", json={"game_id": game_id})
+    assert join_resp.status_code == 400
+    assert join_resp.get_json()["error"] == "Erforderliche Angaben fehlen."
+
+
+def test_game_events_import_returns_imported_events(client, app, base_data, monkeypatch):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Import Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+    imported_event = Event(
+        name="Imported Event",
+        game_id=game_id,
+        event_type=base_data["event_type"],
+        dt=datetime.now() + timedelta(days=1),
+        allow_partial_points=True,
+    )
+
+    def fake_process_events_url(self, url, game_id):
+        assert url == "https://example.com/events/world-cup"
+        assert game_id == imported_event.game_id
+        return [imported_event], None
+
+    monkeypatch.setattr(Biathlon, "process_events_url", fake_process_events_url)
+
+    response = client.get(
+        "/api/game/events",
+        query_string={"game_id": game_id, "url": "https://example.com/events/world-cup"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload[0]["name"] == "Imported Event"
+
+
+def test_game_events_import_requires_url(client, app, base_data):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Import Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+    response = client.get("/api/game/events", query_string={"game_id": game_id})
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Die Event-URL fehlt."

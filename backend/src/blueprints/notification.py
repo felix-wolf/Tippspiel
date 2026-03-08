@@ -1,11 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 from flask_login import *
 from src.models.notification_helper import NotificationHelper
-from datetime import datetime, timedelta
-from src.models.event import Event
-from src.models.game import Game
-import pytz
 from src.blueprints.api_response import error_response
+from src.blueprints.route_helpers import parse_json_body, require_query_arg
+from src.blueprints.notification_service import send_due_bet_reminders
 
 notification_blueprint = Blueprint('notification', __name__)
 
@@ -15,10 +13,14 @@ def register_device():
     if request.method == "GET":
         return error_response("Diese Methode wird nicht unterstützt.", 400)
     if request.method == "POST":
-        token = request.get_json().get("token")
-        platform = request.get_json().get("platform")
-        if any([x is None for x in [token, platform]]):
-            return error_response("Erforderliche Angaben fehlen.", 400)
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["token", "platform"],
+        )
+        if error:
+            return error
+        token = payload.get("token")
+        platform = payload.get("platform")
 
         user_id = current_user.get_id()
         NotificationHelper.save_to_db(token=token, user_id=user_id, platform=platform)
@@ -28,9 +30,13 @@ def register_device():
 @login_required
 def send_test_notification():
     if request.method == "POST":
-        platform = request.get_json().get("platform")
-        if platform is None:
-            return error_response("Erforderliche Angaben fehlen.", 400)
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["platform"],
+        )
+        if error:
+            return error
+        platform = payload.get("platform")
 
         user_id = current_user.get_id()
         response = NotificationHelper.get_token(user_id=user_id, platform=platform)
@@ -42,27 +48,10 @@ def send_test_notification():
 
 @notification_blueprint.route('/api/notification/check', methods=['GET'])
 def send_notification():
-    now = datetime.now(pytz.timezone('CET'))
-    games = Game.get_all()
-    for game in games:
-        events = Event.get_all_by_game_id(game.id, get_full_objects=False)
-        events = [event for event in events if timedelta(minutes=63) > (pytz.timezone('CET').localize(event.dt) - now) > timedelta(minutes=58)]
-        if len(events) == 0:
-            continue
-        for event in events:
-            players_without_bets = list(set([player.id for player in game.players]).difference(set(event.has_bets_for_users)))
-            result = NotificationHelper.get_tokens_for_users(players_without_bets, check_reminder=True)
-            for res in result:
-                try:
-                    NotificationHelper.send_push_notification(
-                        res['device_token'],
-                        event.name,
-                        f"Rennen startet in einer Stunde um {pytz.timezone('CET').localize(event.dt).strftime('%H:%M')}!"
-                    )
-                except Exception as e:
-                    return jsonify({'success': False, 'error': str(e)}), 500
-            break
-    return "Success", 200
+    payload, error_message, status_code = send_due_bet_reminders()
+    if error_message:
+        return error_response(error_message, status_code or 500)
+    return payload, 200
 
 
 @notification_blueprint.route('/api/notification/settings', methods=['GET', 'POST'])
@@ -70,15 +59,26 @@ def send_notification():
 def settings():
     user_id = current_user.get_id()
     if request.method == "GET":
-        platform = request.args.get("platform")
+        platform, error = require_query_arg(
+            request.args.get("platform"),
+            "Die Plattform fehlt.",
+        )
+        if error:
+            return error
         settings = NotificationHelper.get_notification_settings_for_user(user_id=user_id, platform=platform)
         if settings is None:
             return error_response("Es wurden keine Benachrichtigungseinstellungen gefunden.", 404)
         return settings
     if request.method == "POST":
-        platform = request.get_json().get("platform")
-        setting = request.get_json().get("setting")
-        value = request.get_json().get("value")
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["platform", "setting", "value"],
+        )
+        if error:
+            return error
+        platform = payload.get("platform")
+        setting = payload.get("setting")
+        value = payload.get("value")
         success = NotificationHelper.save_setting(user_id=user_id, platform=platform, setting=setting, value=bool(int(value)))
         if not success:
             return error_response("Für dieses Gerät wurden noch keine Benachrichtigungen eingerichtet.", 400)

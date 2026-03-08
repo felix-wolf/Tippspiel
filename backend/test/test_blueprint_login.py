@@ -36,3 +36,13 @@ def test_login_endpoint_invalid_credentials(client):
     response = client.post("/api/login", json={"name": "invalid", "password": "pw"})
     assert response.status_code == 401
     assert response.get_json()["error"] == "Benutzername oder Passwort ist falsch."
+
+
+def test_login_rejects_malformed_json(client):
+    response = client.post(
+        "/api/login",
+        data="{invalid",
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Ungültige oder fehlende JSON-Daten."

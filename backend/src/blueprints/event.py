@@ -5,6 +5,13 @@ from src.models.event_type import EventType
 import json
 from datetime import datetime
 from src.blueprints.api_response import error_response
+from src.blueprints.route_helpers import (
+    get_event_or_error,
+    get_game_or_error,
+    parse_json_body,
+    require_game_member,
+    require_game_owner,
+)
 
 from flask_login import *
 
@@ -36,13 +43,18 @@ def handle_event_request():
         if game_id:
             return [event.to_dict() for event in Event.get_all_by_game_id(game_id, full_object, page_num, past)]
         if event_id:
-            return Event.get_by_id(event_id, full_object).to_dict()
+            event, error = get_event_or_error(event_id)
+            if error:
+                return error
+            return Event.get_by_id(event.id, full_object).to_dict()
         else:
             return error_response("Die Spiel-ID fehlt.", 400)
     elif request.method == "POST":
-        requester_id = current_user.get_id()
+        payload, error = parse_json_body(request.get_json(silent=True))
+        if error:
+            return error
         # posting a list of events
-        events = request.get_json().get("events")
+        events = payload.get("events")
         if events is not None:
             parsed_events = []
             for event_string in events:
@@ -56,18 +68,25 @@ def handle_event_request():
             else:
                 return error_response("Die Events konnten nicht gespeichert werden.", 500)
         # posting a single event
-        name = request.get_json().get("name")
-        game_id = request.get_json().get("game_id")
-        event_type = request.get_json().get("type")
-        dt = request.get_json().get("datetime")
-        allow_partial_points = bool(request.get_json().get("allow_partial_points"))
-        num_bets = request.get_json().get("num_bets")
-        points_correct_bet = request.get_json().get("points_correct_bet")
-        if not name or not game_id or not event_type or not dt or not num_bets or not points_correct_bet or allow_partial_points is None:
+        payload, error = parse_json_body(
+            payload,
+            required_fields=["name", "game_id", "type", "datetime", "num_bets", "points_correct_bet"],
+        )
+        if error:
             return error_response("Erforderliche Angaben fehlen.", 400)
-        game = Game.get_by_id(game_id)
-        if not game or game.creator.id != requester_id:
-            return error_response("Du bist für diese Aktion nicht berechtigt.", 403)
+        name = payload.get("name")
+        game_id = payload.get("game_id")
+        event_type = payload.get("type")
+        dt = payload.get("datetime")
+        allow_partial_points = bool(payload.get("allow_partial_points"))
+        num_bets = payload.get("num_bets")
+        points_correct_bet = payload.get("points_correct_bet")
+        game, error = get_game_or_error(game_id)
+        if error:
+            return error
+        error = require_game_owner(game)
+        if error:
+            return error
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
         success, event_id, event = Event.create(
             name=name, game_id=game_id, event_type_id=event_type, dt=dt, 
@@ -78,22 +97,31 @@ def handle_event_request():
         else:
             return error_response("Das Event konnte nicht erstellt werden.", 500)
     elif request.method == "PUT":
-        requester_id = current_user.get_id()
-        name = request.get_json().get("name")
-        game_id = request.get_json().get("game_id")
-        event_type = request.get_json().get("type")
-        dt = request.get_json().get("datetime")
-        event_id = request.get_json().get("event_id")
-        num_bets = request.get_json().get("num_bets")
-        points_correct_bet = request.get_json().get("points_correct_bet")
-        allow_partial_points = bool(request.get_json().get("allow_partial_points"))
-        if not name or not game_id or not event_type or not dt or not num_bets or not points_correct_bet or allow_partial_points is None:
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["event_id", "name", "game_id", "type", "datetime", "num_bets", "points_correct_bet"],
+        )
+        if error:
             return error_response("Erforderliche Angaben fehlen.", 400)
-        game = Game.get_by_id(game_id)
-        if not game or game.creator.id != requester_id:
-            return error_response("Du bist für diese Aktion nicht berechtigt.", 403)
+        name = payload.get("name")
+        game_id = payload.get("game_id")
+        event_type = payload.get("type")
+        dt = payload.get("datetime")
+        event_id = payload.get("event_id")
+        num_bets = payload.get("num_bets")
+        points_correct_bet = payload.get("points_correct_bet")
+        allow_partial_points = bool(payload.get("allow_partial_points"))
+        game, error = get_game_or_error(game_id)
+        if error:
+            return error
+        error = require_game_owner(game)
+        if error:
+            return error
+        event, error = get_event_or_error(event_id)
+        if error:
+            return error
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
-        success, event = Event.get_by_id(event_id).update(name=name, event_type_id=event_type, dt=dt, num_bets=num_bets, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points)
+        success, event = event.update(name=name, event_type_id=event_type, dt=dt, num_bets=num_bets, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points)
         if success:
             return event.to_dict()
         else:
@@ -104,13 +132,22 @@ def handle_event_request():
 @login_required
 def delete_event():
     if request.method == "DELETE":
-        event_id = request.get_json().get("event_id", None)
-        event = Event.get_by_id(event_id)
-        if not event:
-            return error_response("Das Event wurde nicht gefunden.", 404)
-        game = Game.get_by_id(event.game_id)
-        if not game or game.creator.id != current_user.get_id():
-            return error_response("Du bist für diese Aktion nicht berechtigt.", 403)
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["event_id"],
+        )
+        if error:
+            return error
+        event_id = payload.get("event_id")
+        event, error = get_event_or_error(event_id)
+        if error:
+            return error
+        game, error = get_game_or_error(event.game_id)
+        if error:
+            return error
+        error = require_game_owner(game)
+        if error:
+            return error
         success = event.delete()
         if success:
             return {"deleted_id": event_id}
@@ -122,19 +159,25 @@ def delete_event():
 @login_required
 def save_bets():
     if request.method == "POST":
-        event_id = request.get_json().get("event_id", None)
-        predictions = request.get_json().get("predictions", None)
-        if not event_id or not predictions:
-            return error_response("Erforderliche Angaben fehlen.", 400)
-        event = Event.get_by_id(event_id)
-        if not event:
-            return error_response("Das Event wurde nicht gefunden.", 404)
-        game = Game.get_by_id(event.game_id)
-        user_id = current_user.get_id()
+        payload, error = parse_json_body(
+            request.get_json(silent=True),
+            required_fields=["event_id", "predictions"],
+        )
+        if error:
+            return error
+        event_id = payload.get("event_id")
+        predictions = payload.get("predictions")
+        event, error = get_event_or_error(event_id)
+        if error:
+            return error
+        game, error = get_game_or_error(event.game_id)
+        if error:
+            return error
         # Only members of the game can place bets for themselves
-        if not game or user_id not in [p.id for p in game.players]:
-            return error_response("Du bist für diese Aktion nicht berechtigt.", 403)
-        success, event_id = event.save_bet(user_id, predictions)
+        error = require_game_member(game)
+        if error:
+            return error
+        success, event_id = event.save_bet(current_user.get_id(), predictions)
         if not success:
             return error_response("Die Wette konnte nicht gespeichert werden.", 400)
         if success:
