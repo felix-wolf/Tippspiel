@@ -99,10 +99,10 @@ def handle_event_request():
             return "Fehler...", 500
 
 
-@event_blueprint.route("/api/event/delete", methods=["POST"])
+@event_blueprint.route("/api/event/delete", methods=["DELETE"])
 @login_required
 def delete_event():
-    if request.method == "POST":
+    if request.method == "DELETE":
         event_id = request.get_json().get("event_id", None)
         event = Event.get_by_id(event_id)
         if not event:
@@ -122,7 +122,6 @@ def delete_event():
 def save_bets():
     if request.method == "POST":
         event_id = request.get_json().get("event_id", None)
-        user_id = request.get_json().get("user_id", None)
         predictions = request.get_json().get("predictions", None)
         if not event_id or not predictions:
             return "Missing parameters", 400
@@ -130,8 +129,9 @@ def save_bets():
         if not event:
             return "Event not found", 404
         game = Game.get_by_id(event.game_id)
+        user_id = current_user.get_id()
         # Only members of the game can place bets for themselves
-        if not game or user_id != current_user.get_id() or user_id not in [p.id for p in game.players]:
+        if not game or user_id not in [p.id for p in game.players]:
             return "Not authorized", 403
         success, event_id = event.save_bet(user_id, predictions)
         if not success:

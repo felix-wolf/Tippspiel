@@ -139,7 +139,7 @@ export class Event {
   }
 
   public delete() {
-    return NetworkHelper.post(`/api/event/delete`, () => {}, {
+    return NetworkHelper.delete(`/api/event/delete`, () => {}, {
       event_id: this._id,
     });
   }
@@ -183,7 +183,6 @@ export class Event {
 
   public static saveBets(
     event_id: string,
-    user_id: string,
     predictions: Predictions,
   ): Promise<Event> {
     return NetworkHelper.post(
@@ -191,7 +190,6 @@ export class Event {
       Event.fromJson,
       {
         event_id: event_id,
-        user_id: user_id,
         predictions: predictions.map((prediction) => {
           return {
             id: prediction.id,

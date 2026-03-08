@@ -116,7 +116,7 @@ def test_event_update_delete_require_owner(app, base_data, other_user):
     )
     assert update_resp.status_code == 403
 
-    delete_resp = other_client.post("/api/event/delete", json={"event_id": event_id})
+    delete_resp = other_client.delete("/api/event/delete", json={"event_id": event_id})
     assert delete_resp.status_code == 403
 
 
@@ -129,11 +129,34 @@ def test_save_bets_requires_membership(app, base_data, other_user):
         "/api/event/save_bets",
         json={
             "event_id": event_id,
-            "user_id": other_user,
             "predictions": [{"object_id": "a1", "predicted_place": 1, "object_name": "A"}],
         },
     )
     assert resp.status_code == 403
+
+
+def test_save_bets_ignores_spoofed_user_id(app, base_data, other_user):
+    game_id = _create_game(app, base_data["user"].id, base_data["discipline"].id)
+    with app.app_context():
+        game = Game.get_by_id(game_id)
+        assert game is not None
+        second_user = User.get_by_id(base_data["second_user"].id)
+        assert second_user is not None
+        assert game.add_player(second_user)
+    event_id = _create_event(app, game_id, base_data["event_type"])
+    member_client = _client_for(app, base_data["second_user"].id)
+
+    resp = member_client.post(
+        "/api/event/save_bets",
+        json={
+            "event_id": event_id,
+            "user_id": base_data["user"].id,
+            "predictions": [{"object_id": "a1", "predicted_place": 1, "object_name": "A"}],
+        },
+    )
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["has_bets_for_users"] == [base_data["second_user"].id]
 
 
 def test_user_color_update_ignores_spoofed_user_id(app, base_data, other_user):

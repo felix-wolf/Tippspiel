@@ -104,7 +104,7 @@ def test_event_save_bets_validation(client, base_data):
     # wrong number of predictions
     fail_resp = client.post(
         "/api/event/save_bets",
-        json={"event_id": event_id, "user_id": base_data["user"].id, "predictions": [{"object_id": "a", "predicted_place": 1}]},
+        json={"event_id": event_id, "predictions": [{"object_id": "a", "predicted_place": 1}]},
     )
     assert fail_resp.status_code == 400
 
@@ -113,7 +113,6 @@ def test_event_save_bets_validation(client, base_data):
         "/api/event/save_bets",
         json={
             "event_id": event_id,
-            "user_id": base_data["user"].id,
             "predictions": [
                 {"object_id": "a1", "predicted_place": 1, "object_name": "A"},
                 {"object_id": "a2", "predicted_place": 2, "object_name": "B"},
