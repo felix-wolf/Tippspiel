@@ -5,8 +5,12 @@ git pull
 cd backend
 
 # install deps
-python3 -m pipenv install
+uv sync
 
+# copy systemd service file
+sudo cp /home/felix/tippspiel/backend/tippspiel_backend.service /etc/systemd/system/
+
+# copy cron job file
 sudo cp /home/felix/tippspiel/backend/run_tippspiel_backend /etc/cron.d/
 
 # run server in pipenv
