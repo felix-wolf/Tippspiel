@@ -16,6 +16,7 @@ dependencies = [
     "inquirer",
     "firebase-admin",
     "beartype",
+    "gunicorn>=25.1.0",
 ]
 
 [dependency-groups]
