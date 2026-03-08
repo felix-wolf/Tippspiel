@@ -7,6 +7,7 @@ from src.models.event import Event
 from src.models.game import Game
 from src.models.result import Result
 from src.models.score_event import ScoreEvent
+from src.time_utils import berlin_local_now_naive
 
 
 def _create_event_with_bet(app, base_data):
@@ -136,7 +137,7 @@ def test_results_check_processes_due_event(client, app, base_data, monkeypatch):
             name="Auto Result Event",
             game_id=game_id,
             event_type=base_data["event_type"],
-            dt=datetime.now() - timedelta(hours=2),
+            dt=berlin_local_now_naive() - timedelta(hours=2),
             allow_partial_points=True,
             url="https://example.com/results/world-cup",
         )

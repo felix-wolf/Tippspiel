@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from src.models.event import Event
 from src.models.game import Game
 from src.models.notification_helper import NotificationHelper
+from src.time_utils import berlin_local_now_naive
 
 
 def test_register_device(client, base_data):
@@ -90,7 +91,7 @@ def test_notification_check_sends_due_reminder(client, app, base_data, monkeypat
             name="Reminder Event",
             game_id=game_id,
             event_type=base_data["event_type"],
-            dt=datetime.now() + timedelta(minutes=61),
+            dt=berlin_local_now_naive() + timedelta(minutes=61),
             allow_partial_points=True,
         )
         event.save_to_db()

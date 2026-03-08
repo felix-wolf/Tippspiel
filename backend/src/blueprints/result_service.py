@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
 
-import pytz
-
 from src.models.discipline import Discipline
 from src.models.event import Event
 from src.models.game import Game
 from src.models.notification_helper import NotificationHelper
 from src.models.result import Result
+from src.time_utils import berlin_now, ensure_berlin_time
 
 
 def load_results(event: Event, url: str = None, results_json: list = None):
@@ -65,8 +64,7 @@ def process_event_results(event: Event, game: Game, url: str = None, results_jso
 
 
 def check_recent_results(now=None):
-    timezone = pytz.timezone("CET")
-    current_time = now or datetime.now(timezone)
+    current_time = ensure_berlin_time(now) if now else berlin_now()
 
     for game in Game.get_all():
         events = Event.get_all_by_game_id(game.id, get_full_objects=False, past=True)
@@ -74,7 +72,7 @@ def check_recent_results(now=None):
             event
             for event in events
             if timedelta(minutes=4 * 60)
-            > (current_time - timezone.localize(event.dt))
+            > (current_time - ensure_berlin_time(event.dt))
             > timedelta(minutes=60)
             and not event.results
             and event.url is not None
