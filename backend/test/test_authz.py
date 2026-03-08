@@ -59,7 +59,7 @@ def test_game_delete_requires_owner(app, base_data, other_user):
     game_id = _create_game(app, base_data["user"].id, base_data["discipline"].id)
     other_client = _client_for(app, other_user)
 
-    resp = other_client.get("/api/game/delete", query_string={"game_id": game_id})
+    resp = other_client.delete("/api/game/delete", json={"game_id": game_id})
     assert resp.status_code == 403
 
 
@@ -69,7 +69,7 @@ def test_protected_routes_require_login(app, base_data):
     user_resp = client.get("/api/user")
     assert user_resp.status_code == 401
 
-    join_resp = client.get("/api/game/join", query_string={"game_id": "missing", "pw": "123"})
+    join_resp = client.post("/api/game/join", json={"game_id": "missing", "password": "123"})
     assert join_resp.status_code == 401
 
     settings_resp = client.get("/api/notification/settings", query_string={"platform": "ios"})

@@ -69,10 +69,10 @@ export class Game {
     game_id: string,
     pw: string,
   ): Promise<Game> {
-    return NetworkHelper.execute<Game>(
-      `/api/game/join?game_id=${encodeURIComponent(game_id)}&pw=${encodeURIComponent(pw)}`,
-      Game.fromJson,
-    );
+    return NetworkHelper.post<Game>("/api/game/join", Game.fromJson, {
+      game_id: game_id,
+      password: pw,
+    });
   }
 
   public static fetchNumEvents(game_id: any, past: number): Promise<number> {
@@ -83,9 +83,10 @@ export class Game {
   }
 
   public delete(): Promise<boolean> {
-    return NetworkHelper.execute(
-      `/api/game/delete?game_id=${this._id}`,
+    return NetworkHelper.delete(
+      "/api/game/delete",
       () => true,
+      { game_id: this._id },
     );
   }
 
@@ -101,7 +102,7 @@ export class Game {
 
   public saveNewName(newName: string): Promise<Game> {
     return NetworkHelper.update(
-      `/api/game/update?game_id=${this._id}`,
+      "/api/game/update",
       Game.fromJson,
       {
         game_id: this._id,

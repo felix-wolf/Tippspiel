@@ -39,17 +39,29 @@ def test_game_create_and_join(app, base_data):
         other_user = User.get_by_id(base_data["second_user"].id)
         owner_user = User.get_by_id(base_data["user"].id)
 
-    with app.test_request_context("/api/game/join", query_string={"game_id": game_id, "pw": "wrong"}):
+    with app.test_request_context(
+        "/api/game/join",
+        method="POST",
+        json={"game_id": game_id, "password": "wrong"},
+    ):
         login_user(other_user)
         bad_join = app.make_response(join_game())
         assert bad_join.status_code == 400
 
-    with app.test_request_context("/api/game/join", query_string={"game_id": game_id, "pw": "123"}):
+    with app.test_request_context(
+        "/api/game/join",
+        method="POST",
+        json={"game_id": game_id, "password": "123"},
+    ):
         login_user(owner_user)
         join = app.make_response(join_game())
         assert join.status_code == 400
 
-    with app.test_request_context("/api/game/join", query_string={"game_id": game_id, "pw": "123"}):
+    with app.test_request_context(
+        "/api/game/join",
+        method="POST",
+        json={"game_id": game_id, "password": "123"},
+    ):
         login_user(other_user)
         join = app.make_response(join_game())
         assert join.status_code == 200
@@ -71,9 +83,9 @@ def test_join_game_upgrades_legacy_password_hash(app, base_data):
         )
         assert success
 
-    join = other_client.get(
+    join = other_client.post(
         "/api/game/join",
-        query_string={"game_id": game_id, "pw": "123"},
+        json={"game_id": game_id, "password": "123"},
     )
     assert join.status_code == 200
 
@@ -97,7 +109,8 @@ def test_join_game_ignores_spoofed_user_id(app, base_data):
 
     with app.test_request_context(
         "/api/game/join",
-        query_string={"user_id": base_data["user"].id, "game_id": game_id, "pw": "123"},
+        method="POST",
+        json={"user_id": base_data["user"].id, "game_id": game_id, "password": "123"},
     ):
         login_user(other_user)
         join = app.make_response(join_game())
@@ -122,5 +135,5 @@ def test_game_update_and_delete(app, base_data):
     updated = json.loads(update_resp.data)
     assert updated["name"] == "New Name"
 
-    delete_resp = client.get("/api/game/delete", query_string={"game_id": game_id})
+    delete_resp = client.delete("/api/game/delete", json={"game_id": game_id})
     assert delete_resp.status_code == 200

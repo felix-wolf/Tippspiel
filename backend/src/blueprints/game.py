@@ -61,11 +61,11 @@ def handle_events_import_url():
                 return error, 500
             return [e.to_dict() for e in results]
 
-@game_blueprint.route("/api/game/join")
+@game_blueprint.route("/api/game/join", methods=["POST"])
 @login_required
 def join_game():
-    game_id = request.args.get("game_id")
-    pw = request.args.get("pw")
+    game_id = request.get_json().get("game_id")
+    pw = request.get_json().get("password")
     user_id = current_user.get_id()
     game = Game.get_by_id(game_id)
     if not game:
@@ -84,10 +84,10 @@ def join_game():
             return "Beitreten nicht erfolgreich!", 400
     return "Tippspiel oder spieler konnte nicht gefunden werden!", 400
 
-@game_blueprint.route("/api/game/delete", methods=['GET'])
+@game_blueprint.route("/api/game/delete", methods=['DELETE'])
 @login_required
 def delete_game():
-    game_id = request.args.get("game_id")
+    game_id = request.get_json().get("game_id")
     game = Game.get_by_id(game_id)
     if game:
         if game.creator.id != current_user.get_id():
