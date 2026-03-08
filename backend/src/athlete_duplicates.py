@@ -28,14 +28,16 @@ def athlete_tokens(athlete: Athlete):
     }
 
 
-def duplicate_score(left: Athlete, right: Athlete):
+def duplicate_score(left: Athlete, right: Athlete, allow_unknown_gender=False):
     if left.id == right.id:
         return 0.0
     if left.country_code != right.country_code:
         return 0.0
     if left.discipline != right.discipline:
         return 0.0
-    if left.gender != right.gender:
+    if left.gender != right.gender and not (
+        allow_unknown_gender and "?" in {left.gender, right.gender}
+    ):
         return 0.0
 
     left_tokens = athlete_tokens(left)
@@ -67,6 +69,30 @@ def duplicate_score(left: Athlete, right: Athlete):
     if same_first_token and same_last_token and full_ratio >= 0.84:
         return max(full_ratio, token_overlap)
     return 0.0
+
+
+def resolve_existing_athlete(athlete: Athlete, existing_athletes=None, min_score=0.95):
+    candidates = existing_athletes if existing_athletes is not None else Athlete.get_all()
+    exact_match = next((candidate for candidate in candidates if candidate.id == athlete.id), None)
+    if exact_match is not None:
+        return exact_match, 1.0
+
+    best_match = None
+    best_score = 0.0
+    allow_unknown_gender = "?" in {athlete.gender}
+    for candidate in candidates:
+        score = duplicate_score(
+            athlete,
+            candidate,
+            allow_unknown_gender=allow_unknown_gender,
+        )
+        if score > best_score:
+            best_match = candidate
+            best_score = score
+
+    if best_match is None or best_score < min_score:
+        return None, best_score
+    return best_match, best_score
 
 
 def find_duplicate_candidates(min_score=0.84):

@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import logging
 
 from src.database import db_manager
 from src.models.base_model import BaseModel
@@ -7,12 +8,17 @@ from src.models.event import Event
 from src.models.result import Result
 from src.models.athlete import Athlete
 from src.models.country import Country
+from src.athlete_duplicates import resolve_existing_athlete
 import src.utils as utils
 import src.chrome_manager as chrome_manager
 from selenium.webdriver.common.by import By
 from selenium.common import NoSuchElementException
 from datetime import datetime
 import pandas as pd
+from flask import current_app, has_app_context
+
+
+logger = logging.getLogger(__name__)
 
 
 class Discipline(BaseModel):
@@ -109,6 +115,12 @@ class Discipline(BaseModel):
         disciplines = [Discipline.from_dict(d, event_type) for d, event_type in zip(disciplines, event_types)]
         return disciplines
 
+    @staticmethod
+    def _logger():
+        if has_app_context():
+            return current_app.logger
+        return logger
+
 class Biathlon(Discipline):
 
     def process_events_url(self, url, game_id):
@@ -191,27 +203,13 @@ class Biathlon(Discipline):
             if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
                 print("Webseite enthält nicht die erwarteten Daten")
                 return [], "Webseite enthält nicht die erwarteten Daten"
-            results = []
             athletes = []
+            result_rows = []
             for _, row in df.iterrows():
-                place = row["Rank"]
                 last_name = row["Family\xa0Name"]
                 first_name = row["Given Name"]
                 country_code = row["Nation"]
-                time = row.get("Total Time") if pd.notna(row.get("Total Time")) else None
-                behind = row.get("Behind") if pd.notna(row.get("Behind")) else None
-
                 a_id = utils.generate_id([last_name, first_name, country_code])
-                a_name = " ".join([first_name, last_name])
-                r = Result(
-                    event_id=event.id,
-                    place=utils.validate_int(place),
-                    object_id=a_id,
-                    object_name=a_name,
-                    time=time,
-                    behind=behind
-                    )
-                results.append(r)
                 a = Athlete(
                     athlete_id=a_id,
                     first_name=first_name,
@@ -221,7 +219,26 @@ class Biathlon(Discipline):
                     discipline="biathlon"
                 )
                 athletes.append(a)
-            self.process_athletes(athletes)
+                result_rows.append(
+                    {
+                        "place": utils.validate_int(row["Rank"]),
+                        "time": row.get("Total Time") if pd.notna(row.get("Total Time")) else None,
+                        "behind": row.get("Behind") if pd.notna(row.get("Behind")) else None,
+                    }
+                )
+            resolved_athletes = self.process_athletes(athletes)
+            results = []
+            for row_data, athlete in zip(result_rows, resolved_athletes):
+                results.append(
+                    Result(
+                        event_id=event.id,
+                        place=row_data["place"],
+                        object_id=athlete.id,
+                        object_name=f"{athlete.first_name} {athlete.last_name}",
+                        time=row_data["time"],
+                        behind=row_data["behind"],
+                    )
+                )
             return results, None
 
         else:
@@ -229,21 +246,52 @@ class Biathlon(Discipline):
 
     def process_athletes(self, athletes: list[Athlete]):
         """
-        Saves all athletes (existing as well as new) to database.
-        Gender is inferred from other competing, known athletes.
+        Saves all athletes (existing as well as new) to database and
+        reuses existing IDs for strong duplicate matches.
         """
-        # find gender
-        first_existing_althlete = None
+        known_athletes = Athlete.get_all()
+        inferred_gender = None
+
         for a in athletes:
-            athlete_from_db = Athlete.get_by_id(a.id)
-            if athlete_from_db is not None:
-                first_existing_althlete = athlete_from_db
+            athlete_from_db, _ = resolve_existing_athlete(a, existing_athletes=known_athletes)
+            if athlete_from_db is not None and athlete_from_db.gender != "?":
+                inferred_gender = athlete_from_db.gender
                 break
 
-        # save gender to athlete object, write athlete into db
+        resolved_athletes = []
         for a in athletes:
-            a.gender = first_existing_althlete.gender
+            if inferred_gender is not None and a.gender == "?":
+                a.gender = inferred_gender
+
+            athlete_from_db, _ = resolve_existing_athlete(a, existing_athletes=known_athletes)
+            if athlete_from_db is not None:
+                Discipline._logger().info(
+                    "Resolved scraped athlete '%s %s' (%s/%s) to existing athlete '%s %s' [%s].",
+                    a.first_name,
+                    a.last_name,
+                    a.country_code,
+                    a.discipline,
+                    athlete_from_db.first_name,
+                    athlete_from_db.last_name,
+                    athlete_from_db.id,
+                )
+                resolved_athletes.append(athlete_from_db)
+                continue
+
             a.save_to_db()
+            saved_athlete = Athlete.get_by_id(a.id) or a
+            Discipline._logger().info(
+                "Created new athlete '%s %s' [%s] for %s/%s.",
+                saved_athlete.first_name,
+                saved_athlete.last_name,
+                saved_athlete.id,
+                saved_athlete.country_code,
+                saved_athlete.discipline,
+            )
+            known_athletes.append(saved_athlete)
+            resolved_athletes.append(saved_athlete)
+
+        return resolved_athletes
 
 
     def process_countries(self, countries):

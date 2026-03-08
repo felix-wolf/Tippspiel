@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from flask import Flask
 from flask_login import *
 from src.models.user import User
@@ -39,6 +40,7 @@ def create_app(env):
         print(err)
         sys.exit()
     app.secret_key = app.config["SECRET_KEY"]
+    app.logger.setLevel(logging.INFO)
     # Initialize firebase once; skip in tests if credentials are unavailable.
     if not firebase_admin._apps:
         try:
