@@ -63,10 +63,8 @@ export function BettingGameList({
   const onJoin = useCallback(
     (game_id: string, password?: string): Promise<boolean> => {
       return new Promise((resolve, reject) => {
-        let pw = "";
-        if (password) pw = `&pw=${password}`;
         if (user?.id)
-          Game.join(user.id, game_id, pw)
+          Game.join(user.id, game_id, password ?? "")
             .then((game) => {
               useNavigate(SiteRoutes.Game, { game_id: game.id });
               resolve(true);

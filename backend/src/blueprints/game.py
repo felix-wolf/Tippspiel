@@ -2,7 +2,7 @@ from flask import Blueprint, request, current_app
 from src.models.game import Game
 from src.models.user import User
 from src.models.discipline import Discipline
-from src.utils import hash_password
+from src.utils import hash_game_password
 
 from flask_login import *
 
@@ -31,7 +31,7 @@ def handle_game_request():
             return "Missing parameters", 400
         pw_hash = None
         if pw:
-            pw_hash = hash_password(pw, current_app.config["SALT"])
+            pw_hash = hash_game_password(pw)
         success, game_id = Game.create(user_id=current_user_id, name=name, pw_hash=pw_hash, discipline_name=discipline)
         if success:
             return Game.get_by_id(game_id).to_dict()
@@ -68,7 +68,9 @@ def join_game():
     game_id = request.args.get("game_id")
     pw = request.args.get("pw")
     game = Game.get_by_id(game_id)
-    if game.pw_hash and hash_password(pw, current_app.config["SALT"]) != game.pw_hash:
+    if not game:
+        return "Tippspiel oder spieler konnte nicht gefunden werden!", 400
+    if not game.verify_password(pw, current_app.config["SALT"]):
         return "Passwort falsch", 400
     user = User.get_by_id(user_id)
     if game and user:

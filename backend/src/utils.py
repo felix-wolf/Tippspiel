@@ -16,14 +16,22 @@ def hash_user_password(pw):
     return generate_password_hash(pw, method="pbkdf2:sha256:600000")
 
 
+def hash_game_password(pw):
+    return generate_password_hash(pw, method="pbkdf2:sha256:600000")
+
+
 def password_hash_needs_upgrade(stored_hash):
     return not (stored_hash.startswith("pbkdf2:") or stored_hash.startswith("scrypt:"))
 
 
-def verify_user_password(pw, stored_hash, salt):
+def verify_password(pw, stored_hash, salt):
     if password_hash_needs_upgrade(stored_hash):
         return hmac.compare_digest(hash_password(pw, salt), stored_hash)
     return check_password_hash(stored_hash, pw)
+
+
+def verify_user_password(pw, stored_hash, salt):
+    return verify_password(pw, stored_hash, salt)
 
 
 def generateRandomHexColor():

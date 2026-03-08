@@ -1,7 +1,7 @@
 import json
-from src.utils import hash_password
 from src.models.user import User
 from src.models.game import Game
+from src.utils import hash_password, password_hash_needs_upgrade
 
 
 def test_game_get_all(client, base_data):
@@ -18,6 +18,10 @@ def test_game_create_and_join(client, app, base_data):
     assert response.status_code == 200
     created = json.loads(response.data)
     game_id = created["id"]
+    with app.app_context():
+        created_game = Game.get_by_id(game_id)
+        assert created_game is not None
+        assert not password_hash_needs_upgrade(created_game.pw_hash)
 
     # wrong password
     bad_join = client.get("/api/game/join", query_string={"user_id": base_data["second_user"].id, "game_id": game_id, "pw": "wrong"})
@@ -33,6 +37,30 @@ def test_game_create_and_join(client, app, base_data):
 
     joined = json.loads(join.data)
     assert any(p["id"] == base_data["user"].id for p in joined["players"])
+
+
+def test_join_game_upgrades_legacy_password_hash(client, app, base_data):
+    with app.app_context():
+        legacy_hash = hash_password("123", app.config["SALT"])
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Legacy Protected Game",
+            pw_hash=legacy_hash,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+    join = client.get(
+        "/api/game/join",
+        query_string={"user_id": base_data["second_user"].id, "game_id": game_id, "pw": "123"},
+    )
+    assert join.status_code == 200
+
+    with app.app_context():
+        upgraded_game = Game.get_by_id(game_id)
+        assert upgraded_game is not None
+        assert upgraded_game.pw_hash != legacy_hash
+        assert not password_hash_needs_upgrade(upgraded_game.pw_hash)
 
 
 def test_game_update_and_delete(client, app, base_data):

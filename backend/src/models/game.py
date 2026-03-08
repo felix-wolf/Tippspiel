@@ -32,6 +32,23 @@ class Game(BaseModel):
             self.players.append(player)
         return success
 
+    def update_password_hash(self, pw_hash):
+        sql = f"UPDATE {db_manager.TABLE_GAMES} SET pw_hash = ? WHERE id = ?"
+        success = db_manager.execute(sql, [pw_hash, self.id])
+        if success:
+            self.pw_hash = pw_hash
+        return success
+
+    def verify_password(self, pw, salt):
+        if self.pw_hash is None:
+            return True
+        if pw is None:
+            return False
+        is_valid = utils.verify_password(pw, self.pw_hash, salt)
+        if is_valid and utils.password_hash_needs_upgrade(self.pw_hash):
+            self.update_password_hash(utils.hash_game_password(pw))
+        return is_valid
+
     def to_dict(self):
         return {
             "id": self.id,
