@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from src.models.event import Event
 from src.models.game import Game
 import pytz
+from src.blueprints.api_response import error_response
 
 notification_blueprint = Blueprint('notification', __name__)
 
@@ -12,12 +13,12 @@ notification_blueprint = Blueprint('notification', __name__)
 @login_required
 def register_device():
     if request.method == "GET":
-        return "not supported", 400
+        return error_response("Diese Methode wird nicht unterstützt.", 400)
     if request.method == "POST":
         token = request.get_json().get("token")
         platform = request.get_json().get("platform")
         if any([x is None for x in [token, platform]]):
-            return "missing param", 400
+            return error_response("Erforderliche Angaben fehlen.", 400)
 
         user_id = current_user.get_id()
         NotificationHelper.save_to_db(token=token, user_id=user_id, platform=platform)
@@ -29,12 +30,12 @@ def send_test_notification():
     if request.method == "POST":
         platform = request.get_json().get("platform")
         if platform is None:
-            return "missing param", 400
+            return error_response("Erforderliche Angaben fehlen.", 400)
 
         user_id = current_user.get_id()
         response = NotificationHelper.get_token(user_id=user_id, platform=platform)
         if not response:
-            return "No token found", 404
+            return error_response("Für dieses Gerät wurden keine Benachrichtigungen eingerichtet.", 404)
         NotificationHelper.send_push_notification(response['device_token'], "Das hier ist ein Test", "Test123")
         return {'token': response }
 
@@ -72,7 +73,7 @@ def settings():
         platform = request.args.get("platform")
         settings = NotificationHelper.get_notification_settings_for_user(user_id=user_id, platform=platform)
         if settings is None:
-            return "Could not find settings for user", 404
+            return error_response("Es wurden keine Benachrichtigungseinstellungen gefunden.", 404)
         return settings
     if request.method == "POST":
         platform = request.get_json().get("platform")
@@ -80,5 +81,5 @@ def settings():
         value = request.get_json().get("value")
         success = NotificationHelper.save_setting(user_id=user_id, platform=platform, setting=setting, value=bool(int(value)))
         if not success:
-            return "User has not yet registered a device", 400
+            return error_response("Für dieses Gerät wurden noch keine Benachrichtigungen eingerichtet.", 400)
     return {"Code": 200}

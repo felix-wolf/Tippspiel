@@ -39,12 +39,14 @@ export function syncCurrentUserStorage(current: User | null): void {
 
 export function mapLoginError(error: LoginError): string {
   switch (error.status) {
+    case 401:
+      return error.text ?? "Benutzername oder Passwort ist falsch.";
+    case 409:
+      return error.text ?? "Dieser Benutzername ist bereits vergeben.";
     case 403:
-      return "Fehler. Backend kaputt?";
-    case 404:
-      return error.text ?? "Ein unbekannter Fehler ist aufgetreten!";
+      return error.text ?? "Du bist für diese Aktion nicht berechtigt.";
     default:
-      return "Ein unbekannter Fehler ist aufgetreten!";
+      return error.text ?? "Es ist ein unbekannter Fehler aufgetreten.";
   }
 }
 

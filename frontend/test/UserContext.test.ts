@@ -73,12 +73,15 @@ describe("UserContext auth helpers", () => {
   });
 
   it("maps backend login errors to user-facing messages", () => {
-    expect(mapLoginError({ status: 403 })).toBe("Fehler. Backend kaputt?");
-    expect(mapLoginError({ status: 404, text: "Name oder Password falsch!" })).toBe(
-      "Name oder Password falsch!",
+    expect(mapLoginError({ status: 403 })).toBe("Du bist für diese Aktion nicht berechtigt.");
+    expect(mapLoginError({ status: 401, text: "Benutzername oder Passwort ist falsch." })).toBe(
+      "Benutzername oder Passwort ist falsch.",
+    );
+    expect(mapLoginError({ status: 409, text: "Dieser Benutzername ist bereits vergeben." })).toBe(
+      "Dieser Benutzername ist bereits vergeben.",
     );
     expect(mapLoginError({ status: 500 })).toBe(
-      "Ein unbekannter Fehler ist aufgetreten!",
+      "Es ist ein unbekannter Fehler aufgetreten.",
     );
   });
 });

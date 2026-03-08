@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from src.models.user import User
 from src.models.game import Game
 from flask_login import *
+from src.blueprints.api_response import error_response
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -17,14 +18,14 @@ def handle_user_request():
         user_id = current_user.get_id()
         if user_id:
             return User.get_by_id(user_id).to_dict()
-        return "No user logged in", 400
+        return error_response("Es ist kein Benutzer angemeldet.", 400)
     elif request.method == "POST":
         color = request.get_json().get("color", None)
         if not color:
-            return "Missing parameters", 400
+            return error_response("Erforderliche Angaben fehlen.", 400)
         user_id = current_user.get_id()
         user = User.get_by_id(user_id)
         success = user.update_color(color)
         if success:
             return user.to_dict()
-        return "Fehler beim Speichern der Farbe", 500
+        return error_response("Die Farbe konnte nicht gespeichert werden.", 500)

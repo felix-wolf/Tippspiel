@@ -34,4 +34,5 @@ def test_login_endpoint_success(client, app):
 
 def test_login_endpoint_invalid_credentials(client):
     response = client.post("/api/login", json={"name": "invalid", "password": "pw"})
-    assert response.status_code == 404
+    assert response.status_code == 401
+    assert response.get_json()["error"] == "Benutzername oder Passwort ist falsch."

@@ -7,6 +7,7 @@ from src.models.result import Result
 from flask_login import *
 from datetime import datetime, timedelta
 import pytz
+from src.blueprints.api_response import error_response
 
 result_blueprint = Blueprint('result', __name__)
 
@@ -21,17 +22,17 @@ def check_results():
         if len(events) == 0:
             continue
         for event in events:
-            results = get_results(event.url, None, event)
+            results, error_message, status_code = get_results(event.url, None, event)
             if not results:
-                return "Fehler beim Verarbeiten der Ergebnisse", 500
+                return error_response(error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500)
 
             success, error = event.process_results(results)
             if success:
                 send_notification(game, event)
                 return Event.get_by_id(event.id).to_dict()
             else:
-                return error, 500
-    return "checked", 200
+                return error_response(error, 500)
+    return {"status": "checked"}, 200
 
 
 def get_results(url: str, results_json: list, event: Event):
@@ -39,27 +40,22 @@ def get_results(url: str, results_json: list, event: Event):
         # check if discipline allows url updates and if url matches result_url
         discipline = Discipline.get_by_id(event.event_type.discipline_id)
         if not discipline:
-            return "Fehler...", 500
+            return None, "Die Ergebnisse konnten nicht verarbeitet werden.", 500
         if not discipline.validate_result_url(url):
-            return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
+            return None, "Die Ergebnis-URL ist für diese Disziplin ungültig.", 400
         results, error = discipline.process_results_url(url, event)
         if error:
-            return None
+            return None, error, 500
     else:
         results = [Result(event.id, j['place'], j['id']) for j in results_json]
-    return results
+    return results, None, None
 
 
 def process_url(event, url, game):
     # check if discipline allows url updates and if url matches result_url
-    discipline = Discipline.get_by_id(event.event_type.discipline_id)
-    if not discipline:
-        return "Fehler...", 500
-    if not discipline.validate_result_url(url):
-        return "Disziplin erlaubt keine URL Ergebnisse / URL falsch", 400
-    results, error = discipline.process_results_url(url, event)
-    if error or not results:
-        return error, 500
+    results, error_message, status_code = get_results(url, None, event)
+    if error_message or not results:
+        return error_response(error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500)
 
     success, error = event.process_results(results)
     if success:
@@ -72,7 +68,7 @@ def process_url(event, url, game):
             )
         return Event.get_by_id(event.id).to_dict()
     else:
-        return error, 500
+        return error_response(error, 500)
 
 def send_notification(game, event):
     result = NotificationHelper.get_tokens_for_users([player.id for player in game.players], check_results=1)
@@ -90,23 +86,23 @@ def process_results():
         event_id = request.get_json().get("event_id", None)
         event = Event.get_by_id(event_id)
         if not event:
-            return "Event nicht gefunden", 400
+            return error_response("Das Event wurde nicht gefunden.", 404)
         game = Game.get_by_id(event.game_id)
         if not game:
-            return "Game zu Event nicht gefunden", 500
+            return error_response("Das zugehörige Tippspiel wurde nicht gefunden.", 500)
         # only game owner can submit results
         if game.creator.id != current_user.get_id():
-            return "Not authorized", 403
+            return error_response("Du bist für diese Aktion nicht berechtigt.", 403)
         url = request.get_json().get("url", None)
         results_json = request.get_json().get("results", None)
 
-        results = get_results(url, results_json, event)
+        results, error_message, status_code = get_results(url, results_json, event)
         if not results:
-            return "Fehler beim Verarbeiten der Ergebnisse", 500
+            return error_response(error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500)
 
         success, error = event.process_results(results)
         if success:
             send_notification(game, event)
             return Event.get_by_id(event_id).to_dict()
         else:
-            return error, 500
+            return error_response(error, 500)

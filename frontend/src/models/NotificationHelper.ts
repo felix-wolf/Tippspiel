@@ -14,7 +14,7 @@ export class NotificationHelper {
       try {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
-          console.log("NotificationHelper permission granted.");
+          console.log("Benachrichtigungsberechtigung erteilt.");
           getToken(messaging, {
             vapidKey:
               "BJrEvjNP4CKHuxmUsvLIQnCTD2TveRozjOgxfyESQonaZJfMcChWX67OFlJivbiqCD9Z2bIvgFQvLeUnT12zcZE",
@@ -34,26 +34,26 @@ export class NotificationHelper {
                   .then(() => resolve())
                   .catch(() =>
                     reject(
-                      "Error communicating with backend to store GCM token.",
+                      "Das Gerät konnte nicht für Benachrichtigungen registriert werden.",
                     ),
                   );
               } else {
                 // Show permission request UI
                 console.log(
-                  "No registration token available. Request permission to generate one.",
+                  "Es konnte kein Benachrichtigungs-Token erstellt werden.",
                 );
                 reject(
-                  "No registration token available. Request permission to generate one.",
+                  "Es konnte kein Benachrichtigungs-Token erstellt werden.",
                 );
               }
             })
             .catch((err) => {
-              console.log("An error occurred while retrieving token. ", err);
-              reject("An error occurred while retrieving token. " + err.text);
+              console.log("Fehler beim Laden des Benachrichtigungs-Tokens.", err);
+              reject("Das Benachrichtigungs-Token konnte nicht geladen werden.");
             });
         } else {
-          console.log("NotificationHelper permission denied.");
-          reject("NotificationHelper permission denied.");
+          console.log("Benachrichtigungsberechtigung verweigert.");
+          reject("Benachrichtigungen wurden nicht erlaubt.");
         }
       } catch (error) {
         reject(error);

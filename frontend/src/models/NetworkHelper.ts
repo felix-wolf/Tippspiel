@@ -1,6 +1,14 @@
 type status = {
   status: string;
 };
+
+type NetworkError = {
+  status: number;
+  text: string;
+  data?: unknown;
+  cause?: unknown;
+};
+
 export class NetworkHelper {
   public static getStatus(): Promise<status> {
     const builder = (object: any): status => {
@@ -26,9 +34,9 @@ export class NetworkHelper {
   public static post<Type>(
     url: string,
     builder: (object: any) => Type,
-    body: Object,
+    body: unknown,
   ): Promise<Type> {
-    const b: Object = {
+    const b: RequestInit = {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -42,9 +50,9 @@ export class NetworkHelper {
   public static update<Type>(
     url: string,
     builder: (object: any) => Type,
-    body: Object,
+    body: unknown,
   ): Promise<Type> {
-    const b: Object = {
+    const b: RequestInit = {
       method: "PUT",
       headers: {
         Accept: "application/json",
@@ -58,9 +66,9 @@ export class NetworkHelper {
   public static delete<Type>(
     url: string,
     builder: (object: any) => Type,
-    body: Object,
+    body: unknown,
   ): Promise<Type> {
-    const b: Object = {
+    const b: RequestInit = {
       method: "DELETE",
       headers: {
         Accept: "application/json",
@@ -81,25 +89,83 @@ export class NetworkHelper {
   private static executeFetch<Type>(
     url: string,
     builder: (object: any) => Type,
-    body?: Object,
+    init?: RequestInit,
   ): Promise<Type> {
-    return new Promise((resolve, reject) => {
-      fetch(url, body).then((res) => {
-        if (res.status == 200) {
-          res
-            .json()
-            .then((object) => {
-              resolve(builder(object));
-            })
-            .catch((error) => {
-              console.log("no or faulty json", error, url, res);
-            });
-        } else {
-          res.text().then((error_text) => {
-            reject({ status: res.status, text: error_text });
-          });
+    return fetch(url, init)
+      .then(async (res) => {
+        const rawText = await res.text();
+        const parsedBody = this.tryParseJson(rawText);
+
+        if (res.ok) {
+          if (rawText.trim() === "") {
+            return builder(undefined);
+          }
+          if (parsedBody !== undefined) {
+            return builder(parsedBody);
+          }
+          throw this.createError(
+            res.status,
+            "Die Serverantwort enthält kein gültiges JSON.",
+            rawText,
+          );
         }
+
+        throw this.createError(
+          res.status,
+          this.extractErrorText(parsedBody, rawText, res.statusText),
+          parsedBody,
+        );
+      })
+      .catch((error: NetworkError | Error) => {
+        if (this.isNetworkError(error)) {
+          throw error;
+        }
+        throw this.createError(0, "Die Anfrage an den Server ist fehlgeschlagen.", undefined, error);
       });
-    });
+  }
+
+  private static tryParseJson(rawText: string): unknown | undefined {
+    if (rawText.trim() === "") {
+      return undefined;
+    }
+    try {
+      return JSON.parse(rawText);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private static extractErrorText(
+    parsedBody: unknown,
+    rawText: string,
+    fallback: string,
+  ): string {
+    if (parsedBody && typeof parsedBody === "object") {
+      const errorMessage = (parsedBody as Record<string, unknown>).error;
+      const message = (parsedBody as Record<string, unknown>).message;
+      if (typeof errorMessage === "string") {
+        return errorMessage;
+      }
+      if (typeof message === "string") {
+        return message;
+      }
+    }
+    if (rawText.trim() !== "") {
+      return rawText;
+    }
+    return fallback || "Die Anfrage konnte nicht verarbeitet werden.";
+  }
+
+  private static createError(
+    status: number,
+    text: string,
+    data?: unknown,
+    cause?: unknown,
+  ): NetworkError {
+    return { status, text, data, cause };
+  }
+
+  private static isNetworkError(error: unknown): error is NetworkError {
+    return !!error && typeof error === "object" && "status" in error && "text" in error;
   }
 }
