@@ -20,5 +20,8 @@ sudo cp /home/felix/tippspiel/backend/tippspiel_backend.service /etc/systemd/sys
 # copy cron job file
 sudo cp /home/felix/tippspiel/backend/run_tippspiel_backend /etc/cron.d/
 
+# reload systemd and cron
+sudo systemctl daemon-reload
+
 # start systemd service
 sudo systemctl start tippspiel_backend
