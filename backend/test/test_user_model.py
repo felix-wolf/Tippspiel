@@ -1,5 +1,5 @@
 from src.models.user import User
-from src.utils import hash_password
+from src.utils import hash_password, password_hash_needs_upgrade
 
 
 def test_user_create_and_get(app):
@@ -28,3 +28,12 @@ def test_user_credentials_lookup(base_data, app):
         user = User.get_by_credentials("tester", pw_hash)
         assert user is not None
         assert user.name == "tester"
+
+
+def test_user_authenticate_upgrades_legacy_hash(base_data, app):
+    with app.app_context():
+        user = User.authenticate("tester", "pw", app.config["SALT"])
+        assert user is not None
+        upgraded = User.get_by_id(base_data["user"].id)
+        assert upgraded is not None
+        assert not password_hash_needs_upgrade(upgraded.pw_hash)

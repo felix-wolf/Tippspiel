@@ -39,6 +39,13 @@ class User(BaseModel):
             self.color = color
         return success
 
+    def update_password_hash(self, pw_hash):
+        sql = f"UPDATE {db_manager.TABLE_USERS} SET pw_hash = ? WHERE id = ?"
+        success = db_manager.execute(sql, [pw_hash, self.id])
+        if success:
+            self.pw_hash = pw_hash
+        return success
+
     @staticmethod
     def from_dict(user_dict):
         if user_dict is None:
@@ -84,6 +91,15 @@ class User(BaseModel):
         return [User.from_dict(u) for u in res]
 
     @staticmethod
+    def get_by_name(name):
+        sql = f"""
+                SELECT * FROM {db_manager.TABLE_USERS} a
+                WHERE a.name = ?
+                """
+        res = db_manager.query_one(sql, [name])
+        return User.from_dict(res)
+
+    @staticmethod
     def get_by_credentials(name, pw_hash):
         sql = f"""
                 SELECT * FROM {db_manager.TABLE_USERS} a
@@ -93,6 +109,17 @@ class User(BaseModel):
         if not res:
             return None
         return User.from_dict(res)
+
+    @staticmethod
+    def authenticate(name, password, salt):
+        user = User.get_by_name(name)
+        if user is None:
+            return None
+        if not utils.verify_user_password(password, user.pw_hash, salt):
+            return None
+        if utils.password_hash_needs_upgrade(user.pw_hash):
+            user.update_password_hash(utils.hash_user_password(password))
+        return user
 
     @staticmethod
     def does_exist(name, pw_hash):

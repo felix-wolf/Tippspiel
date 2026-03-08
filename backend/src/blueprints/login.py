@@ -1,7 +1,7 @@
 from flask import Blueprint, request, current_app
 from src.models.user import User
 from flask_login import *
-from src.utils import hash_password
+from src.utils import hash_user_password
 
 login_blueprint = Blueprint('login', __name__)
 
@@ -12,8 +12,7 @@ def login():
         pw = request.get_json().get("password")
         if not name or not pw:
             return "Name und/oder Passwort fehlt!", 400
-        pw_hash = hash_password(pw, current_app.config["SALT"])
-        user_object = User.get_by_credentials(name, pw_hash)
+        user_object = User.authenticate(name, pw, current_app.config["SALT"])
         if not user_object:
             return "Name oder Password falsch!", 404
         login_user(user_object, remember=True)
@@ -25,7 +24,7 @@ def register_user():
     if request.method == "POST":
         name = request.get_json().get("name")
         pw = request.get_json().get("password")
-        pw_hash = hash_password(pw, current_app.config["SALT"])
+        pw_hash = hash_user_password(pw)
         success, user_id = User.create(name, pw_hash)
         if success:
             return User.get_by_id(user_id).to_dict()

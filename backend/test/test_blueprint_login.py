@@ -1,7 +1,7 @@
 import json
 
-from src.utils import hash_password
 from src.models.user import User
+from src.utils import hash_password, password_hash_needs_upgrade
 
 
 def test_register_endpoint_creates_user(client, app):
@@ -10,16 +10,26 @@ def test_register_endpoint_creates_user(client, app):
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data["name"] == "newuser"
+    with app.app_context():
+        user = User.get_by_name("newuser")
+        assert user is not None
+        assert not password_hash_needs_upgrade(user.pw_hash)
 
 
 def test_login_endpoint_success(client, app):
     with app.app_context():
-        pw_hash = hash_password("pw", app.config["SALT"])
+        legacy_hash = hash_password("pw", app.config["SALT"])
+        pw_hash = legacy_hash
         User.create("loginuser", pw_hash)
     response = client.post("/api/login", json={"name": "loginuser", "password": "pw"})
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data["name"] == "loginuser"
+    with app.app_context():
+        upgraded = User.get_by_name("loginuser")
+        assert upgraded is not None
+        assert upgraded.pw_hash != legacy_hash
+        assert not password_hash_needs_upgrade(upgraded.pw_hash)
 
 
 def test_login_endpoint_invalid_credentials(client):
