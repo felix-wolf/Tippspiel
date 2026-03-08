@@ -6,6 +6,7 @@ backend/database/tippspiel.db
 backend/firebase_backend_admin_cred.json
 backend/database/*.db
 backend/config*.py
+!backend/config.py
 backend/src/resources/chromedriver
 backend/.env
 backend/.env.*
