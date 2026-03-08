@@ -1,7 +1,6 @@
 import { NetworkHelper } from "./NetworkHelper.ts";
 import { getToken } from "firebase/messaging";
 import { messaging } from "../main.tsx";
-import { User } from "./user/User.ts";
 
 type settingCategory = "results" | "reminder";
 export type NotificationSettings = {
@@ -10,7 +9,7 @@ export type NotificationSettings = {
 };
 
 export class NotificationHelper {
-  public static registerDevice(user: User | undefined): Promise<void> {
+  public static registerDevice(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         const permission = await Notification.requestPermission();
@@ -29,7 +28,6 @@ export class NotificationHelper {
                   () => {},
                   {
                     token: currentToken,
-                    user_id: user?.id,
                     platform: navigator.userAgent,
                   },
                 )
@@ -63,11 +61,9 @@ export class NotificationHelper {
     });
   }
 
-  public static getSettings(
-    user: User | undefined,
-  ): Promise<NotificationSettings> {
+  public static getSettings(): Promise<NotificationSettings> {
     return NetworkHelper.fetchAll(
-      `/api/notification/settings?user_id=${user?.id}&platform=${navigator.userAgent}`,
+      `/api/notification/settings?platform=${navigator.userAgent}`,
       (setting): NotificationSettings => {
         return {
           reminder: !!setting.reminder_notification,
@@ -77,20 +73,17 @@ export class NotificationHelper {
     );
   }
 
-  public static sendTestNotification(user: User | undefined): Promise<void> {
+  public static sendTestNotification(): Promise<void> {
     return NetworkHelper.post("/api/notification/test", () => {}, {
-      user_id: user?.id,
       platform: navigator.userAgent,
     });
   }
 
   public static saveNotificationSetting(
-    user: User | undefined,
     setting: settingCategory,
     value: number,
   ): Promise<void> {
     return NetworkHelper.post("/api/notification/settings", () => {}, {
-      user_id: user?.id,
       platform: navigator.userAgent,
       setting: setting,
       value: value,

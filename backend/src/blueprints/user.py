@@ -6,6 +6,7 @@ from flask_login import *
 user_blueprint = Blueprint('user', __name__)
 
 @user_blueprint.route('/api/user', methods=["GET", "POST"])
+@login_required
 def handle_user_request():
     if request.method == "GET":
         game_id = request.args.get("game_id", None)
@@ -18,10 +19,10 @@ def handle_user_request():
             return User.get_by_id(user_id).to_dict()
         return "No user logged in", 400
     elif request.method == "POST":
-        user_id = request.get_json().get("user_id", None)
         color = request.get_json().get("color", None)
-        if not user_id or not color:
+        if not color:
             return "Missing parameters", 400
+        user_id = current_user.get_id()
         user = User.get_by_id(user_id)
         success = user.update_color(color)
         if success:

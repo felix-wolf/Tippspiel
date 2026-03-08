@@ -4,7 +4,7 @@ import json
 def test_register_device(client, base_data):
     resp = client.post(
         "/api/notification/register_device",
-        json={"token": "tok123", "user_id": base_data["user"].id, "platform": "ios"},
+        json={"token": "tok123", "platform": "ios"},
     )
     assert resp.status_code == 200
     payload = json.loads(resp.data)
@@ -16,7 +16,6 @@ def test_notification_settings_roundtrip(client, base_data):
     bad_set_resp = client.post(
         "/api/notification/settings",
         json={
-            "user_id": base_data["user"].id,
             "platform": "ios",
             "setting": "results",
             "value": 1,
@@ -26,14 +25,13 @@ def test_notification_settings_roundtrip(client, base_data):
     # register device
     reg_resp = client.post(
         "/api/notification/register_device",
-        json={"token": "tok123", "user_id": base_data["user"].id, "platform": "ios"},
+        json={"token": "tok123", "platform": "ios"},
     )
     assert reg_resp.status_code == 200
     # now set setting
     set_resp = client.post(
         "/api/notification/settings",
         json={
-            "user_id": base_data["user"].id,
             "platform": "ios",
             "setting": "results",
             "value": 1,
@@ -43,7 +41,7 @@ def test_notification_settings_roundtrip(client, base_data):
 
     get_resp = client.get(
         "/api/notification/settings",
-        query_string={"user_id": base_data["user"].id, "platform": "ios"},
+        query_string={"platform": "ios"},
     )
     assert get_resp.status_code == 200
     payload = json.loads(get_resp.data)

@@ -18,7 +18,7 @@ export function ColorUpdater({
   const setCurrentUser = useSetCurrentUser();
 
   function saveChoice() {
-    User.updateColor(user.id, color).then((user) => {
+    User.updateColor(color).then((user) => {
       setCurrentUser(user);
       setIsPicking(false);
       _onUpdated();

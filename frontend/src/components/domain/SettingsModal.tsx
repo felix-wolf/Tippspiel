@@ -46,7 +46,7 @@ export function SettingsModal({
   const settingsFetchValues = useFetch<NotificationSettings>({
     key: "notificationSettings",
     func: NotificationHelper.getSettings,
-    args: [user],
+    args: [],
   });
 
   const { data: settings, refetch: refetchSettings } = settingsFetchValues;
@@ -122,7 +122,7 @@ export function SettingsModal({
           {/* Push enable */}
           <Shakable shaking={pushShaking}>
             <button onClick={() => {
-              NotificationHelper.registerDevice(user)
+              NotificationHelper.registerDevice()
                 .then(() => {
                   setNotificationRegisterSuccess(true);
                 })
@@ -138,7 +138,7 @@ export function SettingsModal({
           </Shakable>
           <Shakable shaking={testPushShaking}>
             <button onClick={() => {
-              NotificationHelper.sendTestNotification(user)
+              NotificationHelper.sendTestNotification()
                 .then(() => {
                   setSendTestNotificationSuccess(true);
                 })
@@ -164,7 +164,6 @@ export function SettingsModal({
               shaking={resultsShaking}
               onStateChange={(newValue) => {
                 NotificationHelper.saveNotificationSetting(
-                  user,
                   "results",
                   newValue ? 1 : 0,
                 )
@@ -182,7 +181,6 @@ export function SettingsModal({
               shaking={reminderShaking}
               onStateChange={(newValue) => {
                 NotificationHelper.saveNotificationSetting(
-                  user,
                   "reminder",
                   newValue ? 1 : 0,
                 )

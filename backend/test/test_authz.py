@@ -5,12 +5,14 @@ import pytest
 from src.models.game import Game
 from src.models.event import Event
 from src.models.user import User
+from src.models.notification_helper import NotificationHelper
 from src.utils import hash_password
 
 
 def _client_for(app, user_id):
     client = app.test_client()
     with client.session_transaction() as sess:
+        sess.clear()
         sess["_user_id"] = user_id
     return client
 
@@ -59,6 +61,19 @@ def test_game_delete_requires_owner(app, base_data, other_user):
 
     resp = other_client.get("/api/game/delete", query_string={"game_id": game_id})
     assert resp.status_code == 403
+
+
+def test_protected_routes_require_login(app, base_data):
+    client = app.test_client()
+
+    user_resp = client.get("/api/user")
+    assert user_resp.status_code == 401
+
+    join_resp = client.get("/api/game/join", query_string={"game_id": "missing", "pw": "123"})
+    assert join_resp.status_code == 401
+
+    settings_resp = client.get("/api/notification/settings", query_string={"platform": "ios"})
+    assert settings_resp.status_code == 401
 
 
 def test_event_create_requires_owner(app, base_data, other_user):
@@ -119,6 +134,52 @@ def test_save_bets_requires_membership(app, base_data, other_user):
         },
     )
     assert resp.status_code == 403
+
+
+def test_user_color_update_ignores_spoofed_user_id(app, base_data, other_user):
+    other_client = _client_for(app, other_user)
+
+    resp = other_client.post(
+        "/api/user",
+        json={"user_id": base_data["user"].id, "color": "#123456"},
+    )
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["id"] == other_user
+
+    with app.app_context():
+        owner = User.get_by_id(base_data["user"].id)
+        other = User.get_by_id(other_user)
+        assert owner.color != "#123456"
+        assert other.color == "#123456"
+
+
+def test_notification_settings_ignore_spoofed_user_id(app, base_data, other_user):
+    other_client = _client_for(app, other_user)
+
+    reg_resp = other_client.post(
+        "/api/notification/register_device",
+        json={"token": "spoof-token", "user_id": base_data["user"].id, "platform": "ios"},
+    )
+    assert reg_resp.status_code == 200
+
+    set_resp = other_client.post(
+        "/api/notification/settings",
+        json={
+            "user_id": base_data["user"].id,
+            "platform": "ios",
+            "setting": "results",
+            "value": 1,
+        },
+    )
+    assert set_resp.status_code == 200
+
+    with app.app_context():
+        spoofed_owner_settings = NotificationHelper.get_notification_settings_for_user(base_data["user"].id, "ios")
+        actual_user_settings = NotificationHelper.get_notification_settings_for_user(other_user, "ios")
+        assert spoofed_owner_settings is None
+        assert actual_user_settings is not None
+        assert actual_user_settings["results_notification"] == 1
 
 
 def test_process_results_requires_owner(app, base_data, other_user):

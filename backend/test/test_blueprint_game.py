@@ -1,45 +1,66 @@
 import json
-from src.models.user import User
+
+from flask_login import login_user
+
+from src.blueprints.game import join_game
 from src.models.game import Game
-from src.utils import hash_password, password_hash_needs_upgrade
+from src.models.user import User
+from src.utils import hash_game_password, hash_password, password_hash_needs_upgrade
 
 
-def test_game_get_all(client, base_data):
+def _login_client(app, name, password="pw"):
+    client = app.test_client()
+    response = client.post("/api/login", json={"name": name, "password": password})
+    assert response.status_code == 200
+    return client
+
+
+def test_game_get_all(app, base_data):
+    client = _login_client(app, base_data["user"].name)
     response = client.get("/api/game")
     assert response.status_code == 200
     payload = json.loads(response.data)
     assert isinstance(payload, list)
 
 
-def test_game_create_and_join(client, app, base_data):
-    # create game with password
-    payload = {"name": "Protected Game", "password": "123", "discipline": base_data["discipline"].id}
-    response = client.post("/api/game", json=payload)
-    assert response.status_code == 200
-    created = json.loads(response.data)
-    game_id = created["id"]
+def test_game_create_and_join(app, base_data):
     with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Protected Game",
+            pw_hash=hash_game_password("123"),
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
         created_game = Game.get_by_id(game_id)
         assert created_game is not None
         assert not password_hash_needs_upgrade(created_game.pw_hash)
 
-    # wrong password
-    bad_join = client.get("/api/game/join", query_string={"user_id": base_data["second_user"].id, "game_id": game_id, "pw": "wrong"})
-    assert bad_join.status_code == 400
+        other_user = User.get_by_id(base_data["second_user"].id)
+        owner_user = User.get_by_id(base_data["user"].id)
 
-    # correct password, but player is creator and already in game
-    join = client.get("/api/game/join", query_string={"user_id": base_data["user"].id, "game_id": game_id, "pw": "123"})
-    assert join.status_code == 400
+    with app.test_request_context("/api/game/join", query_string={"game_id": game_id, "pw": "wrong"}):
+        login_user(other_user)
+        bad_join = app.make_response(join_game())
+        assert bad_join.status_code == 400
 
-    # correct password
-    join = client.get("/api/game/join", query_string={"user_id": base_data["second_user"].id, "game_id": game_id, "pw": "123"})
-    assert join.status_code == 200
+    with app.test_request_context("/api/game/join", query_string={"game_id": game_id, "pw": "123"}):
+        login_user(owner_user)
+        join = app.make_response(join_game())
+        assert join.status_code == 400
 
-    joined = json.loads(join.data)
-    assert any(p["id"] == base_data["user"].id for p in joined["players"])
+    with app.test_request_context("/api/game/join", query_string={"game_id": game_id, "pw": "123"}):
+        login_user(other_user)
+        join = app.make_response(join_game())
+        assert join.status_code == 200
+        joined = join.get_json()
+        assert any(p["id"] == base_data["user"].id for p in joined["players"])
+        assert any(p["id"] == base_data["second_user"].id for p in joined["players"])
 
 
-def test_join_game_upgrades_legacy_password_hash(client, app, base_data):
+def test_join_game_upgrades_legacy_password_hash(app, base_data):
+    other_client = _login_client(app, base_data["second_user"].name)
+
     with app.app_context():
         legacy_hash = hash_password("123", app.config["SALT"])
         success, game_id = Game.create(
@@ -50,9 +71,9 @@ def test_join_game_upgrades_legacy_password_hash(client, app, base_data):
         )
         assert success
 
-    join = client.get(
+    join = other_client.get(
         "/api/game/join",
-        query_string={"user_id": base_data["second_user"].id, "game_id": game_id, "pw": "123"},
+        query_string={"game_id": game_id, "pw": "123"},
     )
     assert join.status_code == 200
 
@@ -63,7 +84,31 @@ def test_join_game_upgrades_legacy_password_hash(client, app, base_data):
         assert not password_hash_needs_upgrade(upgraded_game.pw_hash)
 
 
-def test_game_update_and_delete(client, app, base_data):
+def test_join_game_ignores_spoofed_user_id(app, base_data):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Spoof Test Game",
+            pw_hash=hash_game_password("123"),
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+        other_user = User.get_by_id(base_data["second_user"].id)
+
+    with app.test_request_context(
+        "/api/game/join",
+        query_string={"user_id": base_data["user"].id, "game_id": game_id, "pw": "123"},
+    ):
+        login_user(other_user)
+        join = app.make_response(join_game())
+        assert join.status_code == 200
+        joined = join.get_json()
+        assert any(p["id"] == base_data["second_user"].id for p in joined["players"])
+
+
+def test_game_update_and_delete(app, base_data):
+    client = _login_client(app, base_data["user"].name)
+
     with app.app_context():
         success, game_id = Game.create(
             user_id=base_data["user"].id,

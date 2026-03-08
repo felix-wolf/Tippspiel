@@ -31,7 +31,6 @@ def app(tmp_path):
     app.config.update(
         {
             "TESTING": True,
-            "LOGIN_DISABLED": True,
             "DB_PATH": str(tmp_path / "tippspiel_test.db"),
         }
     )
@@ -99,6 +98,7 @@ def client(app, base_data):
     """Flask test client bound to the app fixture with a logged-in user."""
     client = app.test_client()
     with client.session_transaction() as sess:
+        sess.clear()
         # Flask-Login stores the user id in the session under "_user_id"
         sess["_user_id"] = base_data["user"].id
     return client

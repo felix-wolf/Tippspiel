@@ -66,12 +66,11 @@ export class Game {
   }
 
   public static join(
-    user_id: string,
     game_id: string,
     pw: string,
   ): Promise<Game> {
     return NetworkHelper.execute<Game>(
-      `/api/game/join?user_id=${encodeURIComponent(user_id)}&game_id=${encodeURIComponent(game_id)}&pw=${encodeURIComponent(pw)}`,
+      `/api/game/join?game_id=${encodeURIComponent(game_id)}&pw=${encodeURIComponent(pw)}`,
       Game.fromJson,
     );
   }

@@ -47,9 +47,8 @@ export class User {
     return NetworkHelper.execute("/api/user", User.fromJson);
   }
 
-  public static updateColor(userId: string, color: string): Promise<User> {
+  public static updateColor(color: string): Promise<User> {
     return NetworkHelper.post("/api/user", User.fromJson, {
-      user_id: userId,
       color: color,
     });
   }

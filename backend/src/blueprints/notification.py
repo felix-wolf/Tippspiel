@@ -15,11 +15,11 @@ def register_device():
         return "not supported", 400
     if request.method == "POST":
         token = request.get_json().get("token")
-        user_id = request.get_json().get("user_id")
         platform = request.get_json().get("platform")
-        if any([x is None for x in [token, user_id, platform]]):
+        if any([x is None for x in [token, platform]]):
             return "missing param", 400
 
+        user_id = current_user.get_id()
         NotificationHelper.save_to_db(token=token, user_id=user_id, platform=platform)
         return {'token': token }
 
@@ -27,11 +27,11 @@ def register_device():
 @login_required
 def send_test_notification():
     if request.method == "POST":
-        user_id = request.get_json().get("user_id")
         platform = request.get_json().get("platform")
-        if any([x is None for x in [user_id, platform]]):
+        if platform is None:
             return "missing param", 400
 
+        user_id = current_user.get_id()
         response = NotificationHelper.get_token(user_id=user_id, platform=platform)
         if not response:
             return "No token found", 404
@@ -65,16 +65,16 @@ def send_notification():
 
 
 @notification_blueprint.route('/api/notification/settings', methods=['GET', 'POST'])
+@login_required
 def settings():
+    user_id = current_user.get_id()
     if request.method == "GET":
-        user_id = request.args.get("user_id")
         platform = request.args.get("platform")
         settings = NotificationHelper.get_notification_settings_for_user(user_id=user_id, platform=platform)
         if settings is None:
             return "Could not find settings for user", 404
         return settings
     if request.method == "POST":
-        user_id = request.get_json().get("user_id")
         platform = request.get_json().get("platform")
         setting = request.get_json().get("setting")
         value = request.get_json().get("value")

@@ -64,9 +64,9 @@ def handle_events_import_url():
 @game_blueprint.route("/api/game/join")
 @login_required
 def join_game():
-    user_id = request.args.get("user_id")
     game_id = request.args.get("game_id")
     pw = request.args.get("pw")
+    user_id = current_user.get_id()
     game = Game.get_by_id(game_id)
     if not game:
         return "Tippspiel oder spieler konnte nicht gefunden werden!", 400

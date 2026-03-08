@@ -64,7 +64,7 @@ export function BettingGameList({
     (game_id: string, password?: string): Promise<boolean> => {
       return new Promise((resolve, reject) => {
         if (user?.id)
-          Game.join(user.id, game_id, password ?? "")
+          Game.join(game_id, password ?? "")
             .then((game) => {
               useNavigate(SiteRoutes.Game, { game_id: game.id });
               resolve(true);
