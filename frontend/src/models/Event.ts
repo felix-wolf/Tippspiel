@@ -26,6 +26,7 @@ export class Event {
   private readonly _hasBetsForUsers: string[];
   private readonly _results: Result[];
   private readonly _eventUrl?: string;
+  private readonly _location?: string;
   constructor(
     id: string,
     name: string,
@@ -40,6 +41,7 @@ export class Event {
     hasBetsForUsers: string[],
     date?: Date,
     eventUrl?: string,
+    location?: string,
   ) {
     this._id = id;
     this._name = name;
@@ -52,6 +54,7 @@ export class Event {
     this._results = results;
     this._hasBetsForUsers = hasBetsForUsers;
     this._eventUrl = eventUrl;
+    this._location = location;
     if (date) {
       this._datetime = date;
     } else {
@@ -103,6 +106,10 @@ export class Event {
     return this._eventUrl;
   }
 
+  get location(): string | undefined {
+    return this._location;
+  }
+
   get datetime(): Date {
     return this._datetime;
   }
@@ -134,7 +141,8 @@ export class Event {
       "results": [${this._results.map((result) => result.toJson()).join(",")}],
       "bets": [${this._bets.map((bet) => bet.toJson()).join(",")}],
       "event_type": ${this._eventType.toJson()},
-      "url": ${this._eventUrl ? `"${this._eventUrl}"` : null}
+      "url": ${this._eventUrl ? `"${this._eventUrl}"` : null},
+      "location": ${this._location ? JSON.stringify(this._location) : null}
       }`;
   }
 
@@ -171,6 +179,7 @@ export class Event {
       json["has_bets_for_users"],
       undefined,
       json["url"],
+      json["location"],
     );
   }
 
@@ -252,6 +261,7 @@ export class Event {
     datetime: Date,
     numBets: number,
     pointsCorrectBet: number,
+    location?: string,
   ): Promise<Event> {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -266,6 +276,7 @@ export class Event {
       datetime: date_string,
       num_bets: numBets,
       points_correct_bet: pointsCorrectBet,
+      location: location,
     });
   }
 
@@ -278,6 +289,7 @@ export class Event {
     numBets: number,
     pointsCorrectBet: number,
     allowPartialPoints: boolean,
+    location?: string,
   ): Promise<Event> {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -294,6 +306,7 @@ export class Event {
       num_bets: numBets,
       points_correct_bet: pointsCorrectBet,
       allow_partial_points: allowPartialPoints,
+      location: location,
     });
   }
 }

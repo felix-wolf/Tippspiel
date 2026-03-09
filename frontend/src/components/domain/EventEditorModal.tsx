@@ -57,6 +57,7 @@ export function EventEditorModal({
             updatedEvent.numBets,
             updatedEvent.pointsCorrectBet,
             updatedEvent.allowPartialPoints,
+            updatedEvent.location,
           )
             .then((_) => {
               _onEventsChanged("update");
@@ -76,6 +77,7 @@ export function EventEditorModal({
             updatedEvent.datetime,
             updatedEvent.numBets,
             updatedEvent.pointsCorrectBet,
+            updatedEvent.location,
           )
             .then((_) => {
               _onEventsChanged("create");

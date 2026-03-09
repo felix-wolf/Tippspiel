@@ -81,6 +81,7 @@ def handle_event_request():
         allow_partial_points = bool(payload.get("allow_partial_points"))
         num_bets = payload.get("num_bets")
         points_correct_bet = payload.get("points_correct_bet")
+        location = payload.get("location")
         game, error = get_game_or_error(game_id)
         if error:
             return error
@@ -90,7 +91,8 @@ def handle_event_request():
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
         success, event_id, event = Event.create(
             name=name, game_id=game_id, event_type_id=event_type, dt=dt, 
-            num_bets=num_bets, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points
+            num_bets=num_bets, points_correct_bet=points_correct_bet,
+            allow_partial_points=allow_partial_points, location=location
         )
         if success:
             return event.to_dict()
@@ -111,6 +113,7 @@ def handle_event_request():
         num_bets = payload.get("num_bets")
         points_correct_bet = payload.get("points_correct_bet")
         allow_partial_points = bool(payload.get("allow_partial_points"))
+        location = payload.get("location")
         game, error = get_game_or_error(game_id)
         if error:
             return error
@@ -121,7 +124,15 @@ def handle_event_request():
         if error:
             return error
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
-        success, event = event.update(name=name, event_type_id=event_type, dt=dt, num_bets=num_bets, points_correct_bet=points_correct_bet, allow_partial_points=allow_partial_points)
+        success, event = event.update(
+            name=name,
+            event_type_id=event_type,
+            dt=dt,
+            num_bets=num_bets,
+            points_correct_bet=points_correct_bet,
+            allow_partial_points=allow_partial_points,
+            location=location,
+        )
         if success:
             return event.to_dict()
         else:

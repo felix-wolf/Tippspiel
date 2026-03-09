@@ -5,6 +5,7 @@ from flask_login import *
 from src.models.user import User
 import sys
 from config import load_config
+from src.database import db_manager
 from src.blueprints.athlete import athlete_blueprint
 from src.blueprints.country import country_blueprint
 from src.blueprints.discipline import discipline_blueprint
@@ -39,6 +40,8 @@ def create_app(env):
     except RuntimeError as err:
         print(err)
         sys.exit()
+    with app.app_context():
+        db_manager.ensure_event_location_schema()
     app.secret_key = app.config["SECRET_KEY"]
     app.logger.setLevel(logging.INFO)
     # Initialize firebase once; skip in tests if credentials are unavailable.

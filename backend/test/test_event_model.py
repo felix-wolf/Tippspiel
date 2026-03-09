@@ -37,6 +37,26 @@ def test_event_create_and_get(base_data, app):
         assert fetched.name == "Qualifier"
         assert fetched.url == "http://example.com/event"
         assert isinstance(fetched.event_type, EventType)
+        assert fetched.location is None
+
+
+def test_event_create_derives_biathlon_location_from_name(base_data, app):
+    with app.app_context():
+        game = _create_game(app, base_data)
+        success, event_id, _ = Event.create(
+            name="Oberhof - Men Sprint",
+            game_id=game.id,
+            event_type_id=base_data["event_type"].id,
+            dt=datetime.now() + timedelta(hours=2),
+            num_bets=1,
+            points_correct_bet=5,
+            allow_partial_points=True,
+        )
+        assert success
+
+        fetched = Event.get_by_id(event_id, get_full_object=False)
+        assert fetched is not None
+        assert fetched.location == "Oberhof"
 
 
 def test_event_save_bet_and_has_bets(base_data, app):

@@ -10,15 +10,42 @@ from src.models.base_model import BaseModel
 
 
 class Event(BaseModel):
+    LOCATION_SEPARATOR = " - "
 
     @staticmethod
     def current_time():
         return datetime.now(ZoneInfo("Europe/Berlin")).replace(tzinfo=None)
 
+    @staticmethod
+    def normalize_location(location: str | None):
+        if location is None:
+            return None
+        normalized = location.strip()
+        return normalized or None
+
+    @staticmethod
+    def derive_location_from_name(name: str | None, discipline_id: str | None = None):
+        if not name:
+            return None
+        if discipline_id not in (None, "biathlon"):
+            return None
+        prefix, separator, _ = name.partition(Event.LOCATION_SEPARATOR)
+        if not separator:
+            return None
+        return Event.normalize_location(prefix)
+
+    @staticmethod
+    def resolve_location(name: str, event_type: EventType, location: str | None = None):
+        normalized_location = Event.normalize_location(location)
+        if normalized_location is not None:
+            return normalized_location
+        return Event.derive_location_from_name(name, event_type.discipline_id)
+
     def __init__(
             self, name: str, game_id: str, event_type: EventType, dt: datetime,
             allow_partial_points: bool, num_bets: int = None, points_correct_bet: int = None,
-            event_id: str = None, bets: list[Bet] = None, results: list[Result] = None, url: str = None
+            event_id: str = None, bets: list[Bet] = None, results: list[Result] = None,
+            location: str = None, url: str = None
             ):
         if bets is None:
             bets = []
@@ -42,6 +69,7 @@ class Event(BaseModel):
         self.points_correct_bet = points_correct_bet
         self.bets = bets
         self.results = results
+        self.location = Event.resolve_location(name, event_type, location)
         self.url = url
 
     def to_dict(self):
@@ -54,6 +82,7 @@ class Event(BaseModel):
         return {
             "id": self.id,
             "name": self.name,
+            "location": self.location,
             "game_id": self.game_id,
             "event_type": self.event_type.to_dict(),
             "datetime": Event.datetime_to_string(self.dt),
@@ -117,6 +146,7 @@ class Event(BaseModel):
                     num_bets=num_bets,
                     points_correct_bet=points_correct_bet,
                     dt=datetime.strptime(e_dict['datetime'], "%Y-%m-%d %H:%M:%S"),
+                    location=e_dict.get("location"),
                     url=e_dict.get("url")
                 )
             except KeyError as e:
@@ -141,37 +171,47 @@ class Event(BaseModel):
         return []
 
     @staticmethod
-    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, url: str = None):
+    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, url: str = None):
         # insert event
         event_type = EventType.get_by_id(event_type_id)
         if not event_type:
             return False, None, None
         event = Event(
             name=name, game_id=game_id, event_type=event_type, dt=dt, allow_partial_points=allow_partial_points,
-            num_bets=num_bets, points_correct_bet=points_correct_bet, url=url
+            num_bets=num_bets, points_correct_bet=points_correct_bet, location=location, url=url
             )
         success, event_id = event.save_to_db()
         return success, event_id, event
 
     @staticmethod
     def save_events(events):
-        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, game_id, event_type_id, datetime, url) VALUES (?,?,?,?,?,?)"
+        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, location, game_id, event_type_id, datetime, url) VALUES (?,?,?,?,?,?,?)"
         success = db_manager.execute_many(
             sql=sql,
             params=[
-                (event.id, event.name, event.game_id, event.event_type.id, Event.datetime_to_string(event.dt), event.url) for event in events],
+                (
+                    event.id,
+                    event.name,
+                    event.location,
+                    event.game_id,
+                    event.event_type.id,
+                    Event.datetime_to_string(event.dt),
+                    event.url,
+                )
+                for event in events
+            ],
             )
         return success
 
     def save_to_db(self, commit=True):
         sql = f"""
         INSERT INTO {db_manager.TABLE_EVENTS}
-            (id, name, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, url)
-            VALUES (?,?,?,?,?,?,?,?,?)
+            (id, name, location, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, url)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
         """
         success = db_manager.execute(
             sql, [
-                self.id, self.name, self.game_id,
+                self.id, self.name, self.location, self.game_id,
                 self.event_type.id, Event.datetime_to_string(self.dt),
                 self.num_bets, self.points_correct_bet, self.allow_partial_points,
                 self.url
@@ -249,7 +289,7 @@ class Event(BaseModel):
             if conn:
                 conn.close()
 
-    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool):
+    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None):
         """Update an event's information. If the type is changed, all bets are deleted :("""
         success = True
         if name != self.name:
@@ -280,9 +320,11 @@ class Event(BaseModel):
             self.points_correct_bet = points_correct_bet
         if allow_partial_points != self.allow_partial_points:
             self.allow_partial_points = allow_partial_points
+        self.location = Event.resolve_location(self.name, self.event_type, location)
         if success:
             sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
                     name = ?,
+                    location = ?,
                     event_type_id = ?,
                     datetime = ?,
                     num_bets = ?,
@@ -292,7 +334,16 @@ class Event(BaseModel):
                 """
             success = db_manager.execute(
                 sql,
-                [self.name, self.event_type.id, Event.datetime_to_string(self.dt), num_bets, points_correct_bet, 1 if allow_partial_points else 0, self.id]
+                [
+                    self.name,
+                    self.location,
+                    self.event_type.id,
+                    Event.datetime_to_string(self.dt),
+                    num_bets,
+                    points_correct_bet,
+                    1 if allow_partial_points else 0,
+                    self.id,
+                ]
             )
         return success, self
     

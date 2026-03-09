@@ -66,6 +66,7 @@ def test_event_create_and_update(client, base_data):
     )
     assert create_resp.status_code == 200
     created = create_resp.get_json()
+    assert created["location"] is None
 
     update_resp = client.put(
         "/api/event",
@@ -83,6 +84,30 @@ def test_event_create_and_update(client, base_data):
     assert update_resp.status_code == 200
     updated = update_resp.get_json()
     assert updated["name"] == "Event 1 Updated"
+
+
+def test_event_create_derives_location_for_biathlon_name(client, base_data):
+    game_id = client.post(
+        "/api/game",
+        json={"name": "Ev Game 2", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+
+    create_resp = client.post(
+        "/api/event",
+        json={
+            "name": "Antholz - Women Sprint",
+            "game_id": game_id,
+            "type": base_data["event_type"].id,
+            "datetime": _dt_string(),
+            "num_bets": 1,
+            "points_correct_bet": 5,
+            "allow_partial_points": True,
+        },
+    )
+    assert create_resp.status_code == 200
+
+    created = create_resp.get_json()
+    assert created["location"] == "Antholz"
 
 
 def test_event_save_bets_validation(client, base_data):

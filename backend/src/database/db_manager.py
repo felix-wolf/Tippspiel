@@ -15,6 +15,15 @@ TABLE_PREDICTIONS = "Predictions"
 TABLE_DISCIPLINES = "Disciplines"
 TABLE_RESULTS = "Results"
 TABLE_DEVICE_TOKENS = "DeviceTokens"
+VIEW_EVENTS_SQL = f"""
+CREATE VIEW VIEW_{TABLE_EVENTS} AS
+    SELECT e.*, g.discipline, COUNT(b.id) > 0 as has_bets
+    FROM {TABLE_EVENTS} e
+    INNER JOIN {TABLE_GAMES} g on e.game_id = g.id
+    LEFT JOIN {TABLE_BETS} b ON e.id = b.event_id
+    GROUP BY e.id
+    ORDER BY e.datetime
+"""
 
 
 def open_connection():
@@ -93,6 +102,25 @@ def query_one(sql, params=None):
             conn.close()
 
 
+def table_exists(table_name):
+    return query_one(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        [table_name],
+    ) is not None
+
+
+def column_exists(table_name, column_name):
+    conn = None
+    try:
+        conn = open_connection()
+        cur = conn.cursor()
+        cur.execute(f"PRAGMA table_info({table_name})")
+        return any(row[1] == column_name for row in cur.fetchall())
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 def execute(sql, params=None, commit=True):
     """Executes a statement (INSERT, UPDATE, DELETE)."""
     conn = None
@@ -134,6 +162,29 @@ def execute_many(sql, params=None, commit=True):
     finally:
         if conn is not None:
             conn.close()
+
+
+def refresh_events_view():
+    if not all(table_exists(table_name) for table_name in [TABLE_EVENTS, TABLE_GAMES, TABLE_BETS]):
+        return
+    conn = None
+    try:
+        conn = open_connection()
+        cursor = conn.cursor()
+        cursor.execute(f"DROP VIEW IF EXISTS VIEW_{TABLE_EVENTS}")
+        cursor.execute(VIEW_EVENTS_SQL)
+        conn.commit()
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def ensure_event_location_schema():
+    if not table_exists(TABLE_EVENTS):
+        return
+    if not column_exists(TABLE_EVENTS, "location"):
+        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN location TEXT")
+    refresh_events_view()
 
 
 def execute_script(script_name):

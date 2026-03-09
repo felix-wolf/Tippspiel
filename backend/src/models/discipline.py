@@ -153,7 +153,8 @@ class Biathlon(Discipline):
                         allow_partial_points=True,
                         event_id=None,
                         bets=None,
-                        results=None
+                        results=None,
+                        location=location_name.split(" | ")[0].strip(),
                         )
                     events.append(e)
 
