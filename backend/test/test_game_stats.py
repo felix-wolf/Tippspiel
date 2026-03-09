@@ -174,10 +174,13 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
 
     assert payload["locations"]["best_total_points"]["name"] == "Oberhof"
     assert payload["locations"]["best_total_points"]["points"] == 14.0
+    assert payload["locations"]["best_total_points"]["average_points"] == 7.0
     assert payload["locations"]["best_vs_opponents"]["name"] == "Oberhof"
-    assert payload["locations"]["best_vs_opponents"]["delta"] == 14.0
+    assert payload["locations"]["best_vs_opponents"]["average_points"] == 7.0
+    assert payload["locations"]["best_vs_opponents"]["delta"] == 7.0
     assert payload["locations"]["worst_total_points"]["name"] == "Antholz"
     assert payload["locations"]["worst_total_points"]["points"] == 0.0
+    assert payload["locations"]["worst_total_points"]["average_points"] == 0.0
     assert payload["locations"]["worst_vs_opponents"]["name"] == "Antholz"
     assert payload["locations"]["worst_vs_opponents"]["delta"] == -5.0
 

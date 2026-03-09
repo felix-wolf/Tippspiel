@@ -80,6 +80,7 @@ function DetailCard({
   accent,
   icon,
   formatName,
+  averagePointsLabel = "Schnitt pro Tipp",
 }: {
   title: string;
   detail: GameStatsDetail | null;
@@ -87,6 +88,7 @@ function DetailCard({
   accent: string;
   icon: ReactNode;
   formatName?: (value: string) => string | null | undefined;
+  averagePointsLabel?: string;
 }) {
   return (
     <div className="rounded-2xl bg-white/60 border border-white/60 p-4 shadow-sm h-full">
@@ -119,7 +121,7 @@ function DetailCard({
           )}
           {detail.average_points !== undefined && (
             <div className="text-sm text-slate-600">
-              Schnitt pro Tipp: {formatNumber(detail.average_points, 2)}
+              {averagePointsLabel}: {formatNumber(detail.average_points, 2)}
             </div>
           )}
           {detail.location && (
@@ -229,6 +231,7 @@ export function GameStatsPanel({
           emptyText="Kein Ort mit ausgewerteten Tipps vorhanden."
           accent="text-sky-700"
           icon={<MapPinned size={18} />}
+          averagePointsLabel="Schnitt pro Rennen"
         />
         <DetailCard
           title="Bester Ort vs. Gegner"
@@ -236,6 +239,7 @@ export function GameStatsPanel({
           emptyText="Noch kein Vergleich mit Gegnern moeglich."
           accent="text-emerald-700"
           icon={<Mountain size={18} />}
+          averagePointsLabel="Schnitt pro Rennen"
         />
         <DetailCard
           title="Schwierigster Ort"
@@ -243,6 +247,7 @@ export function GameStatsPanel({
           emptyText="Kein Ort mit ausgewerteten Tipps vorhanden."
           accent="text-rose-700"
           icon={<MapPinned size={18} />}
+          averagePointsLabel="Schnitt pro Rennen"
         />
         <DetailCard
           title="Schwierigster Ort vs. Gegner"
@@ -250,6 +255,7 @@ export function GameStatsPanel({
           emptyText="Noch kein Vergleich mit Gegnern moeglich."
           accent="text-slate-700"
           icon={<Mountain size={18} />}
+          averagePointsLabel="Schnitt pro Rennen"
         />
         <DetailCard
           title="Haefigster Athlet"

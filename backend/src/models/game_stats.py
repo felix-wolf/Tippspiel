@@ -104,11 +104,14 @@ class GameStats:
                 SUM(prediction_score) AS points,
                 COUNT(*) AS pick_count,
                 COUNT(DISTINCT event_id) AS event_count,
-                AVG(prediction_score) AS average_points
+                CASE
+                    WHEN COUNT(DISTINCT event_id) = 0 THEN 0
+                    ELSE (1.0 * SUM(prediction_score)) / COUNT(DISTINCT event_id)
+                END AS average_points
             FROM {STATS_VIEW}
             WHERE game_id = ? AND user_id = ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
             GROUP BY event_location
-            ORDER BY points DESC, event_count DESC, name ASC
+            ORDER BY average_points DESC, event_count DESC, points DESC, name ASC
             LIMIT 1
             """,
             [game_id, user_id],
@@ -121,11 +124,14 @@ class GameStats:
                 SUM(prediction_score) AS points,
                 COUNT(*) AS pick_count,
                 COUNT(DISTINCT event_id) AS event_count,
-                AVG(prediction_score) AS average_points
+                CASE
+                    WHEN COUNT(DISTINCT event_id) = 0 THEN 0
+                    ELSE (1.0 * SUM(prediction_score)) / COUNT(DISTINCT event_id)
+                END AS average_points
             FROM {STATS_VIEW}
             WHERE game_id = ? AND user_id = ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
             GROUP BY event_location
-            ORDER BY points ASC, event_count DESC, name ASC
+            ORDER BY average_points ASC, event_count DESC, points ASC, name ASC
             LIMIT 1
             """,
             [game_id, user_id],
@@ -137,7 +143,11 @@ class GameStats:
                 SELECT
                     event_location AS name,
                     SUM(prediction_score) AS user_points,
-                    COUNT(DISTINCT event_id) AS event_count
+                    COUNT(DISTINCT event_id) AS event_count,
+                    CASE
+                        WHEN COUNT(DISTINCT event_id) = 0 THEN 0
+                        ELSE (1.0 * SUM(prediction_score)) / COUNT(DISTINCT event_id)
+                    END AS user_average_points
                 FROM {STATS_VIEW}
                 WHERE game_id = ? AND user_id = ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
                 GROUP BY event_location
@@ -146,7 +156,12 @@ class GameStats:
                 SELECT
                     event_location AS name,
                     user_id,
-                    SUM(prediction_score) AS opponent_points
+                    SUM(prediction_score) AS opponent_points,
+                    COUNT(DISTINCT event_id) AS opponent_event_count,
+                    CASE
+                        WHEN COUNT(DISTINCT event_id) = 0 THEN 0
+                        ELSE (1.0 * SUM(prediction_score)) / COUNT(DISTINCT event_id)
+                    END AS opponent_average_points
                 FROM {STATS_VIEW}
                 WHERE game_id = ? AND user_id != ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
                 GROUP BY event_location, user_id
@@ -155,13 +170,14 @@ class GameStats:
                 ul.name,
                 ul.user_points AS points,
                 ul.event_count,
-                AVG(ol.opponent_points) AS opponent_average_points,
-                ul.user_points - AVG(ol.opponent_points) AS delta
+                ul.user_average_points AS average_points,
+                AVG(ol.opponent_average_points) AS opponent_average_points,
+                ul.user_average_points - AVG(ol.opponent_average_points) AS delta
             FROM user_location ul
             LEFT JOIN opponent_location ol ON ol.name = ul.name
-            GROUP BY ul.name, ul.user_points, ul.event_count
+            GROUP BY ul.name, ul.user_points, ul.event_count, ul.user_average_points
             HAVING COUNT(ol.user_id) > 0
-            ORDER BY delta DESC, points DESC, ul.name ASC
+            ORDER BY delta DESC, average_points DESC, ul.event_count DESC, points DESC, ul.name ASC
             LIMIT 1
             """,
             [game_id, user_id, game_id, user_id],
@@ -173,7 +189,11 @@ class GameStats:
                 SELECT
                     event_location AS name,
                     SUM(prediction_score) AS user_points,
-                    COUNT(DISTINCT event_id) AS event_count
+                    COUNT(DISTINCT event_id) AS event_count,
+                    CASE
+                        WHEN COUNT(DISTINCT event_id) = 0 THEN 0
+                        ELSE (1.0 * SUM(prediction_score)) / COUNT(DISTINCT event_id)
+                    END AS user_average_points
                 FROM {STATS_VIEW}
                 WHERE game_id = ? AND user_id = ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
                 GROUP BY event_location
@@ -182,7 +202,12 @@ class GameStats:
                 SELECT
                     event_location AS name,
                     user_id,
-                    SUM(prediction_score) AS opponent_points
+                    SUM(prediction_score) AS opponent_points,
+                    COUNT(DISTINCT event_id) AS opponent_event_count,
+                    CASE
+                        WHEN COUNT(DISTINCT event_id) = 0 THEN 0
+                        ELSE (1.0 * SUM(prediction_score)) / COUNT(DISTINCT event_id)
+                    END AS opponent_average_points
                 FROM {STATS_VIEW}
                 WHERE game_id = ? AND user_id != ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
                 GROUP BY event_location, user_id
@@ -191,13 +216,14 @@ class GameStats:
                 ul.name,
                 ul.user_points AS points,
                 ul.event_count,
-                AVG(ol.opponent_points) AS opponent_average_points,
-                ul.user_points - AVG(ol.opponent_points) AS delta
+                ul.user_average_points AS average_points,
+                AVG(ol.opponent_average_points) AS opponent_average_points,
+                ul.user_average_points - AVG(ol.opponent_average_points) AS delta
             FROM user_location ul
             LEFT JOIN opponent_location ol ON ol.name = ul.name
-            GROUP BY ul.name, ul.user_points, ul.event_count
+            GROUP BY ul.name, ul.user_points, ul.event_count, ul.user_average_points
             HAVING COUNT(ol.user_id) > 0
-            ORDER BY delta ASC, points ASC, ul.name ASC
+            ORDER BY delta ASC, average_points ASC, ul.event_count DESC, points ASC, ul.name ASC
             LIMIT 1
             """,
             [game_id, user_id, game_id, user_id],
