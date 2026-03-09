@@ -1,11 +1,14 @@
 from flask import Blueprint, request, current_app
 from src.models.game import Game
+from src.models.game_stats import GameStats
 from src.models.user import User
 from src.utils import hash_game_password
 from src.blueprints.api_response import error_response
 from src.blueprints.route_helpers import (
     get_game_or_error,
     parse_json_body,
+    require_game_member,
+    require_query_arg,
     require_game_owner,
 )
 from src.blueprints.game_service import import_events_from_url
@@ -153,3 +156,24 @@ def get_num_events():
     if success:
         return {"num_events": num_events}
     return error_response("Die Anzahl der Events konnte nicht geladen werden.", 500)
+
+
+@game_blueprint.route("/api/game/stats", methods=["GET"])
+@login_required
+def get_game_stats():
+    game_id, error = require_query_arg(
+        request.args.get("game_id"),
+        "Die Spiel-ID fehlt.",
+    )
+    if error:
+        return error
+    game, error = get_game_or_error(game_id)
+    if error:
+        return error
+    error = require_game_member(game)
+    if error:
+        return error
+    selected_user_id = request.args.get("user_id") or current_user.get_id()
+    if selected_user_id not in [player.id for player in game.players]:
+        return error_response("Der Nutzer gehoert nicht zu diesem Tippspiel.", 400)
+    return GameStats.get_for_game_user(game_id=game.id, user_id=selected_user_id)

@@ -97,8 +97,8 @@ export function ManualEventCreator({
         [],
         d,
         undefined,
-        event?.location,
-        event?.raceFormat,
+        undefined,
+        undefined,
       );
       _onSelectEvents([updatedEvent])
     } else {

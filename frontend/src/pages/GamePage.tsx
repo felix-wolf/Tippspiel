@@ -15,6 +15,10 @@ import { SettingsModal } from "../components/domain/SettingsModal.tsx";
 import { useCache } from "../contexts/CacheContext.tsx";
 import { Trophy, Table as TableIcon, Settings } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { GameStats } from "../models/GameStats.ts";
+import type { GameStatsPayload } from "../models/GameStats.ts";
+import { GameStatsPanel } from "../components/domain/GameStatsPanel.tsx";
+import type { DropDownOption } from "../components/design/DropDown.tsx";
 
 
 export function GamePage() {
@@ -27,6 +31,7 @@ export function GamePage() {
   const [showingSettingsModal, setShowingSettingsModal] = useState(false);
   const [settingsKey, setSettingsKey] = useState(0);
   const [eventsRefreshToken, setEventsRefreshToken] = useState(0);
+  const [selectedStatsUserId, setSelectedStatsUserId] = useState<string | undefined>(user?.id);
 
   const gameFetchValues = useFetch<Game>({
     key: Game.buildCacheKey(game_id),
@@ -39,7 +44,6 @@ export function GamePage() {
     func: EventScore.fetchAll,
     args: [game_id],
   });
-
   const {
     data: game,
     refetch: refetchGame,
@@ -54,6 +58,26 @@ export function GamePage() {
     }
     setIsCreator(game?.creator?.id == user?.id);
   }, [user, game]);
+
+  useEffect(() => {
+    if (user && !selectedStatsUserId) {
+      setSelectedStatsUserId(user.id);
+    }
+  }, [user, selectedStatsUserId]);
+
+  useEffect(() => {
+    if (
+      game &&
+      selectedStatsUserId &&
+      !game.players.some((player) => player.id === selectedStatsUserId)
+    ) {
+      setSelectedStatsUserId(user?.id ?? game.players[0]?.id);
+    }
+  }, [game, selectedStatsUserId, user]);
+
+  const playerOptions: DropDownOption[] = game
+    ? game.players.map((player) => ({ id: player.id, label: player.name }))
+    : [];
 
   return (<>
     <NavPage
@@ -140,6 +164,15 @@ export function GamePage() {
                 refreshToken={eventsRefreshToken}
               />
             </motion.section>
+            {game && selectedStatsUserId && (
+              <LazyGameStatsPanel
+                key={`${game.id}-${selectedStatsUserId}`}
+                gameId={game.id}
+                selectedPlayerId={selectedStatsUserId}
+                playerOptions={playerOptions}
+                onSelectedPlayerChange={setSelectedStatsUserId}
+              />
+            )}
           </motion.div>
         ) : (
           <motion.div
@@ -157,6 +190,35 @@ export function GamePage() {
       </AnimatePresence>
     </NavPage>
   </>
+  );
+}
+
+function LazyGameStatsPanel({
+  gameId,
+  selectedPlayerId,
+  playerOptions,
+  onSelectedPlayerChange,
+}: {
+  gameId: string;
+  selectedPlayerId: string;
+  playerOptions: DropDownOption[];
+  onSelectedPlayerChange: (playerId: string) => void;
+}) {
+  const { data: stats, loading } = useFetch<GameStatsPayload>({
+    key: GameStats.buildCacheKey(gameId, selectedPlayerId),
+    func: GameStats.fetchOne,
+    args: [gameId, selectedPlayerId],
+    cache: { enabled: true, ttl: 5 * 60 },
+  });
+
+  return (
+    <GameStatsPanel
+      stats={stats}
+      playerOptions={playerOptions}
+      selectedPlayerId={selectedPlayerId}
+      onSelectedPlayerChange={onSelectedPlayerChange}
+      loading={loading}
+    />
   );
 }
 

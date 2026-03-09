@@ -99,7 +99,9 @@ describe("Event.toJson", () => {
       "betting_on": "countries",
       "display_name": "Type Display"
     },
-      "url": "https://example.com/event"
+      "url": "https://example.com/event",
+      "location": null,
+      "race_format": null
       }`;
 
     expect(normalizeJson(event.toJson())).toBe(normalizeJson(expectedJson1));
@@ -156,7 +158,9 @@ describe("Event.toJson", () => {
       "betting_on": "countries",
       "display_name": "Type Display"
     },
-      "url": null
+      "url": null,
+      "location": null,
+      "race_format": null
       }`;
 
     expect(normalizeJson(eventNoUrl.toJson())).toBe(normalizeJson(expectedJson2));

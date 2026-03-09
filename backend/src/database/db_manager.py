@@ -24,6 +24,49 @@ CREATE VIEW VIEW_{TABLE_EVENTS} AS
     GROUP BY e.id
     ORDER BY e.datetime
 """
+VIEW_GAME_PREDICTION_STATS_SQL = f"""
+CREATE VIEW VIEW_GamePredictionStats AS
+    SELECT
+        g.id AS game_id,
+        g.name AS game_name,
+        g.discipline AS discipline_id,
+        e.id AS event_id,
+        e.name AS event_name,
+        e.location AS event_location,
+        e.race_format AS event_race_format,
+        e.datetime AS event_datetime,
+        e.num_bets,
+        e.points_correct_bet,
+        e.allow_partial_points,
+        et.id AS event_type_id,
+        et.name AS event_type_name,
+        et.display_name AS event_type_display_name,
+        b.id AS bet_id,
+        b.user_id,
+        u.name AS user_name,
+        COALESCE(b.score, 0) AS bet_score,
+        p.id AS prediction_id,
+        p.object_id,
+        vp.object_name,
+        p.predicted_place,
+        p.actual_place,
+        COALESCE(p.score, 0) AS prediction_score,
+        CASE
+            WHEN p.actual_place IS NOT NULL AND p.actual_place = p.predicted_place THEN 1
+            ELSE 0
+        END AS is_exact_hit,
+        CASE
+            WHEN p.actual_place IS NOT NULL AND COALESCE(p.score, 0) > 0 THEN 1
+            ELSE 0
+        END AS is_scoring_pick
+    FROM {TABLE_PREDICTIONS} p
+    INNER JOIN {TABLE_BETS} b ON b.id = p.bet_id
+    INNER JOIN {TABLE_EVENTS} e ON e.id = b.event_id
+    INNER JOIN {TABLE_GAMES} g ON g.id = e.game_id
+    INNER JOIN {TABLE_USERS} u ON u.id = b.user_id
+    INNER JOIN {TABLE_EVENT_TYPES} et ON et.id = e.event_type_id
+    LEFT JOIN VIEW_{TABLE_PREDICTIONS} vp ON vp.id = p.id
+"""
 
 
 def open_connection():
@@ -164,8 +207,8 @@ def execute_many(sql, params=None, commit=True):
             conn.close()
 
 
-def refresh_events_view():
-    if not all(table_exists(table_name) for table_name in [TABLE_EVENTS, TABLE_GAMES, TABLE_BETS]):
+def refresh_analytics_views():
+    if not all(table_exists(table_name) for table_name in [TABLE_EVENTS, TABLE_GAMES, TABLE_BETS, TABLE_PREDICTIONS, TABLE_USERS, TABLE_EVENT_TYPES]):
         return
     conn = None
     try:
@@ -173,6 +216,8 @@ def refresh_events_view():
         cursor = conn.cursor()
         cursor.execute(f"DROP VIEW IF EXISTS VIEW_{TABLE_EVENTS}")
         cursor.execute(VIEW_EVENTS_SQL)
+        cursor.execute("DROP VIEW IF EXISTS VIEW_GamePredictionStats")
+        cursor.execute(VIEW_GAME_PREDICTION_STATS_SQL)
         conn.commit()
     finally:
         if conn is not None:
@@ -190,7 +235,7 @@ def ensure_event_schema():
         execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN location TEXT")
     if not column_exists(TABLE_EVENTS, "race_format"):
         execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN race_format TEXT")
-    refresh_events_view()
+    refresh_analytics_views()
 
 
 def execute_script(script_name):

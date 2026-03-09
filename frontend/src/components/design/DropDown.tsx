@@ -8,12 +8,14 @@ export type DropDownOption = {
 type DropDownProps = {
   options: DropDownOption[];
   initial?: DropDownOption;
+  selectedId?: string;
   onChange: (option: DropDownOption | undefined) => void;
 };
 
 export function DropDown({
   options,
   initial,
+  selectedId,
   onChange: _onChange,
 }: DropDownProps) {
   const onChange = useCallback(
@@ -21,13 +23,13 @@ export function DropDown({
       const option = options.find((option) => option.id == event.target.value);
       _onChange(option);
     },
-    [options],
+    [_onChange, options],
   );
   return (
     <select
       className="text-white text-l bg-sky-600 rounded-md p-2"
       onChange={(event) => onChange(event)}
-      defaultValue={initial?.id}
+      value={selectedId ?? initial?.id}
     >
       {options.map((option) => {
         return (

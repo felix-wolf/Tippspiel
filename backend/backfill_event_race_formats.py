@@ -37,6 +37,16 @@ def build_race_format_updates(event_rows):
     return updates
 
 
+def collect_unresolved_event_names(event_rows, resolved_event_ids):
+    return sorted(
+        {
+            row["name"]
+            for row in event_rows
+            if row["id"] not in resolved_event_ids
+        }
+    )
+
+
 def apply_race_format_updates(updates):
     if not updates:
         return 0
@@ -73,12 +83,22 @@ def main():
         db_manager.ensure_event_schema()
         event_rows = get_events_missing_race_format()
         updates = build_race_format_updates(event_rows)
+        unresolved_names = collect_unresolved_event_names(
+            event_rows,
+            {event_id for _, event_id, _ in updates},
+        )
 
         print(f"Found {len(event_rows)} events without a race_format.")
         print(f"Derived a race format for {len(updates)} events.")
+        print(f"Could not derive a race format for {len(unresolved_names)} unique event names.")
 
         for race_format, event_id, event_name in updates:
             print(f"{event_id}: {race_format} <- {event_name}")
+
+        if unresolved_names:
+            print("Unresolved event names:")
+            for event_name in unresolved_names:
+                print(f"- {event_name}")
 
         if args.dry_run:
             print("Dry run enabled. No database changes were written.")
