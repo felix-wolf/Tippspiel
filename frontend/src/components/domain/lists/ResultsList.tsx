@@ -15,7 +15,6 @@ type ResultListItem = {
 };
 
 export function ResultsList({ event }: ResultsListProps) {
-  console.log(window.innerWidth);
   return (
     <motion.section
       layout
