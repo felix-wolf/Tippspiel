@@ -10,12 +10,15 @@ import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes.ts";
 import { EventListItem } from "./EventListItem.tsx";
 
 export type EventTimeType = "upcoming" | "past";
+type EventChangeType = "create" | "update" | "delete" | "import";
 
 type EventListProps = {
   type: EventTimeType;
   game: Game;
   placeholderText?: string;
   isCreator?: boolean;
+  refreshToken?: number;
+  onEventsChanged?: () => void;
 };
 
 export function EventList({
@@ -23,6 +26,8 @@ export function EventList({
   game,
   placeholderText,
   isCreator = false,
+  refreshToken = 0,
+  onEventsChanged,
 }: EventListProps) {
   const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
   const [editorKey, setEditorKey] = useState(0);
@@ -36,6 +41,13 @@ export function EventList({
       refetchNumEvents();
     }
   }, [currPage, game]);
+
+  useEffect(() => {
+    refetch(true);
+    if (game) {
+      refetchNumEvents(true);
+    }
+  }, [refreshToken]);
 
   const numEventsFetchValues = useFetch<number>({
     key: `eventlistlength${type}${game.id}`,
@@ -53,6 +65,16 @@ export function EventList({
 
   const { data: events, refetch, loading } = eventsFetchValues;
   const { data: numEvents, refetch: refetchNumEvents } = numEventsFetchValues;
+
+  function refreshEvents(changeType: EventChangeType) {
+    onEventsChanged?.();
+    refetchNumEvents(true);
+    if ((changeType == "create" || changeType == "import") && currPage != 1) {
+      setCurrPage(1);
+      return;
+    }
+    refetch(true);
+  }
 
   if (type == "upcoming")
     events?.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
@@ -86,7 +108,7 @@ export function EventList({
           isOpen={showingAddEventModal}
           types={game?.discipline.eventTypes ?? []}
           game={game}
-          onEventsChanged={() => refetch(true)}
+          onEventsChanged={refreshEvents}
           onClose={() => setShowingAddEventModal(false)}
         />
       )}
@@ -97,7 +119,7 @@ export function EventList({
         types={game?.discipline.eventTypes}
         onEventsChanged={() => {
           setEventEditId(undefined);
-          refetch(true);
+          refreshEvents("update");
         }}
         onClose={() => {
           setEventEditId(undefined);

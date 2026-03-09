@@ -11,6 +11,10 @@ from src.models.base_model import BaseModel
 
 class Event(BaseModel):
 
+    @staticmethod
+    def current_time():
+        return datetime.now(ZoneInfo("Europe/Berlin")).replace(tzinfo=None)
+
     def __init__(
             self, name: str, game_id: str, event_type: EventType, dt: datetime,
             allow_partial_points: bool, num_bets: int = None, points_correct_bet: int = None,
@@ -182,6 +186,18 @@ class Event(BaseModel):
         if len(predictions) != self.num_bets:
             return False, None
         return bet.update_predictions(predictions), self.id
+
+    def has_started(self, now=None):
+        if now is None:
+            now = Event.current_time()
+        return self.dt <= now
+
+    def creator_can_add_missing_bet(self, user_id):
+        if not self.has_started():
+            return False
+        if Bet.get_by_event_id_user_id(event_id=self.id, user_id=user_id):
+            return False
+        return True
 
     def getResults(self):
         # get results

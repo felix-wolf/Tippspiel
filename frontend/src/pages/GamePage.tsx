@@ -26,6 +26,7 @@ export function GamePage() {
   const cache = useCache();
   const [showingSettingsModal, setShowingSettingsModal] = useState(false);
   const [settingsKey, setSettingsKey] = useState(0);
+  const [eventsRefreshToken, setEventsRefreshToken] = useState(0);
 
   const gameFetchValues = useFetch<Game>({
     key: Game.buildCacheKey(game_id),
@@ -127,11 +128,16 @@ export function GamePage() {
                 type={"upcoming"}
                 placeholderText={"Es sind noch keine Events eingetragen..."}
                 isCreator={isCreator}
+                refreshToken={eventsRefreshToken}
+                onEventsChanged={() =>
+                  setEventsRefreshToken((currentToken) => currentToken + 1)
+                }
               />
               <EventList
                 game={game}
                 type={"past"}
                 placeholderText={"Es hat noch kein Event stattgefunden..."}
+                refreshToken={eventsRefreshToken}
               />
             </motion.section>
           </motion.div>

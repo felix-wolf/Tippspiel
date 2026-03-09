@@ -185,16 +185,34 @@ export class Event {
     event_id: string,
     predictions: Predictions,
   ): Promise<Event> {
+    return Event.saveBetsRequest(event_id, predictions);
+  }
+
+  public static saveBetsForUser(
+    event_id: string,
+    user_id: string,
+    predictions: Predictions,
+  ): Promise<Event> {
+    return Event.saveBetsRequest(event_id, predictions, user_id);
+  }
+
+  private static saveBetsRequest(
+    event_id: string,
+    predictions: Predictions,
+    user_id?: string,
+  ): Promise<Event> {
     return NetworkHelper.post(
       "/api/event/save_bets",
       Event.fromJson,
       {
         event_id: event_id,
+        user_id: user_id,
         predictions: predictions.map((prediction) => {
           return {
             id: prediction.id,
             bet_id: prediction.bet_id,
             object_id: prediction.object_id,
+            object_name: prediction.object_name,
             predicted_place: prediction.predicted_place,
             score: prediction.score,
           };

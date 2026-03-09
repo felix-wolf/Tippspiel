@@ -54,7 +54,10 @@ export default function Results<T>({
   if (showNoResultsFlag) {
     return (
       <ResultsWrapper>
-        <li data-test="no-results-message" className="flex flex-row px-3 py-2">
+        <li
+          data-test="no-results-message"
+          className="flex flex-row px-3 py-2 text-slate-700"
+        >
           <div className="ellipsis">{showNoResultsText}</div>
         </li>
       </ResultsWrapper>
@@ -69,7 +72,9 @@ export default function Results<T>({
     <ResultsWrapper>
       {results.slice(0, maxResults).map((result, index) => (
         <li
-          className={`${highlightedItem === index && "hover:bg-sky-100 rounded-xl"}`}
+          className={`rounded-xl ${
+            highlightedItem === index ? "bg-sky-100" : "hover:bg-slate-100"
+          }`}
           onMouseEnter={() => setHighlightedItem({ index })}
           data-test="result"
           key={`rsa-result-${result.id}`}
@@ -77,7 +82,7 @@ export default function Results<T>({
           onClick={() => handleClick(result)}
         >
           <div
-            className="text-lg py-2 px-3 cursor-pointer ellipsis"
+            className="cursor-pointer ellipsis px-3 py-2 text-lg text-slate-900"
             title={result[resultStringKeyName] as string}
           >
             {formatResultWithKey(result)}
@@ -90,7 +95,7 @@ export default function Results<T>({
 
 const ResultsWrapper = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="backdrop-blur-md bg-sky-50 border border-white/20 shadow-xl rounded-2xl">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-xl">
       <ul className="">{children}</ul>
     </div>
   );

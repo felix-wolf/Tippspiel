@@ -53,6 +53,12 @@ export function ViewBetsPage() {
     setResultsUploaded(predictionsWithResults.length > 0);
   }, [event]);
 
+  function onEventUpdated() {
+    refetchEvent(true);
+    deleteCache(Game.buildCacheKey(game_id));
+    deleteCache(EventScore.buildCacheKey(game_id));
+  }
+
   return (
     <>
       {eventLoading && <Loader />}
@@ -63,26 +69,25 @@ export function ViewBetsPage() {
               resultUrl={game.discipline.resultUrl}
               resultsUploaded={resultsUploaded}
               event={event}
-              onEventUpdated={() => {
-                refetchEvent(true);
-                deleteCache(Game.buildCacheKey(game_id));
-                deleteCache(EventScore.buildCacheKey(game_id));
-              }}
+              onEventUpdated={onEventUpdated}
             />
           )}
           {isCreator && !game?.discipline?.resultUrl && (
             <ManualResultUploader
               resultsUploaded={resultsUploaded}
               event={event}
-              onEventUpdated={() => {
-                refetchEvent(true);
-                deleteCache(Game.buildCacheKey(game_id));
-                deleteCache(EventScore.buildCacheKey(game_id));
-              }}
+              onEventUpdated={onEventUpdated}
             />
           )}
           {event && event.results.length != 0 && <ResultsList event={event} />}
-          {game && event && <BetList game={game} event={event} />}
+          {game && event && (
+            <BetList
+              game={game}
+              event={event}
+              isCreator={isCreator}
+              onEventUpdated={onEventUpdated}
+            />
+          )}
         </NavPage>
       )}
     </>

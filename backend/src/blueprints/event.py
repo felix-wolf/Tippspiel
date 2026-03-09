@@ -173,11 +173,28 @@ def save_bets():
         game, error = get_game_or_error(event.game_id)
         if error:
             return error
+        target_user_id = current_user.get_id()
+        requested_user_id = payload.get("user_id")
+        if requested_user_id and requested_user_id != current_user.get_id():
+            owner_error = require_game_owner(game)
+            if owner_error is None:
+                if requested_user_id not in [player.id for player in game.players]:
+                    return error_response("Der Nutzer gehoert nicht zu diesem Tippspiel.", 400)
+                if not event.creator_can_add_missing_bet(requested_user_id):
+                    return error_response(
+                        "Fehlende Tipps koennen nur nach Rennstart und nur einmal nachgetragen werden.",
+                        400,
+                    )
+                target_user_id = requested_user_id
+            else:
+                # Non-owners cannot spoof another player's user id.
+                target_user_id = current_user.get_id()
+
         # Only members of the game can place bets for themselves
         error = require_game_member(game)
         if error:
             return error
-        success, event_id = event.save_bet(current_user.get_id(), predictions)
+        success, event_id = event.save_bet(target_user_id, predictions)
         if not success:
             return error_response("Die Wette konnte nicht gespeichert werden.", 400)
         if success:

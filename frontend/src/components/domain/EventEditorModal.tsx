@@ -10,7 +10,7 @@ type EventCreatorProps = {
   types: EventType[] | undefined;
   event?: Event;
   game: Game;
-  onEventsChanged: () => void;
+  onEventsChanged: (changeType: "create" | "update" | "delete" | "import") => void;
   onClose: () => void;
   isOpen: boolean
 };
@@ -39,7 +39,7 @@ export function EventEditorModal({
           Event.saveImportedEvents(events)
             .then(() => {
               setSelectedEvents([])
-              _onEventsChanged()
+              _onEventsChanged("import")
               _onClose()
             })
             .catch((_) => {
@@ -59,7 +59,7 @@ export function EventEditorModal({
             updatedEvent.allowPartialPoints,
           )
             .then((_) => {
-              _onEventsChanged();
+              _onEventsChanged("update");
               resolve(true);
               _onClose()
             })
@@ -78,7 +78,7 @@ export function EventEditorModal({
             updatedEvent.pointsCorrectBet,
           )
             .then((_) => {
-              _onEventsChanged();
+              _onEventsChanged("create");
               resolve(true);
               _onClose()
             })
@@ -141,7 +141,7 @@ export function EventEditorModal({
             event={event}
             onSelectEvents={setSelectedEvents}
             types={types}
-            onEventDeleted={() => _onEventsChanged()}
+            onEventDeleted={() => _onEventsChanged("delete")}
           />
         )}
       </div>

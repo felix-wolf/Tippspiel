@@ -1,10 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Bet, Prediction } from "../src/models/Bet";
 import { Event } from "../src/models/Event";
 import { Result } from "../src/models/Result";
 import { EventType } from "../src/models/user/EventType";
 
 const normalizeJson = (value: string) => value.replace(/\n\s*/g, "").trim();
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("Event.toJson", () => {
   it("serializes the event with nested bets, results and type", () => {
@@ -156,5 +160,74 @@ describe("Event.toJson", () => {
       }`;
 
     expect(normalizeJson(eventNoUrl.toJson())).toBe(normalizeJson(expectedJson2));
+  });
+});
+
+describe("Event.saveBetsForUser", () => {
+  it("posts the creator target user and prediction names to the backend", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            id: "event-1",
+            name: "Sample Event",
+            game_id: "game-1",
+            datetime: "2024-01-02 03:04:05",
+            num_bets: 1,
+            points_correct_bet: 5,
+            allow_partial_points: false,
+            bets: [],
+            results: [],
+            has_bets_for_users: ["user-2"],
+            event_type: {
+              id: "type-1",
+              name: "Type Name",
+              display_name: "Type Display",
+              discipline_id: "discipline-1",
+              betting_on: "countries",
+            },
+            url: null,
+          }),
+        status: 200,
+        statusText: "OK",
+      } as Response);
+
+    const predictions = [
+      new Prediction(
+        "prediction-1",
+        "bet-1",
+        1,
+        "object-1",
+        "Object Name",
+        undefined,
+        undefined,
+      ),
+    ];
+
+    await Event.saveBetsForUser("event-1", "user-2", predictions as any);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/event/save_bets",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          event_id: "event-1",
+          user_id: "user-2",
+          predictions: [
+            {
+              id: "prediction-1",
+              bet_id: "bet-1",
+              object_id: "object-1",
+              object_name: "Object Name",
+              predicted_place: 1,
+              score: undefined,
+            },
+          ],
+        }),
+      }),
+    );
   });
 });

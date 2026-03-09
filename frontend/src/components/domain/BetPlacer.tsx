@@ -141,7 +141,7 @@ export function BetPlacer({
         userBet?.id,
         index + 1,
         bet_item.id!,
-        undefined,
+        bet_item.name,
         undefined,
         undefined,
       );
