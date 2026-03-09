@@ -180,10 +180,16 @@ def refresh_events_view():
 
 
 def ensure_event_location_schema():
+    ensure_event_schema()
+
+
+def ensure_event_schema():
     if not table_exists(TABLE_EVENTS):
         return
     if not column_exists(TABLE_EVENTS, "location"):
         execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN location TEXT")
+    if not column_exists(TABLE_EVENTS, "race_format"):
+        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN race_format TEXT")
     refresh_events_view()
 
 

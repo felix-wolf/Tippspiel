@@ -10,46 +10,46 @@ from src.database import db_manager
 from src.models.event import Event
 
 
-def get_events_missing_location():
+def get_events_missing_race_format():
     sql = f"""
         SELECT
             e.id,
             e.name,
-            e.location,
+            e.race_format,
             et.discipline_id
         FROM {db_manager.TABLE_EVENTS} e
         INNER JOIN {db_manager.TABLE_EVENT_TYPES} et ON et.id = e.event_type_id
-        WHERE COALESCE(TRIM(e.location), '') = ''
+        WHERE COALESCE(TRIM(e.race_format), '') = ''
         ORDER BY e.datetime ASC
     """
     return db_manager.query(sql) or []
 
 
-def build_location_updates(event_rows):
+def build_race_format_updates(event_rows):
     updates = []
     for row in event_rows:
-        location = Event.derive_location_from_name(
+        race_format = Event.derive_race_format_from_name(
             row.get("name"),
             row.get("discipline_id"),
         )
-        if location:
-            updates.append((location, row["id"], row["name"]))
+        if race_format:
+            updates.append((race_format, row["id"], row["name"]))
     return updates
 
 
-def apply_location_updates(updates):
+def apply_race_format_updates(updates):
     if not updates:
         return 0
     db_manager.execute_many(
-        f"UPDATE {db_manager.TABLE_EVENTS} SET location = ? WHERE id = ?",
-        [(location, event_id) for location, event_id, _ in updates],
+        f"UPDATE {db_manager.TABLE_EVENTS} SET race_format = ? WHERE id = ?",
+        [(race_format, event_id) for race_format, event_id, _ in updates],
     )
     return len(updates)
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Backfill event.location from existing event names.",
+        description="Backfill event.race_format from existing event names.",
     )
     parser.add_argument(
         "--env",
@@ -71,20 +71,20 @@ def main():
 
     with app.app_context():
         db_manager.ensure_event_schema()
-        event_rows = get_events_missing_location()
-        updates = build_location_updates(event_rows)
+        event_rows = get_events_missing_race_format()
+        updates = build_race_format_updates(event_rows)
 
-        print(f"Found {len(event_rows)} events without a location.")
-        print(f"Derived a location for {len(updates)} events.")
+        print(f"Found {len(event_rows)} events without a race_format.")
+        print(f"Derived a race format for {len(updates)} events.")
 
-        for location, event_id, event_name in updates:
-            print(f"{event_id}: {location} <- {event_name}")
+        for race_format, event_id, event_name in updates:
+            print(f"{event_id}: {race_format} <- {event_name}")
 
         if args.dry_run:
             print("Dry run enabled. No database changes were written.")
             return
 
-        updated_count = apply_location_updates(updates)
+        updated_count = apply_race_format_updates(updates)
         print(f"Updated {updated_count} events.")
 
 

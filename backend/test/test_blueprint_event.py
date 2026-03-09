@@ -67,6 +67,7 @@ def test_event_create_and_update(client, base_data):
     assert create_resp.status_code == 200
     created = create_resp.get_json()
     assert created["location"] is None
+    assert created["race_format"] is None
 
     update_resp = client.put(
         "/api/event",
@@ -108,6 +109,7 @@ def test_event_create_derives_location_for_biathlon_name(client, base_data):
 
     created = create_resp.get_json()
     assert created["location"] == "Antholz"
+    assert created["race_format"] == "sprint"
 
 
 def test_event_save_bets_validation(client, base_data):

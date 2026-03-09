@@ -27,6 +27,7 @@ export class Event {
   private readonly _results: Result[];
   private readonly _eventUrl?: string;
   private readonly _location?: string;
+  private readonly _raceFormat?: string;
   constructor(
     id: string,
     name: string,
@@ -42,6 +43,7 @@ export class Event {
     date?: Date,
     eventUrl?: string,
     location?: string,
+    raceFormat?: string,
   ) {
     this._id = id;
     this._name = name;
@@ -55,6 +57,7 @@ export class Event {
     this._hasBetsForUsers = hasBetsForUsers;
     this._eventUrl = eventUrl;
     this._location = location;
+    this._raceFormat = raceFormat;
     if (date) {
       this._datetime = date;
     } else {
@@ -110,6 +113,10 @@ export class Event {
     return this._location;
   }
 
+  get raceFormat(): string | undefined {
+    return this._raceFormat;
+  }
+
   get datetime(): Date {
     return this._datetime;
   }
@@ -142,7 +149,8 @@ export class Event {
       "bets": [${this._bets.map((bet) => bet.toJson()).join(",")}],
       "event_type": ${this._eventType.toJson()},
       "url": ${this._eventUrl ? `"${this._eventUrl}"` : null},
-      "location": ${this._location ? JSON.stringify(this._location) : null}
+      "location": ${this._location ? JSON.stringify(this._location) : null},
+      "race_format": ${this._raceFormat ? JSON.stringify(this._raceFormat) : null}
       }`;
   }
 
@@ -180,6 +188,7 @@ export class Event {
       undefined,
       json["url"],
       json["location"],
+      json["race_format"],
     );
   }
 
@@ -262,6 +271,7 @@ export class Event {
     numBets: number,
     pointsCorrectBet: number,
     location?: string,
+    raceFormat?: string,
   ): Promise<Event> {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -277,6 +287,7 @@ export class Event {
       num_bets: numBets,
       points_correct_bet: pointsCorrectBet,
       location: location,
+      race_format: raceFormat,
     });
   }
 
@@ -290,6 +301,7 @@ export class Event {
     pointsCorrectBet: number,
     allowPartialPoints: boolean,
     location?: string,
+    raceFormat?: string,
   ): Promise<Event> {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -307,6 +319,7 @@ export class Event {
       points_correct_bet: pointsCorrectBet,
       allow_partial_points: allowPartialPoints,
       location: location,
+      race_format: raceFormat,
     });
   }
 }

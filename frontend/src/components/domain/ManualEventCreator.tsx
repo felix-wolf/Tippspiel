@@ -69,6 +69,7 @@ export function ManualEventCreator({
           eventDetails.date,
           undefined,
           event.location,
+          event.raceFormat,
         )
         _onSelectEvents([updatedEvent])
       } else {
@@ -97,6 +98,7 @@ export function ManualEventCreator({
         d,
         undefined,
         event?.location,
+        event?.raceFormat,
       );
       _onSelectEvents([updatedEvent])
     } else {

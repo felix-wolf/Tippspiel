@@ -64,6 +64,7 @@ CREATE TABLE if not EXISTS Events (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
     location TEXT,
+    race_format TEXT,
     game_id TEXT NOT NULL,
     event_type_id TEXT NOT NULL,
     datetime DATETIME NOT NULL,

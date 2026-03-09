@@ -38,6 +38,7 @@ def test_event_create_and_get(base_data, app):
         assert fetched.url == "http://example.com/event"
         assert isinstance(fetched.event_type, EventType)
         assert fetched.location is None
+        assert fetched.race_format is None
 
 
 def test_event_create_derives_biathlon_location_from_name(base_data, app):
@@ -57,6 +58,7 @@ def test_event_create_derives_biathlon_location_from_name(base_data, app):
         fetched = Event.get_by_id(event_id, get_full_object=False)
         assert fetched is not None
         assert fetched.location == "Oberhof"
+        assert fetched.race_format == "sprint"
 
 
 def test_event_save_bet_and_has_bets(base_data, app):

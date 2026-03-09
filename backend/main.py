@@ -41,7 +41,7 @@ def create_app(env):
         print(err)
         sys.exit()
     with app.app_context():
-        db_manager.ensure_event_location_schema()
+        db_manager.ensure_event_schema()
     app.secret_key = app.config["SECRET_KEY"]
     app.logger.setLevel(logging.INFO)
     # Initialize firebase once; skip in tests if credentials are unavailable.

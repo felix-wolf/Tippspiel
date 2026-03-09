@@ -82,6 +82,7 @@ def handle_event_request():
         num_bets = payload.get("num_bets")
         points_correct_bet = payload.get("points_correct_bet")
         location = payload.get("location")
+        race_format = payload.get("race_format")
         game, error = get_game_or_error(game_id)
         if error:
             return error
@@ -92,7 +93,8 @@ def handle_event_request():
         success, event_id, event = Event.create(
             name=name, game_id=game_id, event_type_id=event_type, dt=dt, 
             num_bets=num_bets, points_correct_bet=points_correct_bet,
-            allow_partial_points=allow_partial_points, location=location
+            allow_partial_points=allow_partial_points, location=location,
+            race_format=race_format,
         )
         if success:
             return event.to_dict()
@@ -114,6 +116,7 @@ def handle_event_request():
         points_correct_bet = payload.get("points_correct_bet")
         allow_partial_points = bool(payload.get("allow_partial_points"))
         location = payload.get("location")
+        race_format = payload.get("race_format")
         game, error = get_game_or_error(game_id)
         if error:
             return error
@@ -132,6 +135,7 @@ def handle_event_request():
             points_correct_bet=points_correct_bet,
             allow_partial_points=allow_partial_points,
             location=location,
+            race_format=race_format,
         )
         if success:
             return event.to_dict()
