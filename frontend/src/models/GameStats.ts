@@ -29,6 +29,8 @@ export type GameStatsPayload = {
   locations: {
     best_total_points: GameStatsDetail | null;
     best_vs_opponents: GameStatsDetail | null;
+    worst_total_points: GameStatsDetail | null;
+    worst_vs_opponents: GameStatsDetail | null;
   };
   race_formats: {
     best_total_points: GameStatsDetail | null;

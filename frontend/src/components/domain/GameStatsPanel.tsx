@@ -238,6 +238,20 @@ export function GameStatsPanel({
           icon={<Mountain size={18} />}
         />
         <DetailCard
+          title="Schwierigster Ort"
+          detail={stats.locations.worst_total_points}
+          emptyText="Kein Ort mit ausgewerteten Tipps vorhanden."
+          accent="text-rose-700"
+          icon={<MapPinned size={18} />}
+        />
+        <DetailCard
+          title="Schwierigster Ort vs. Gegner"
+          detail={stats.locations.worst_vs_opponents}
+          emptyText="Noch kein Vergleich mit Gegnern moeglich."
+          accent="text-slate-700"
+          icon={<Mountain size={18} />}
+        />
+        <DetailCard
           title="Haefigster Athlet"
           detail={stats.athletes.most_picked}
           emptyText="Noch keine Athleten-Tipps vorhanden."

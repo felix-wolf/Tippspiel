@@ -114,6 +114,23 @@ class GameStats:
             [game_id, user_id],
         )
 
+        worst_location = GameStats._query_one(
+            f"""
+            SELECT
+                event_location AS name,
+                SUM(prediction_score) AS points,
+                COUNT(*) AS pick_count,
+                COUNT(DISTINCT event_id) AS event_count,
+                AVG(prediction_score) AS average_points
+            FROM {STATS_VIEW}
+            WHERE game_id = ? AND user_id = ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
+            GROUP BY event_location
+            ORDER BY points ASC, event_count DESC, name ASC
+            LIMIT 1
+            """,
+            [game_id, user_id],
+        )
+
         best_location_vs_opponents = GameStats._query_one(
             f"""
             WITH user_location AS (
@@ -145,6 +162,42 @@ class GameStats:
             GROUP BY ul.name, ul.user_points, ul.event_count
             HAVING COUNT(ol.user_id) > 0
             ORDER BY delta DESC, points DESC, ul.name ASC
+            LIMIT 1
+            """,
+            [game_id, user_id, game_id, user_id],
+        )
+
+        worst_location_vs_opponents = GameStats._query_one(
+            f"""
+            WITH user_location AS (
+                SELECT
+                    event_location AS name,
+                    SUM(prediction_score) AS user_points,
+                    COUNT(DISTINCT event_id) AS event_count
+                FROM {STATS_VIEW}
+                WHERE game_id = ? AND user_id = ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
+                GROUP BY event_location
+            ),
+            opponent_location AS (
+                SELECT
+                    event_location AS name,
+                    user_id,
+                    SUM(prediction_score) AS opponent_points
+                FROM {STATS_VIEW}
+                WHERE game_id = ? AND user_id != ? AND actual_place IS NOT NULL AND event_location IS NOT NULL
+                GROUP BY event_location, user_id
+            )
+            SELECT
+                ul.name,
+                ul.user_points AS points,
+                ul.event_count,
+                AVG(ol.opponent_points) AS opponent_average_points,
+                ul.user_points - AVG(ol.opponent_points) AS delta
+            FROM user_location ul
+            LEFT JOIN opponent_location ol ON ol.name = ul.name
+            GROUP BY ul.name, ul.user_points, ul.event_count
+            HAVING COUNT(ol.user_id) > 0
+            ORDER BY delta ASC, points ASC, ul.name ASC
             LIMIT 1
             """,
             [game_id, user_id, game_id, user_id],
@@ -199,13 +252,13 @@ class GameStats:
         low_return_frequent_athlete = GameStats._query_top_object(
             game_id,
             user_id,
-            "pick_count DESC, average_points ASC, points ASC, name ASC",
+            "average_points ASC, pick_count DESC, points ASC, name ASC",
             "athletes",
             min_picks=2,
         ) or GameStats._query_top_object(
             game_id,
             user_id,
-            "pick_count DESC, average_points ASC, points ASC, name ASC",
+            "average_points ASC, pick_count DESC, points ASC, name ASC",
             "athletes",
         )
         most_points_country = GameStats._query_top_object(
@@ -217,13 +270,13 @@ class GameStats:
         low_return_frequent_country = GameStats._query_top_object(
             game_id,
             user_id,
-            "pick_count DESC, average_points ASC, points ASC, name ASC",
+            "average_points ASC, pick_count DESC, points ASC, name ASC",
             "countries",
             min_picks=2,
         ) or GameStats._query_top_object(
             game_id,
             user_id,
-            "pick_count DESC, average_points ASC, points ASC, name ASC",
+            "average_points ASC, pick_count DESC, points ASC, name ASC",
             "countries",
         )
 
@@ -266,6 +319,8 @@ class GameStats:
             "locations": {
                 "best_total_points": best_location,
                 "best_vs_opponents": best_location_vs_opponents,
+                "worst_total_points": worst_location,
+                "worst_vs_opponents": worst_location_vs_opponents,
             },
             "race_formats": {
                 "best_total_points": best_race_format,
