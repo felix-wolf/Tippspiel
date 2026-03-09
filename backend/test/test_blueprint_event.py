@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from src.models.event import Event
 from src.models.game import Game
@@ -21,7 +21,7 @@ def _create_game(app, base_data):
 
 
 def _dt_string(hours_from_now=1):
-    return (datetime.now() + timedelta(hours=hours_from_now)).strftime("%d.%m.%Y, %H:%M:%S")
+    return (Event.current_time() + timedelta(hours=hours_from_now)).strftime("%d.%m.%Y, %H:%M:%S")
 
 
 def test_event_get_by_game(client, app, base_data):
@@ -32,7 +32,7 @@ def test_event_get_by_game(client, app, base_data):
             name="Test Event",
             game_id=game_id,
             event_type=base_data["event_type"],
-            dt=datetime.now() + timedelta(hours=2),
+            dt=Event.current_time() + timedelta(hours=2),
             allow_partial_points=True,
             num_bets=1,
             points_correct_bet=5,
@@ -143,7 +143,7 @@ def test_creator_can_add_missing_bet_for_player_after_start(client, app, base_da
             name="Started Event",
             game_id=game_id,
             event_type=base_data["event_type"],
-            dt=datetime.now() - timedelta(hours=1),
+            dt=Event.current_time() - timedelta(hours=1),
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=5,
@@ -186,7 +186,7 @@ def test_creator_cannot_edit_added_missing_bet(client, app, base_data):
             name="Locked Event",
             game_id=game_id,
             event_type=base_data["event_type"],
-            dt=datetime.now() - timedelta(hours=1),
+            dt=Event.current_time() - timedelta(hours=1),
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=5,
@@ -237,7 +237,7 @@ def test_creator_cannot_add_missing_bet_before_start(client, app, base_data):
             name="Upcoming Event",
             game_id=game_id,
             event_type=base_data["event_type"],
-            dt=datetime.now() + timedelta(hours=1),
+            dt=Event.current_time() + timedelta(hours=1),
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=5,
@@ -273,7 +273,7 @@ def test_creator_can_add_missing_bet_after_results_exist(client, app, base_data)
             name="Finished Event",
             game_id=game_id,
             event_type=base_data["event_type"],
-            dt=datetime.now() - timedelta(hours=2),
+            dt=Event.current_time() - timedelta(hours=2),
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=5,
