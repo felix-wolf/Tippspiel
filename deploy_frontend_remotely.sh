@@ -62,7 +62,8 @@ npm run build
 
 ssh "${SSH_OPTS[@]}" "${DEPLOY_TARGET}" "mkdir -p '${DEPLOY_REMOTE_PATH}/assets'"
 
-scp "${SCP_OPTS[@]}" -r dist/* "${DEPLOY_TARGET}:${DEPLOY_REMOTE_PATH}/"
+# Keep the target in sync with the latest Vite build and remove stale hashed assets.
+rsync -av --delete -e "ssh ${SSH_OPTS[*]}" dist/ "${DEPLOY_TARGET}:${DEPLOY_REMOTE_PATH}/"
 scp "${SCP_OPTS[@]}" firebase-messaging-sw.js "${DEPLOY_TARGET}:${DEPLOY_REMOTE_PATH}/"
 scp "${SCP_OPTS[@]}" src/assets/icons/icon-192x192.png "${DEPLOY_TARGET}:${DEPLOY_REMOTE_PATH}/assets/"
 scp "${SCP_OPTS[@]}" src/assets/icons/icon-512x512.png "${DEPLOY_TARGET}:${DEPLOY_REMOTE_PATH}/assets/"
