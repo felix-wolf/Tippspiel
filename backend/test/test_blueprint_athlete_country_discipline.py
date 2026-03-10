@@ -19,4 +19,7 @@ def test_discipline_endpoint(client, base_data):
     response = client.get("/api/disciplines")
     assert response.status_code == 200
     payload = json.loads(response.data)
-    assert any(d["id"] == base_data["discipline"].id for d in payload)
+    discipline = next((d for d in payload if d["id"] == base_data["discipline"].id), None)
+    assert discipline is not None
+    assert discipline["event_import_mode"] == "official_api"
+    assert discipline["result_mode"] == "official_api"

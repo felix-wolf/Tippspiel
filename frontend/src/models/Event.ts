@@ -28,6 +28,10 @@ export class Event {
   private readonly _eventUrl?: string;
   private readonly _location?: string;
   private readonly _raceFormat?: string;
+  private readonly _sourceProvider?: string;
+  private readonly _sourceEventId?: string;
+  private readonly _sourceRaceId?: string;
+  private readonly _seasonId?: string;
   constructor(
     id: string,
     name: string,
@@ -44,6 +48,10 @@ export class Event {
     eventUrl?: string,
     location?: string,
     raceFormat?: string,
+    sourceProvider?: string,
+    sourceEventId?: string,
+    sourceRaceId?: string,
+    seasonId?: string,
   ) {
     this._id = id;
     this._name = name;
@@ -58,6 +66,10 @@ export class Event {
     this._eventUrl = eventUrl;
     this._location = location;
     this._raceFormat = raceFormat;
+    this._sourceProvider = sourceProvider;
+    this._sourceEventId = sourceEventId;
+    this._sourceRaceId = sourceRaceId;
+    this._seasonId = seasonId;
     if (date) {
       this._datetime = date;
     } else {
@@ -121,6 +133,22 @@ export class Event {
     return this._datetime;
   }
 
+  get sourceProvider(): string | undefined {
+    return this._sourceProvider;
+  }
+
+  get sourceEventId(): string | undefined {
+    return this._sourceEventId;
+  }
+
+  get sourceRaceId(): string | undefined {
+    return this._sourceRaceId;
+  }
+
+  get seasonId(): string | undefined {
+    return this._seasonId;
+  }
+
   public processUrlForResults(url: string): Promise<Event> {
     return NetworkHelper.post("/api/results", Event.fromJson, {
       url: url,
@@ -150,7 +178,11 @@ export class Event {
       "event_type": ${this._eventType.toJson()},
       "url": ${this._eventUrl ? `"${this._eventUrl}"` : null},
       "location": ${this._location ? JSON.stringify(this._location) : null},
-      "race_format": ${this._raceFormat ? JSON.stringify(this._raceFormat) : null}
+      "race_format": ${this._raceFormat ? JSON.stringify(this._raceFormat) : null},
+      "source_provider": ${this._sourceProvider ? JSON.stringify(this._sourceProvider) : null},
+      "source_event_id": ${this._sourceEventId ? JSON.stringify(this._sourceEventId) : null},
+      "source_race_id": ${this._sourceRaceId ? JSON.stringify(this._sourceRaceId) : null},
+      "season_id": ${this._seasonId ? JSON.stringify(this._seasonId) : null}
       }`;
   }
 
@@ -189,6 +221,10 @@ export class Event {
       json["url"],
       json["location"],
       json["race_format"],
+      json["source_provider"],
+      json["source_event_id"],
+      json["source_race_id"],
+      json["season_id"],
     );
   }
 

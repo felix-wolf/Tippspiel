@@ -11,7 +11,7 @@ from src.blueprints.route_helpers import (
     require_query_arg,
     require_game_owner,
 )
-from src.blueprints.game_service import import_events_from_url
+from src.blueprints.game_service import import_events_from_url, import_official_events
 
 from flask_login import *
 
@@ -65,6 +65,22 @@ def handle_events_import_url():
         if error_message:
             return error_response(error_message, status_code or 500)
         return [event.to_dict() for event in events]
+
+
+@game_blueprint.route("/api/game/events/importable")
+@login_required
+def handle_importable_events():
+    game_id = request.args.get("game_id", None)
+    game, error = get_game_or_error(game_id)
+    if error:
+        return error
+    error = require_game_owner(game)
+    if error:
+        return error
+    events, error_message, status_code = import_official_events(game=game)
+    if error_message:
+        return error_response(error_message, status_code or 500)
+    return [event.to_dict() for event in events]
 
 @game_blueprint.route("/api/game/join", methods=["POST"])
 @login_required

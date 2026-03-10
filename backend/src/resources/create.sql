@@ -6,6 +6,7 @@ CREATE TABLE if not EXISTS Countries (
 
 CREATE TABLE if not EXISTS Athletes (
      id TEXT PRIMARY KEY NOT NULL,
+     ibu_id TEXT UNIQUE,
      first_name TEXT NOT NULL,
      last_name TEXT NOT NULL,
      country_code TEXT NOT NULL,
@@ -29,7 +30,9 @@ CREATE TABLE if not EXISTS Disciplines (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
     result_url TEXT,
-    events_url TEXT
+    events_url TEXT,
+    event_import_mode TEXT NOT NULL DEFAULT 'manual',
+    result_mode TEXT NOT NULL DEFAULT 'manual'
 );
 
 CREATE TABLE if not EXISTS Games (
@@ -71,6 +74,9 @@ CREATE TABLE if not EXISTS Events (
     num_bets INTEGER NOT NULL DEFAULT 5,
     points_correct_bet INTEGER NOT NULL DEFAULT 5,
     allow_partial_points INTEGER NOT NULL DEFAULT 1,
+    source_provider TEXT,
+    source_event_id TEXT,
+    source_race_id TEXT,
     url TEXT DEFAULT NULL,
     FOREIGN KEY(event_type_id) REFERENCES EventTypes(id) ON DELETE CASCADE,
     FOREIGN KEY(game_id) REFERENCES Games(id) ON DELETE CASCADE
@@ -83,6 +89,8 @@ CREATE TABLE if not EXISTS Results (
     object_id TEXT NOT NULL,
     time TEXT DEFAULT NULL,
     behind TEXT DEFAULT NULL,
+    shooting TEXT DEFAULT NULL,
+    shooting_time TEXT DEFAULT NULL,
     FOREIGN KEY(event_id) REFERENCES Events(id) ON DELETE CASCADE
 );
 

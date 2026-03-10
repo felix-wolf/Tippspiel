@@ -12,9 +12,26 @@ type ResultListItem = {
   objectName: string;
   time: string | undefined;
   behind: string | undefined;
+  shooting?: string;
+  shootingTime?: string;
 };
 
 export function ResultsList({ event }: ResultsListProps) {
+  const hasShooting = event.results.some((result) => result.shooting);
+  const hasShootingTime = event.results.some((result) => result.shooting_time);
+  const headers: Record<string, string> = {
+    place: "Platz",
+    objectName: "Name",
+    time: "Zeit",
+    behind: "Rückstand",
+  };
+  if (hasShooting) {
+    headers.shooting = "Schießfehler";
+  }
+  if (hasShootingTime) {
+    headers.shootingTime = "Schießzeit";
+  }
+
   return (
     <motion.section
       layout
@@ -30,7 +47,7 @@ export function ResultsList({ event }: ResultsListProps) {
         </h2>
         <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-600">
           <Clock size={14} />
-          Offizielle Zielzeiten
+          Offizielle Renndaten
         </div>
       </div>
       <TableList
@@ -41,14 +58,11 @@ export function ResultsList({ event }: ResultsListProps) {
             objectName: r.object_name,
             time: r.time,
             behind: r.behind,
+            shooting: r.shooting,
+            shootingTime: r.shooting_time,
           };
         })}
-        headers={{
-          place: "Platz",
-          objectName: "Name",
-          time: "Zeit",
-          behind: "Rückstand",
-        }}
+        headers={headers}
         customRenderers={{}}
         displayNextArrow={false}
         maxHeight={360}

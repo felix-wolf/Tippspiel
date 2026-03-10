@@ -82,7 +82,9 @@ class Event(BaseModel):
             self, name: str, game_id: str, event_type: EventType, dt: datetime,
             allow_partial_points: bool, num_bets: int = None, points_correct_bet: int = None,
             event_id: str = None, bets: list[Bet] = None, results: list[Result] = None,
-            location: str = None, race_format: str = None, url: str = None
+            location: str = None, race_format: str = None, url: str = None,
+            source_provider: str = None, source_event_id: str = None, source_race_id: str = None,
+            season_id: str = None,
             ):
         if bets is None:
             bets = []
@@ -109,6 +111,10 @@ class Event(BaseModel):
         self.location = Event.resolve_location(name, event_type, location)
         self.race_format = Event.resolve_race_format(name, event_type, race_format)
         self.url = url
+        self.source_provider = source_provider
+        self.source_event_id = source_event_id
+        self.source_race_id = source_race_id
+        self.season_id = season_id
 
     def to_dict(self):
         bets = []
@@ -132,6 +138,10 @@ class Event(BaseModel):
             "results": results,
             "has_bets_for_users": self.has_bets_for_users,
             "url": self.url,
+            "source_provider": self.source_provider,
+            "source_event_id": self.source_event_id,
+            "source_race_id": self.source_race_id,
+            "season_id": self.season_id,
 
         }
 
@@ -187,7 +197,11 @@ class Event(BaseModel):
                     dt=datetime.strptime(e_dict['datetime'], "%Y-%m-%d %H:%M:%S"),
                     location=e_dict.get("location"),
                     race_format=e_dict.get("race_format"),
-                    url=e_dict.get("url")
+                    url=e_dict.get("url"),
+                    source_provider=e_dict.get("source_provider"),
+                    source_event_id=e_dict.get("source_event_id"),
+                    source_race_id=e_dict.get("source_race_id"),
+                    season_id=e_dict.get("season_id"),
                 )
             except KeyError as e:
                 print("Could not instantiate event with given values:", e_dict, e)
@@ -211,7 +225,7 @@ class Event(BaseModel):
         return []
 
     @staticmethod
-    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, race_format: str = None, url: str = None):
+    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, race_format: str = None, url: str = None, source_provider: str = None, source_event_id: str = None, source_race_id: str = None, season_id: str = None):
         # insert event
         event_type = EventType.get_by_id(event_type_id)
         if not event_type:
@@ -219,14 +233,62 @@ class Event(BaseModel):
         event = Event(
             name=name, game_id=game_id, event_type=event_type, dt=dt, allow_partial_points=allow_partial_points,
             num_bets=num_bets, points_correct_bet=points_correct_bet,
-            location=location, race_format=race_format, url=url
+            location=location, race_format=race_format, url=url,
+            source_provider=source_provider, source_event_id=source_event_id, source_race_id=source_race_id,
+            season_id=season_id,
             )
         success, event_id = event.save_to_db()
         return success, event_id, event
 
     @staticmethod
     def save_events(events):
-        sql = f"INSERT INTO {db_manager.TABLE_EVENTS} (id, name, location, race_format, game_id, event_type_id, datetime, url) VALUES (?,?,?,?,?,?,?,?)"
+        if not events:
+            return True
+
+        game_ids = sorted({event.game_id for event in events})
+        placeholders = ",".join("?" for _ in game_ids)
+        existing_rows = db_manager.query(
+            f"""
+            SELECT id, game_id, source_provider, source_race_id
+            FROM {db_manager.TABLE_EVENTS}
+            WHERE game_id IN ({placeholders})
+            """,
+            game_ids,
+        )
+        existing_ids = {row["id"] for row in existing_rows}
+        existing_official_keys = {
+            (row["game_id"], row["source_provider"], row["source_race_id"])
+            for row in existing_rows
+            if row["source_provider"] and row["source_race_id"]
+        }
+
+        events_to_save = []
+        pending_ids = set()
+        pending_official_keys = set()
+        for event in events:
+            official_key = None
+            if event.source_provider and event.source_race_id:
+                official_key = (event.game_id, event.source_provider, event.source_race_id)
+            if event.id in existing_ids or event.id in pending_ids:
+                continue
+            if official_key and (
+                    official_key in existing_official_keys
+                    or official_key in pending_official_keys
+            ):
+                continue
+            events_to_save.append(event)
+            pending_ids.add(event.id)
+            if official_key:
+                pending_official_keys.add(official_key)
+
+        if not events_to_save:
+            return True
+
+        sql = f"""
+            INSERT INTO {db_manager.TABLE_EVENTS}
+            (id, name, location, race_format, game_id, event_type_id, datetime, source_provider, source_event_id, source_race_id, url)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        """
         success = db_manager.execute_many(
             sql=sql,
             params=[
@@ -238,9 +300,12 @@ class Event(BaseModel):
                     event.game_id,
                     event.event_type.id,
                     Event.datetime_to_string(event.dt),
+                    event.source_provider,
+                    event.source_event_id,
+                    event.source_race_id,
                     event.url,
                 )
-                for event in events
+                for event in events_to_save
             ],
             )
         return success
@@ -248,14 +313,15 @@ class Event(BaseModel):
     def save_to_db(self, commit=True):
         sql = f"""
         INSERT INTO {db_manager.TABLE_EVENTS}
-            (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, url)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, url)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """
         success = db_manager.execute(
             sql, [
                 self.id, self.name, self.location, self.race_format, self.game_id,
                 self.event_type.id, Event.datetime_to_string(self.dt),
                 self.num_bets, self.points_correct_bet, self.allow_partial_points,
+                self.source_provider, self.source_event_id, self.source_race_id,
                 self.url
             ],
             commit=commit)
@@ -331,7 +397,7 @@ class Event(BaseModel):
             if conn:
                 conn.close()
 
-    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, race_format: str = None):
+    def update(self, name: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, race_format: str = None, source_provider: str = None, source_event_id: str = None, source_race_id: str = None):
         """Update an event's information. If the type is changed, all bets are deleted :("""
         success = True
         if name != self.name:
@@ -364,6 +430,10 @@ class Event(BaseModel):
             self.allow_partial_points = allow_partial_points
         self.location = Event.resolve_location(self.name, self.event_type, location)
         self.race_format = Event.resolve_race_format(self.name, self.event_type, race_format)
+        if source_provider is not None or source_event_id is not None or source_race_id is not None:
+            self.source_provider = source_provider
+            self.source_event_id = source_event_id
+            self.source_race_id = source_race_id
         if success:
             sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
                     name = ?,
@@ -373,7 +443,10 @@ class Event(BaseModel):
                     datetime = ?,
                     num_bets = ?,
                     points_correct_bet = ?,
-                    allow_partial_points = ?
+                    allow_partial_points = ?,
+                    source_provider = ?,
+                    source_event_id = ?,
+                    source_race_id = ?
                     WHERE id = ?
                 """
             success = db_manager.execute(
@@ -387,6 +460,9 @@ class Event(BaseModel):
                     num_bets,
                     points_correct_bet,
                     1 if allow_partial_points else 0,
+                    self.source_provider,
+                    self.source_event_id,
+                    self.source_race_id,
                     self.id,
                 ]
             )

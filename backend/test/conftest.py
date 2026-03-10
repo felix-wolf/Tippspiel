@@ -54,6 +54,8 @@ def base_data(app):
             event_types=[],
             result_url="https://example.com/results",
             events_url="https://example.com/events",
+            event_import_mode="official_api",
+            result_mode="official_api",
         )
         discipline.save_to_db()
 
@@ -80,6 +82,7 @@ def base_data(app):
             country_code=country.code,
             gender="m",
             discipline=discipline.id,
+            ibu_id="IBU-1",
         )
         athlete.save_to_db()
 

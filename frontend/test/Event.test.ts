@@ -60,6 +60,12 @@ describe("Event.toJson", () => {
       ["user-1", "user-2"],
       new Date(2024, 0, 2, 3, 4, 5),
       "https://example.com/event",
+      undefined,
+      undefined,
+      "ibu",
+      "event-source-1",
+      "race-source-1",
+      "2526",
     );
 
     const expectedJson1 = `{
@@ -101,7 +107,11 @@ describe("Event.toJson", () => {
     },
       "url": "https://example.com/event",
       "location": null,
-      "race_format": null
+      "race_format": null,
+      "source_provider": "ibu",
+      "source_event_id": "event-source-1",
+      "source_race_id": "race-source-1",
+      "season_id": "2526"
       }`;
 
     expect(normalizeJson(event.toJson())).toBe(normalizeJson(expectedJson1));
@@ -160,7 +170,11 @@ describe("Event.toJson", () => {
     },
       "url": null,
       "location": null,
-      "race_format": null
+      "race_format": null,
+      "source_provider": null,
+      "source_event_id": null,
+      "source_race_id": null,
+      "season_id": null
       }`;
 
     expect(normalizeJson(eventNoUrl.toJson())).toBe(normalizeJson(expectedJson2));

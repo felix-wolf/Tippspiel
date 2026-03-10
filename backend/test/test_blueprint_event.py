@@ -112,6 +112,41 @@ def test_event_create_derives_location_for_biathlon_name(client, base_data):
     assert created["race_format"] == "sprint"
 
 
+def test_event_import_is_idempotent_for_existing_official_event(client, app, base_data):
+    game_id = client.post(
+        "/api/game",
+        json={"name": "Import Game", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+
+    with app.app_context():
+        imported_event = Event(
+            name="Oberhof (GER) - Women Sprint",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=Event.current_time() + timedelta(hours=2),
+            allow_partial_points=True,
+            location="Oberhof (GER)",
+            race_format="sprint",
+            source_provider="ibu",
+            source_event_id="event-123",
+            source_race_id="race-123",
+            url="https://www.biathlonworld.com/results/race-123",
+        )
+        payload = imported_event.to_dict()
+
+    first_resp = client.post("/api/event", json={"events": [json.dumps(payload)]})
+    assert first_resp.status_code == 200
+
+    second_resp = client.post("/api/event", json={"events": [json.dumps(payload)]})
+    assert second_resp.status_code == 200
+
+    events_resp = client.get(f"/api/event?game_id={game_id}")
+    assert events_resp.status_code == 200
+    events_payload = events_resp.get_json()
+    assert len(events_payload) == 1
+    assert events_payload[0]["source_race_id"] == "race-123"
+
+
 def test_event_save_bets_validation(client, base_data):
     game_id = client.post(
         "/api/game",

@@ -10,6 +10,7 @@ import src.chrome_manager as chrome_manager
 class Athlete(BaseModel):
 
     id: str
+    ibu_id: str | None
     first_name: str
     last_name: str
     country_code: str
@@ -17,8 +18,9 @@ class Athlete(BaseModel):
     discipline: str
     flag: str = None
 
-    def __init__(self, athlete_id, first_name, last_name, country_code, gender, discipline, flag=None):
+    def __init__(self, athlete_id, first_name, last_name, country_code, gender, discipline, flag=None, ibu_id=None):
         object.__setattr__(self, "id", athlete_id or utils.generate_id([last_name, first_name, country_code]))
+        object.__setattr__(self, "ibu_id", ibu_id)
         object.__setattr__(self, "first_name", first_name)
         object.__setattr__(self, "last_name", last_name)
         object.__setattr__(self, "country_code", country_code)
@@ -40,6 +42,7 @@ class Athlete(BaseModel):
     def to_dict(self):
         return {
             "id": self.id,
+            "ibu_id": self.ibu_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "country_code": self.country_code,
@@ -59,11 +62,12 @@ class Athlete(BaseModel):
                 flag = "🏴‍☠️"
             if "id" in a_dict:
                 a_id = a_dict["id"]
+            ibu_id = a_dict.get("ibu_id")
             try:
                 return Athlete(
                     athlete_id=a_id, first_name=a_dict['first_name'], last_name=a_dict['last_name'],
                     country_code=a_dict['country_code'], gender=a_dict['gender'],
-                    discipline=a_dict['discipline'], flag=flag
+                    discipline=a_dict['discipline'], flag=flag, ibu_id=ibu_id
                 )
             except KeyError as e:
                 print("Could not instantiate athlete with given values:", a_dict, e)
@@ -85,16 +89,33 @@ class Athlete(BaseModel):
             return None
         return Athlete.from_dict(res)
 
+    @staticmethod
+    def get_by_ibu_id(ibu_id):
+        if not ibu_id:
+            return None
+        sql = f"SELECT * FROM {db_manager.TABLE_ATHLETES} a WHERE a.ibu_id = ?"
+        res = db_manager.query_one(sql, [ibu_id])
+        if not res:
+            return None
+        return Athlete.from_dict(res)
+
     def save_to_db(self):
         sql = f"""
             INSERT OR IGNORE INTO {db_manager.TABLE_ATHLETES} 
-            (id, first_name, last_name, country_code, gender, discipline)
-            VALUES (?,?,?,?,?,?)
+            (id, ibu_id, first_name, last_name, country_code, gender, discipline)
+            VALUES (?,?,?,?,?,?,?)
             """
         success = db_manager.execute(sql, [
-            self.id, self.first_name, self.last_name, self.country_code, self.gender, self.discipline
+            self.id, self.ibu_id, self.first_name, self.last_name, self.country_code, self.gender, self.discipline
         ])
         return success, self.id
+
+    def set_ibu_id(self, ibu_id):
+        self.ibu_id = ibu_id
+        return db_manager.execute(
+            f"UPDATE {db_manager.TABLE_ATHLETES} SET ibu_id = ? WHERE id = ?",
+            [ibu_id, self.id],
+        )
 
     @staticmethod
     def get_base_data():

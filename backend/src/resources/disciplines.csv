@@ -1,3 +1,3 @@
-id;name;result_url;events_url
-biathlon;Biathlon;realbiathlon.com;realbiathlon.com/races.html
+id;name;result_url;events_url;event_import_mode;result_mode
+biathlon;Biathlon;biathlonworld.com/results;realbiathlon.com/races.html;official_api;official_api
 skispringen;Skispringen;;

@@ -201,3 +201,43 @@ def test_game_events_import_requires_url(client, app, base_data):
     response = client.get("/api/game/events", query_string={"game_id": game_id})
     assert response.status_code == 400
     assert response.get_json()["error"] == "Die Event-URL fehlt."
+
+
+def test_game_importable_events_returns_official_candidates(client, app, base_data, monkeypatch):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Importable Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+    imported_event = Event(
+        name="Oberhof - Women Mass Start",
+        game_id=game_id,
+        event_type=base_data["event_type"],
+        dt=datetime.now() + timedelta(days=1),
+        allow_partial_points=True,
+        source_provider="ibu",
+        source_event_id="event-123",
+        source_race_id="race-123",
+        season_id="2526",
+    )
+
+    def fake_fetch_importable_events(self, game_id, now=None):
+        assert game_id == imported_event.game_id
+        return [imported_event], None
+
+    monkeypatch.setattr(Biathlon, "fetch_importable_events", fake_fetch_importable_events)
+
+    response = client.get(
+        "/api/game/events/importable",
+        query_string={"game_id": game_id},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload[0]["source_provider"] == "ibu"
+    assert payload[0]["source_race_id"] == "race-123"
+    assert payload[0]["season_id"] == "2526"

@@ -100,6 +100,16 @@ export class Game {
     );
   }
 
+  public fetchImportableEvents(): Promise<Event[]> {
+    const builder = (res: any): Event[] => {
+      return res.map((event: any) => Event.fromJson(event));
+    };
+    return NetworkHelper.fetchAll(
+      `/api/game/events/importable?game_id=${this._id}`,
+      builder,
+    );
+  }
+
   public saveNewName(newName: string): Promise<Game> {
     return NetworkHelper.update(
       "/api/game/update",

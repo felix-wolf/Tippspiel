@@ -31,10 +31,21 @@ def populate_db(db_path):
     for discipline in disciplines:
         sql = f"""
                 INSERT OR IGNORE INTO {db_manager.TABLE_DISCIPLINES} 
-                (id, name, result_url, events_url)
-                VALUES (?,?,?,?)
+                (id, name, result_url, events_url, event_import_mode, result_mode)
+                VALUES (?,?,?,?,?,?)
                 """
-        execute(sql, [discipline.id, discipline.name, discipline.result_url, discipline.events_url], db_path=db_path)
+        execute(
+            sql,
+            [
+                discipline.id,
+                discipline.name,
+                discipline.result_url,
+                discipline.events_url,
+                discipline.event_import_mode,
+                discipline.result_mode,
+            ],
+            db_path=db_path,
+        )
 
     print("Inserting countries types")
     countries = Country.get_base_data()
@@ -51,11 +62,11 @@ def populate_db(db_path):
     for athlete in athletes:
         sql = f"""
             INSERT OR IGNORE INTO {db_manager.TABLE_ATHLETES} 
-            (id, first_name, last_name, country_code, gender, discipline)
-            VALUES (?,?,?,?,?,?)
+            (id, ibu_id, first_name, last_name, country_code, gender, discipline)
+            VALUES (?,?,?,?,?,?,?)
             """
         execute(sql, [
-            athlete.id, athlete.first_name, athlete.last_name, athlete.country_code, athlete.gender, athlete.discipline
+            athlete.id, athlete.ibu_id, athlete.first_name, athlete.last_name, athlete.country_code, athlete.gender, athlete.discipline
         ])
 
     print("db initialized")

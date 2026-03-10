@@ -7,6 +7,8 @@ export class Result {
   private readonly _object_name: string;
   private readonly _time?: string;
   private readonly _behind?: string;
+  private readonly _shooting?: string;
+  private readonly _shooting_time?: string;
 
   constructor(
     id: string,
@@ -16,6 +18,8 @@ export class Result {
     obejct_name: string,
     time?: string,
     behind?: string,
+    shooting?: string,
+    shooting_time?: string,
   ) {
     this._id = id;
     this._event_id = event_id;
@@ -24,18 +28,27 @@ export class Result {
     this._object_name = obejct_name;
     this._time = time;
     this._behind = behind;
+    this._shooting = shooting;
+    this._shooting_time = shooting_time;
   }
 
   public toJson(): string {
-    return `{
-      "id": "${this.id}",
-      "event_id": "${this.event_id}",
-      "place": "${this.place}",
-      "object_id": "${this.object_id}",
-      "object_name": "${this.object_name}",
-      "time": "${this.time}",
-      "behind": "${this.behind}"
-    }`;
+    const payload: Record<string, string | undefined> = {
+      id: this.id,
+      event_id: this.event_id,
+      place: `${this.place}`,
+      object_id: this.object_id,
+      object_name: this.object_name,
+      time: this.time,
+      behind: this.behind,
+    };
+    if (this.shooting !== undefined) {
+      payload.shooting = this.shooting;
+    }
+    if (this.shooting_time !== undefined) {
+      payload.shooting_time = this.shooting_time;
+    }
+    return JSON.stringify(payload, null, 2);
   }
 
   public static fromJson(json: any): Result {
@@ -47,6 +60,8 @@ export class Result {
       json["object_name"],
       json["time"],
       json["behind"],
+      json["shooting"],
+      json["shooting_time"],
     );
   }
 
@@ -76,5 +91,13 @@ export class Result {
 
   get behind(): string | undefined {
     return this._behind;
+  }
+
+  get shooting(): string | undefined {
+    return this._shooting;
+  }
+
+  get shooting_time(): string | undefined {
+    return this._shooting_time;
   }
 }

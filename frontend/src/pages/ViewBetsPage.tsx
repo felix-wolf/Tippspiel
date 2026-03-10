@@ -64,7 +64,7 @@ export function ViewBetsPage() {
       {eventLoading && <Loader />}
       {!eventLoading && (
         <NavPage title={<span className="text-sky-800">{event?.name}</span>}>
-          {isCreator && game?.discipline?.resultUrl && (
+          {isCreator && game?.discipline?.resultMode === "legacy_url" && game?.discipline?.resultUrl && (
             <URLResultUploader
               resultUrl={game.discipline.resultUrl}
               resultsUploaded={resultsUploaded}
@@ -72,7 +72,13 @@ export function ViewBetsPage() {
               onEventUpdated={onEventUpdated}
             />
           )}
-          {isCreator && !game?.discipline?.resultUrl && (
+          {isCreator && game?.discipline?.resultMode === "official_api" && (
+            <p className="mb-3 text-sm text-gray-500">
+              Ergebnisse werden fuer offizielle Biathlon-Events automatisch
+              geladen. Die manuelle Eingabe bleibt als Fallback verfuegbar.
+            </p>
+          )}
+          {isCreator && game?.discipline?.resultMode !== "legacy_url" && (
             <ManualResultUploader
               resultsUploaded={resultsUploaded}
               event={event}

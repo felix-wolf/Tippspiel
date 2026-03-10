@@ -3,6 +3,7 @@ import { BetInputItem } from "../components/design/BetInput";
 
 export class Athlete {
   private readonly _id: string;
+  private readonly _ibu_id: string | undefined;
   private readonly _first_name: string;
   private readonly _last_name: string;
   private readonly _country_code: string;
@@ -13,6 +14,7 @@ export class Athlete {
 
   constructor(
     id: string,
+    ibu_id: string | undefined,
     first_name: string,
     last_name: string,
     country_code: string,
@@ -21,6 +23,7 @@ export class Athlete {
     discipline: string,
   ) {
     this._id = id;
+    this._ibu_id = ibu_id;
     this._first_name = first_name;
     this._last_name = last_name;
     this._country_code = country_code;
@@ -31,6 +34,10 @@ export class Athlete {
 
   get id(): string {
     return this._id;
+  }
+
+  get ibu_id(): string | undefined {
+    return this._ibu_id;
   }
 
   get first_name(): string {
@@ -63,6 +70,7 @@ export class Athlete {
   public static fromJson(json: any): Athlete {
     return new Athlete(
       json["id"],
+      json["ibu_id"],
       json["first_name"],
       json["last_name"],
       json["country_code"],

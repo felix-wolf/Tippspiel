@@ -4,7 +4,18 @@ from src.models.base_model import BaseModel
 
 class Result(BaseModel):
 
-    def __init__(self, event_id: str, place: int, object_id: str, object_name: str = None, result_id: str = None, time: str = None, behind: str = None):
+    def __init__(
+            self,
+            event_id: str,
+            place: int,
+            object_id: str,
+            object_name: str = None,
+            result_id: str = None,
+            time: str = None,
+            behind: str = None,
+            shooting: str = None,
+            shooting_time: str = None,
+            ):
         if result_id is None:
             self.id = utils.generate_id([event_id, place, object_id])
         else:
@@ -15,6 +26,8 @@ class Result(BaseModel):
         self.object_name = object_name
         self.time = time
         self.behind = behind
+        self.shooting = shooting
+        self.shooting_time = shooting_time
 
     @staticmethod
     def from_dict(r_dict):
@@ -26,7 +39,9 @@ class Result(BaseModel):
                 object_name=r_dict['object_name'], 
                 result_id=r_dict['id'], 
                 time=r_dict.get('time'),
-                behind=r_dict.get('behind')
+                behind=r_dict.get('behind'),
+                shooting=r_dict.get('shooting'),
+                shooting_time=r_dict.get('shooting_time'),
             )
         else:
             return None
@@ -55,16 +70,27 @@ class Result(BaseModel):
             "object_id": self.object_id,
             "object_name": self.object_name,
             "time": self.time,
-            "behind": self.behind
+            "behind": self.behind,
+            "shooting": self.shooting,
+            "shooting_time": self.shooting_time,
         }
 
     def save_to_db(self, commit=True, conn=None):
         sql = f"""
             INSERT INTO {db_manager.TABLE_RESULTS} 
-            (id, event_id, place, object_id, time, behind)
-            VALUES (?,?,?,?,?,?)
+            (id, event_id, place, object_id, time, behind, shooting, shooting_time)
+            VALUES (?,?,?,?,?,?,?,?)
         """
-        params = [self.id, self.event_id, self.place, self.object_id, self.time, self.behind]
+        params = [
+            self.id,
+            self.event_id,
+            self.place,
+            self.object_id,
+            self.time,
+            self.behind,
+            self.shooting,
+            self.shooting_time,
+        ]
         if conn:
             conn.execute(sql, params)
             return True, self.id

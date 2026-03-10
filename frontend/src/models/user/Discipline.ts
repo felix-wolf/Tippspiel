@@ -1,12 +1,16 @@
 import { NetworkHelper } from "../NetworkHelper";
 import { EventType } from "./EventType";
 
+export type DisciplineImportMode = "manual" | "legacy_url" | "official_api";
+
 export class Discipline {
   private readonly _id: string;
   private readonly _name: string;
   private readonly _eventTypes: EventType[];
   private readonly _resultUrl: string | undefined;
   private readonly _eventsUrl: string | undefined;
+  private readonly _eventImportMode: DisciplineImportMode;
+  private readonly _resultMode: DisciplineImportMode;
 
   constructor(
     id: string,
@@ -14,12 +18,16 @@ export class Discipline {
     eventTypes: EventType[],
     resultUrl: string | undefined,
     eventsUrl: string | undefined,
+    eventImportMode: DisciplineImportMode,
+    resultMode: DisciplineImportMode,
   ) {
     this._id = id;
     this._name = name;
     this._eventTypes = eventTypes;
     this._resultUrl = resultUrl;
     this._eventsUrl = eventsUrl;
+    this._eventImportMode = eventImportMode;
+    this._resultMode = resultMode;
   }
 
   get id(): string {
@@ -42,6 +50,14 @@ export class Discipline {
     return this._eventsUrl;
   }
 
+  get eventImportMode(): DisciplineImportMode {
+    return this._eventImportMode;
+  }
+
+  get resultMode(): DisciplineImportMode {
+    return this._resultMode;
+  }
+
   public static fromJson(json: any) {
     return new Discipline(
       json["id"],
@@ -51,6 +67,8 @@ export class Discipline {
       ),
       json["result_url"],
       json["events_url"],
+      json["event_import_mode"] ?? "manual",
+      json["result_mode"] ?? "manual",
     );
   }
 

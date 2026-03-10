@@ -148,3 +148,42 @@ def test_results_check_processes_due_event(client, app, base_data, monkeypatch):
     payload = response.get_json()
     assert payload["name"] == "Auto Result Event"
     assert payload["results"][0]["place"] == 1
+
+
+def test_results_check_prefers_official_source_ids(client, app, base_data, monkeypatch):
+    def fake_process_official_results(self, event):
+        assert event.source_race_id == "race-123"
+        return [Result(event.id, 1, base_data["athlete"].id)], None
+
+    def fail_process_results_url(self, url, event):
+        raise AssertionError("legacy URL processing should not be used for official API events")
+
+    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+    monkeypatch.setattr(Biathlon, "process_results_url", fail_process_results_url)
+
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Official Auto Result Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        event = Event(
+            name="Official Auto Result Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() - timedelta(hours=2),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-123",
+            source_race_id="race-123",
+        )
+        event.save_to_db()
+
+    response = client.get("/api/results/check")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["name"] == "Official Auto Result Event"
+    assert payload["results"][0]["place"] == 1

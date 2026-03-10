@@ -228,6 +228,45 @@ def ensure_event_location_schema():
     ensure_event_schema()
 
 
+def ensure_athlete_schema():
+    if not table_exists(TABLE_ATHLETES):
+        return
+    if not column_exists(TABLE_ATHLETES, "ibu_id"):
+        execute(f"ALTER TABLE {TABLE_ATHLETES} ADD COLUMN ibu_id TEXT")
+
+
+def ensure_result_schema():
+    if not table_exists(TABLE_RESULTS):
+        return
+    if not column_exists(TABLE_RESULTS, "shooting"):
+        execute(f"ALTER TABLE {TABLE_RESULTS} ADD COLUMN shooting TEXT")
+    if not column_exists(TABLE_RESULTS, "shooting_time"):
+        execute(f"ALTER TABLE {TABLE_RESULTS} ADD COLUMN shooting_time TEXT")
+
+
+def ensure_discipline_schema():
+    if not table_exists(TABLE_DISCIPLINES):
+        return
+    if not column_exists(TABLE_DISCIPLINES, "event_import_mode"):
+        execute(
+            f"ALTER TABLE {TABLE_DISCIPLINES} ADD COLUMN event_import_mode TEXT NOT NULL DEFAULT 'manual'"
+        )
+    if not column_exists(TABLE_DISCIPLINES, "result_mode"):
+        execute(
+            f"ALTER TABLE {TABLE_DISCIPLINES} ADD COLUMN result_mode TEXT NOT NULL DEFAULT 'manual'"
+        )
+    execute(
+        f"""
+        UPDATE {TABLE_DISCIPLINES}
+        SET
+            result_url = 'biathlonworld.com/results',
+            event_import_mode = 'official_api',
+            result_mode = 'official_api'
+        WHERE id = 'biathlon'
+        """
+    )
+
+
 def ensure_event_schema():
     if not table_exists(TABLE_EVENTS):
         return
@@ -235,6 +274,15 @@ def ensure_event_schema():
         execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN location TEXT")
     if not column_exists(TABLE_EVENTS, "race_format"):
         execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN race_format TEXT")
+    if not column_exists(TABLE_EVENTS, "source_provider"):
+        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN source_provider TEXT")
+    if not column_exists(TABLE_EVENTS, "source_event_id"):
+        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN source_event_id TEXT")
+    if not column_exists(TABLE_EVENTS, "source_race_id"):
+        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN source_race_id TEXT")
+    ensure_result_schema()
+    ensure_athlete_schema()
+    ensure_discipline_schema()
     refresh_analytics_views()
 
 

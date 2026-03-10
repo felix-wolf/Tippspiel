@@ -16,7 +16,9 @@ describe("Result.toJson", () => {
         "Object Name",
         "10:00",
         "0.2",
-      )
+        "0 1",
+        "1:42.0",
+      );
 
     const expectedJson = `{
       "id": "${result.id}",
@@ -25,7 +27,9 @@ describe("Result.toJson", () => {
       "object_id": "${result.object_id}",
       "object_name": "${result.object_name}",
       "time": "${result.time}",
-      "behind": "${result.behind}"
+      "behind": "${result.behind}",
+      "shooting": "${result.shooting}",
+      "shooting_time": "${result.shooting_time}"
       }`;
 
     expect(normalizeJson(result.toJson())).toBe(normalizeJson(expectedJson));

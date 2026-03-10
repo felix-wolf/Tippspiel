@@ -43,12 +43,12 @@ export function DialogModal({
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-3xl bg-slate-900/95 text-slate-50 shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            className="relative transform overflow-hidden rounded-3xl bg-slate-950/96 text-slate-50 shadow-2xl outline -outline-offset-1 outline-white/8 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
           >
             {/* Header */}
-            <div className="bg-slate-900/95 flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="bg-slate-950/90 flex items-center justify-between px-6 py-4 border-b border-white/8">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-sky-700 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-sky-500/18 ring-1 ring-sky-300/25 flex items-center justify-center">
                   {type == "add" && <Plus size={20} color="white" />}
                   {type == "enter" && <LogIn size={20} color="white" />}
                   {type == "edit" && <Wrench size={20} color="white" />}
@@ -60,7 +60,7 @@ export function DialogModal({
               </div>
               <button
                 onClick={_onClose}
-                className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition"
+                className="p-1.5 rounded-full hover:bg-white/6 text-slate-400 hover:text-slate-100 transition"
               >
                 <X size={18} />
               </button>
@@ -70,7 +70,7 @@ export function DialogModal({
               {children}
             </div>
             {((_onNeutralClick && neutralButtonTitle) || (_onActionClick && actionButtonTitle)) && (
-              <div className="bg-gray-700/25 px-4 py-3 grid grid-cols-2 px-6 gap-3 justify-center">
+              <div className="border-t border-white/8 bg-slate-900/70 px-4 py-3 grid grid-cols-2 px-6 gap-3 justify-center">
                 {_onNeutralClick && neutralButtonTitle && <Button title={neutralButtonTitle} onClick={_onNeutralClick} type="neutral" />}
                 {_onActionClick && actionButtonTitle &&
                   <Shakable shaking={shakingActionButton ?? false}>

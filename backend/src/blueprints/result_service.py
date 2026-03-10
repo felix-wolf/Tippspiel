@@ -9,10 +9,17 @@ from src.time_utils import berlin_now, ensure_berlin_time
 
 
 def load_results(event: Event, url: str = None, results_json: list = None):
+    discipline = Discipline.get_by_id(event.event_type.discipline_id)
+    if not discipline:
+        return None, "Die Ergebnisse konnten nicht verarbeitet werden.", 500
+
+    if event.source_provider == "ibu" and event.source_race_id:
+        results, error = discipline.process_official_results(event)
+        if error:
+            return None, error, 500
+        return results, None, None
+
     if url:
-        discipline = Discipline.get_by_id(event.event_type.discipline_id)
-        if not discipline:
-            return None, "Die Ergebnisse konnten nicht verarbeitet werden.", 500
         if not discipline.validate_result_url(url):
             return None, "Die Ergebnis-URL ist für diese Disziplin ungültig.", 400
         results, error = discipline.process_results_url(url, event)
@@ -75,7 +82,10 @@ def check_recent_results(now=None):
             > (current_time - ensure_berlin_time(event.dt))
             > timedelta(minutes=60)
             and not event.results
-            and event.url is not None
+            and (
+                (event.source_provider == "ibu" and event.source_race_id)
+                or event.url is not None
+            )
         ]
         if not recent_events:
             continue
