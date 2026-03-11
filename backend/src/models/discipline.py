@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import logging
 
 from src.database import db_manager
@@ -9,12 +8,6 @@ from src.models.result import Result
 from src.models.athlete import Athlete
 from src.models.country import Country
 from src.athlete_duplicates import resolve_existing_athlete
-import src.utils as utils
-import src.chrome_manager as chrome_manager
-from selenium.webdriver.common.by import By
-from selenium.common import NoSuchElementException
-from datetime import datetime
-import pandas as pd
 import requests
 from flask import current_app, has_app_context
 
@@ -25,10 +18,8 @@ logger = logging.getLogger(__name__)
 
 class Discipline(BaseModel):
     EVENT_IMPORT_MODE_MANUAL = "manual"
-    EVENT_IMPORT_MODE_LEGACY_URL = "legacy_url"
     EVENT_IMPORT_MODE_OFFICIAL_API = "official_api"
     RESULT_MODE_MANUAL = "manual"
-    RESULT_MODE_LEGACY_URL = "legacy_url"
     RESULT_MODE_OFFICIAL_API = "official_api"
 
     def __init__(self, discipline_id: str, name: str, event_types: list[EventType], result_url: str = None,
@@ -41,14 +32,6 @@ class Discipline(BaseModel):
         self.events_url = events_url
         self.event_import_mode = event_import_mode
         self.result_mode = result_mode
-
-    @abstractmethod
-    def process_events_url(self, url):
-        pass
-
-    @abstractmethod
-    def process_results_url(self, url, event):
-        pass
 
     def fetch_importable_events(self, game_id, now=None):
         return [], "Disziplin nicht auswertbar"
@@ -66,12 +49,6 @@ class Discipline(BaseModel):
             "event_import_mode": self.event_import_mode,
             "result_mode": self.result_mode,
         }
-
-    def validate_result_url(self, url):
-        return self.result_url is not None and self.result_url in url
-
-    def validate_events_url(self, url):
-        return self.events_url is not None and self.events_url in url
 
     @staticmethod
     def from_dict(a_dict, event_types):
@@ -160,51 +137,6 @@ class Discipline(BaseModel):
 
 class Biathlon(Discipline):
     RESULT_PAGE_PREFIX = "https://www.biathlonworld.com/results/"
-
-    def process_events_url(self, url, game_id):
-        driver = chrome_manager.configure_driver()
-        driver.implicitly_wait(3)
-        driver.get(url)
-        try:
-            parent_element = driver.find_element(by=By.XPATH, value='//*[@id="tablesdiv"]')
-            tables = parent_element.find_elements(by=By.CLASS_NAME, value="locationdiv")
-            events = []
-            for t in tables:
-
-                location_name = t.find_element(by=By.TAG_NAME, value='h4').get_attribute('innerHTML').strip()
-                table = chrome_manager.read_table_into_df(url=url, table_element_key=By.ID, table_element_value="thistable", element=t)
-                for _, row in table.iterrows():
-
-                    def get_correct_event_type(event_description):
-                        if "relay" in event_description.lower():
-                            return next((e_type for e_type in self.event_types if e_type.name == "relay"))
-                        elif "women" in event_description.lower():
-                            return next((e_type for e_type in self.event_types if e_type.name == "women"))
-                        else:
-                            return next((e_type for e_type in self.event_types if e_type.name == "men"))
-
-                    e = Event(
-                        name=location_name.split(" | ")[0] + " - " + row['Description'],
-                        game_id=game_id,
-                        event_type=get_correct_event_type(row['Description']),
-                        dt=datetime.strptime(f"{row['Date']} {row['Time']}", "%Y-%m-%d %H:%M"),
-                        allow_partial_points=True,
-                        event_id=None,
-                        bets=None,
-                        results=None,
-                        location=location_name.split(" | ")[0].strip(),
-                        )
-                    events.append(e)
-
-            #events = self.__add_event_urls(driver, url, events)
-
-            return events, None
-
-        except NoSuchElementException as exc:
-            return None
-        finally:
-            driver.close()
-            driver.quit()
 
     def fetch_importable_events(self, game_id, now=None):
         try:
@@ -317,84 +249,6 @@ class Biathlon(Discipline):
             return results, None
 
         return [], "Wettobjekt nicht bekannt"
-
-
-    def process_results_url(self, url, event):
-        df = chrome_manager.read_table_into_df(url, "thistable")
-        if df is None:
-            return [], "Fehler beim Parsen der Webseite"
-
-        if event.event_type.betting_on == "countries":
-            if "Rank" not in df or "Country" not in df or "Nation" not in df:
-                return [], "Webseite enthält nicht die erwarteten Daten"
-            df = df[df["Country"].notnull()]
-            results = []
-            for _, row in df.iterrows():
-                place = row["Rank"]
-                country_name = row["Country"]
-                nation = row['Nation']
-                time = row.get("Total Time") if pd.notna(row.get("Total Time")) else None
-                behind = row.get("Behind") if pd.notna(row.get("Behind")) else None
-                country = Country.get_by_id(nation)
-                if country is None:
-                    country = Country(nation, country_name, "🏴‍☠️")
-                    country.save_to_db()
-                result = Result(
-                    event_id=event.id,
-                    place=utils.validate_int(place),
-                    object_id=country.code,
-                    object_name=country.name,
-                    time=time,
-                    behind=behind
-                )
-                results.append(result)
-            return results, None
-
-        elif event.event_type.betting_on == "athletes":
-            if "Rank" not in df or "Family\xa0Name" not in df or "Given Name" not in df or "Nation" not in df:
-                print("Webseite enthält nicht die erwarteten Daten")
-                return [], "Webseite enthält nicht die erwarteten Daten"
-            athletes = []
-            result_rows = []
-            for _, row in df.iterrows():
-                last_name = row["Family\xa0Name"]
-                first_name = row["Given Name"]
-                country_code = row["Nation"]
-                a_id = utils.generate_id([last_name, first_name, country_code])
-                a = Athlete(
-                    athlete_id=a_id,
-                    first_name=first_name,
-                    last_name=last_name,
-                    country_code=country_code,
-                    gender="?",
-                    discipline="biathlon"
-                )
-                athletes.append(a)
-                result_rows.append(
-                    {
-                        "place": utils.validate_int(row["Rank"]),
-                        "time": row.get("Total Time") if pd.notna(row.get("Total Time")) else None,
-                        "behind": row.get("Behind") if pd.notna(row.get("Behind")) else None,
-                    }
-                )
-            resolved_athletes = self.process_athletes(athletes)
-            results = []
-            for row_data, athlete in zip(result_rows, resolved_athletes):
-                results.append(
-                    Result(
-                        event_id=event.id,
-                        place=row_data["place"],
-                        object_id=athlete.id,
-                        object_name=f"{athlete.first_name} {athlete.last_name}",
-                        time=row_data["time"],
-                        behind=row_data["behind"],
-                    )
-                )
-            return results, None
-
-        else:
-            return [], "Wettobjekt nicht bekannt"
-
     def process_athletes(self, athletes: list[Athlete]):
         """
         Saves all athletes (existing as well as new) to database and
@@ -430,7 +284,7 @@ class Biathlon(Discipline):
                     athlete_from_db.set_ibu_id(a.ibu_id)
                     athlete_from_db = Athlete.get_by_id(athlete_from_db.id) or athlete_from_db
                 Discipline._logger().info(
-                    "Resolved scraped athlete '%s %s' (%s/%s) to existing athlete '%s %s' [%s].",
+                    "Resolved imported athlete '%s %s' (%s/%s) to existing athlete '%s %s' [%s].",
                     a.first_name,
                     a.last_name,
                     a.country_code,
@@ -464,9 +318,4 @@ class Biathlon(Discipline):
 
 
 class Skispringen(Discipline):
-
-    def process_events_url(self, url, game_id):
-         return [], "Disziplin nicht auswertbar"
-
-    def process_results_url(self, url, event):
-        return [], "Disziplin nicht auswertbar"
+    pass

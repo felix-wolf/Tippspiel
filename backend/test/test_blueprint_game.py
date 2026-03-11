@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from flask_login import login_user
 
 from src.blueprints.game import join_game
-from src.models.discipline import Biathlon
 from src.models.event import Event
 from src.models.game import Game
 from src.models.user import User
@@ -153,7 +152,7 @@ def test_join_game_requires_password_field(client, base_data):
     assert join_resp.get_json()["error"] == "Erforderliche Angaben fehlen."
 
 
-def test_game_events_import_returns_imported_events(client, app, base_data, monkeypatch):
+def test_game_events_import_url_is_unsupported(client, app, base_data):
     with app.app_context():
         success, game_id = Game.create(
             user_id=base_data["user"].id,
@@ -162,45 +161,14 @@ def test_game_events_import_returns_imported_events(client, app, base_data, monk
             discipline_name=base_data["discipline"].id,
         )
         assert success
-
-    imported_event = Event(
-        name="Imported Event",
-        game_id=game_id,
-        event_type=base_data["event_type"],
-        dt=datetime.now() + timedelta(days=1),
-        allow_partial_points=True,
-    )
-
-    def fake_process_events_url(self, url, game_id):
-        assert url == "https://example.com/events/world-cup"
-        assert game_id == imported_event.game_id
-        return [imported_event], None
-
-    monkeypatch.setattr(Biathlon, "process_events_url", fake_process_events_url)
 
     response = client.get(
         "/api/game/events",
         query_string={"game_id": game_id, "url": "https://example.com/events/world-cup"},
     )
 
-    assert response.status_code == 200
-    payload = response.get_json()
-    assert payload[0]["name"] == "Imported Event"
-
-
-def test_game_events_import_requires_url(client, app, base_data):
-    with app.app_context():
-        success, game_id = Game.create(
-            user_id=base_data["user"].id,
-            name="Import Game",
-            pw_hash=None,
-            discipline_name=base_data["discipline"].id,
-        )
-        assert success
-
-    response = client.get("/api/game/events", query_string={"game_id": game_id})
-    assert response.status_code == 400
-    assert response.get_json()["error"] == "Die Event-URL fehlt."
+    assert response.status_code == 410
+    assert response.get_json()["error"] == "URL-basierter Event-Import wird nicht mehr unterstützt."
 
 
 def test_game_importable_events_returns_official_candidates(client, app, base_data, monkeypatch):
@@ -229,6 +197,7 @@ def test_game_importable_events_returns_official_candidates(client, app, base_da
         assert game_id == imported_event.game_id
         return [imported_event], None
 
+    from src.models.discipline import Biathlon
     monkeypatch.setattr(Biathlon, "fetch_importable_events", fake_fetch_importable_events)
 
     response = client.get(

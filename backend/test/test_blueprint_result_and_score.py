@@ -1,7 +1,6 @@
 import json
 from datetime import datetime, timedelta
 
-from src.models.discipline import Biathlon
 from src.models.bet import Bet, Prediction
 from src.models.event import Event
 from src.models.game import Game
@@ -117,24 +116,46 @@ def test_scores_requires_game_id(client):
     assert resp.get_json()["error"] == "Die Spiel-ID fehlt."
 
 
-def test_results_check_processes_due_event(client, app, base_data, monkeypatch):
-    def fake_process_results_url(self, url, event):
-        assert url == "https://example.com/results/world-cup"
-        return [Result(event.id, 1, base_data["athlete"].id)], None
-
-    monkeypatch.setattr(Biathlon, "process_results_url", fake_process_results_url)
-
+def test_process_results_rejects_result_url_upload(client, app, base_data):
     with app.app_context():
         success, game_id = Game.create(
             user_id=base_data["user"].id,
-            name="Auto Result Game",
+            name="Legacy Result Game",
             pw_hash=None,
             discipline_name=base_data["discipline"].id,
         )
         assert success
 
         event = Event(
-            name="Auto Result Event",
+            name="Legacy Result Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() + timedelta(hours=1),
+            allow_partial_points=True,
+            url="https://example.com/results/world-cup",
+        )
+        event.save_to_db()
+
+    response = client.post(
+        "/api/results",
+        json={"event_id": event.id, "url": "https://example.com/results/world-cup"},
+    )
+    assert response.status_code == 410
+    assert response.get_json()["error"] == "Ergebnis-URLs werden nicht mehr unterstützt."
+
+
+def test_results_check_ignores_legacy_url_only_event(client, app, base_data):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Legacy Auto Result Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        event = Event(
+            name="Legacy Auto Result Event",
             game_id=game_id,
             event_type=base_data["event_type"],
             dt=berlin_local_now_naive() - timedelta(hours=2),
@@ -145,9 +166,7 @@ def test_results_check_processes_due_event(client, app, base_data, monkeypatch):
 
     response = client.get("/api/results/check")
     assert response.status_code == 200
-    payload = response.get_json()
-    assert payload["name"] == "Auto Result Event"
-    assert payload["results"][0]["place"] == 1
+    assert response.get_json() == {"status": "checked"}
 
 
 def test_results_check_prefers_official_source_ids(client, app, base_data, monkeypatch):
@@ -155,11 +174,8 @@ def test_results_check_prefers_official_source_ids(client, app, base_data, monke
         assert event.source_race_id == "race-123"
         return [Result(event.id, 1, base_data["athlete"].id)], None
 
-    def fail_process_results_url(self, url, event):
-        raise AssertionError("legacy URL processing should not be used for official API events")
-
+    from src.models.discipline import Biathlon
     monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
-    monkeypatch.setattr(Biathlon, "process_results_url", fail_process_results_url)
 
     with app.app_context():
         success, game_id = Game.create(

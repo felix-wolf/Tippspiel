@@ -5,7 +5,6 @@ import { Game } from "../../models/Game";
 import { DialogModal } from "../design/Dialog";
 import { ManualEventCreator } from "./ManualEventCreator";
 import { OfficialEventImporter } from "./OfficialEventImporter";
-import { URLEventImporter } from "./URLEventImporter";
 
 type EventCreatorProps = {
   types: EventType[] | undefined;
@@ -27,7 +26,7 @@ export function EventEditorModal({
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<Event[]>([]);
   const [shakingAction, setShakingAction] = useState(false);
-  const [selectingURLEvents, setSelectingURLEvents] = useState(false);
+  const [selectingImportedEvents, setSelectingImportedEvents] = useState(false);
   const [showManualCreator, setShowManualCreator] = useState(false);
 
   const hasAutomaticImport = game?.discipline?.eventImportMode !== "manual";
@@ -41,7 +40,7 @@ export function EventEditorModal({
     setCreatingEvent(false);
     if (!isOpen) {
       setSelectedEvents([]);
-      setSelectingURLEvents(false);
+      setSelectingImportedEvents(false);
       setShowManualCreator(false);
     }
   }, [event, isOpen]);
@@ -49,7 +48,7 @@ export function EventEditorModal({
   const onActionClick = useCallback(
     (events: Event[]): Promise<boolean> => {
       return new Promise((resolve, reject) => {
-        if (selectingURLEvents) {
+        if (selectingImportedEvents) {
           Event.saveImportedEvents(events)
             .then(() => {
               setSelectedEvents([])
@@ -83,7 +82,7 @@ export function EventEditorModal({
               reject();
               console.log(error);
             });
-        } else if (!event && !selectingURLEvents) {
+        } else if (!event && !selectingImportedEvents) {
           const updatedEvent = events[0];
           Event.create(
             updatedEvent.name,
@@ -110,11 +109,11 @@ export function EventEditorModal({
         resolve(true);
       });
     },
-    [selectingURLEvents, event, game],
+    [selectingImportedEvents, event, game],
   );
 
-  function getActionButtonTitle(creatingEvent: boolean, selectingURLEvents: boolean): string {
-    if (selectingURLEvents) {
+  function getActionButtonTitle(creatingEvent: boolean, selectingImportedEvents: boolean): string {
+    if (selectingImportedEvents) {
       return `${selectedEvents.length > 0 ? selectedEvents.length : ""} Importieren`;
     } else if (creatingEvent) {
       return "Speichern";
@@ -130,13 +129,13 @@ export function EventEditorModal({
       onClose={() => _onClose()}
       type={"add"}
       onActionClick={() => onActionClick(selectedEvents)}
-      actionButtonTitle={getActionButtonTitle(creatingEvent, selectingURLEvents)}
+      actionButtonTitle={getActionButtonTitle(creatingEvent, selectingImportedEvents)}
       actionButtonEnabled={selectedEvents.length > 0}
       neutralButtonTitle="Abbrechen"
       onNeutralClick={() => {
         setSelectedEvents([])
         setCreatingEvent(false)
-        setSelectingURLEvents(false)
+        setSelectingImportedEvents(false)
         setShowManualCreator(false)
         _onClose()
       }}
@@ -147,20 +146,11 @@ export function EventEditorModal({
           <OfficialEventImporter
             game={game}
             onSelectEvents={setSelectedEvents}
-            onSelectingEventsToImport={(selecting) => setSelectingURLEvents(selecting)}
+            onSelectingEventsToImport={(selecting) => setSelectingImportedEvents(selecting)}
           />
         )}
 
-        {!creatingEvent && game?.discipline?.eventImportMode === "legacy_url" && game?.discipline?.eventsUrl && (
-          <URLEventImporter
-            game={game}
-            eventsUrl={game.discipline.eventsUrl}
-            onSelectEvents={setSelectedEvents}
-            onSelectingEventsToImport={(selecting) => setSelectingURLEvents(selecting)}
-          />
-        )}
-
-        {!creatingEvent && hasAutomaticImport && !selectingURLEvents && !showManualCreator && (
+        {!creatingEvent && hasAutomaticImport && !selectingImportedEvents && !showManualCreator && (
           <div className="rounded-2xl border border-sky-400/20 bg-slate-800/55 p-4 text-sm text-slate-300 shadow-sm">
             <p className="font-semibold text-sky-100">Automatischer Import ist der Standard</p>
             <p className="mt-1">
@@ -180,7 +170,7 @@ export function EventEditorModal({
           </div>
         )}
 
-        {!selectingURLEvents && (showManualCreator || !hasAutomaticImport || creatingEvent) && (
+        {!selectingImportedEvents && (showManualCreator || !hasAutomaticImport || creatingEvent) && (
           <div className="flex flex-col gap-3 rounded-2xl border border-white/8 bg-slate-800/55 p-4 shadow-sm">
             {!creatingEvent && hasAutomaticImport && (
               <>

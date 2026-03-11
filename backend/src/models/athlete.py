@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from src.database import db_manager
 from src.models.base_model import BaseModel
 import src.utils as utils
-import src.chrome_manager as chrome_manager
 
 
 @dataclass(eq=False)
@@ -119,24 +118,5 @@ class Athlete(BaseModel):
 
     @staticmethod
     def get_base_data():
-        # insert athletes from csv
         athletes = db_manager.load_csv("athletes.csv", generate_id=False)
-        athletes = [Athlete.from_dict(a) for a in athletes]
-
-        # insert athletes from world cup standing
-        athlete_url_objects = db_manager.load_csv("athlete_urls.csv", generate_id=False)
-        for url_object in athlete_url_objects:
-            df = chrome_manager.read_table_into_df(
-                url=url_object["url"],
-                table_element_key=url_object['htmlKey'],
-                table_element_value=url_object['htmlValue']
-            )
-            url_object["lastNameColumn"] = url_object["lastNameColumn"].replace('$%$', '\xa0')
-            df = df[[url_object["firstNameColumn"], url_object["lastNameColumn"], url_object["countryColumn"]]]
-            results = [dict(zip(["first_name", "last_name", "country_code"], result)) for result in df.values]
-            for result in results:
-                result["gender"] = url_object["gender"]
-                result["discipline"] = url_object["discipline"]
-            athletes.extend([Athlete.from_dict(a) for a in results])
-            athletes = list(set(athletes))
-        return athletes
+        return [Athlete.from_dict(a) for a in athletes]

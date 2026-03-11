@@ -260,6 +260,7 @@ def ensure_discipline_schema():
         UPDATE {TABLE_DISCIPLINES}
         SET
             result_url = 'biathlonworld.com/results',
+            events_url = NULL,
             event_import_mode = 'official_api',
             result_mode = 'official_api'
         WHERE id = 'biathlon'

@@ -20,12 +20,7 @@ def load_results(event: Event, url: str = None, results_json: list = None):
         return results, None, None
 
     if url:
-        if not discipline.validate_result_url(url):
-            return None, "Die Ergebnis-URL ist für diese Disziplin ungültig.", 400
-        results, error = discipline.process_results_url(url, event)
-        if error:
-            return None, error, 500
-        return results, None, None
+        return None, "Ergebnis-URLs werden nicht mehr unterstützt.", 410
 
     if not results_json:
         return None, "Es wurden keine Ergebnisse übermittelt.", 400
@@ -82,10 +77,8 @@ def check_recent_results(now=None):
             > (current_time - ensure_berlin_time(event.dt))
             > timedelta(minutes=60)
             and not event.results
-            and (
-                (event.source_provider == "ibu" and event.source_race_id)
-                or event.url is not None
-            )
+            and event.source_provider == "ibu"
+            and event.source_race_id
         ]
         if not recent_events:
             continue

@@ -149,13 +149,6 @@ export class Event {
     return this._seasonId;
   }
 
-  public processUrlForResults(url: string): Promise<Event> {
-    return NetworkHelper.post("/api/results", Event.fromJson, {
-      url: url,
-      event_id: this._id,
-    });
-  }
-
   public processManualResults(results: Prediction[]): Promise<Event> {
     return NetworkHelper.post("/api/results", Event.fromJson, {
       results: results.map((pred) => {

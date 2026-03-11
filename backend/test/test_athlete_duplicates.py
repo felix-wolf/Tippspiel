@@ -1,13 +1,11 @@
 from datetime import datetime, timedelta
 
 import pytest
-import pandas as pd
 
 from src.athlete_duplicates import build_merge_preview, find_duplicate_candidates, merge_athletes, resolve_existing_athlete
 from src.database import db_manager
 from src.models.athlete import Athlete
 from src.models.bet import Bet, Prediction
-from src.models.discipline import chrome_manager
 from src.models.event import Event
 from src.models.game import Game
 from src.models.result import Result
@@ -205,7 +203,7 @@ def test_merge_athletes_blocks_conflicting_prediction_ids(app, base_data):
             merge_athletes(old_athlete.id, new_athlete.id)
 
 
-def test_process_results_url_reuses_existing_athlete_for_name_variant(app, base_data, monkeypatch):
+def test_process_athletes_reuses_existing_athlete_for_name_variant(app, base_data):
     with app.app_context():
         existing_athlete = Athlete(
             athlete_id="athlete-existing",
@@ -217,34 +215,20 @@ def test_process_results_url_reuses_existing_athlete_for_name_variant(app, base_
         )
         existing_athlete.save_to_db()
 
-        event = Event(
-            name="Resolver Event",
-            game_id="game-1",
-            event_type=base_data["event_type"],
-            dt=datetime.now() + timedelta(hours=1),
-            allow_partial_points=True,
+        resolved = base_data["discipline"].process_athletes(
+            [
+                Athlete(
+                    athlete_id=None,
+                    first_name="Johan-Olav Smoerdal",
+                    last_name="Botn",
+                    country_code="NOR",
+                    gender="?",
+                    discipline=base_data["discipline"].id,
+                )
+            ]
         )
-
-        def fake_read_table_into_df(url, table_element_value):
-            return pd.DataFrame(
-                [
-                    {
-                        "Rank": 1,
-                        "Given Name": "Johan-Olav Smoerdal",
-                        "Family\xa0Name": "Botn",
-                        "Nation": "NOR",
-                        "Total Time": "10:00",
-                        "Behind": None,
-                    }
-                ]
-            )
-
-        monkeypatch.setattr(chrome_manager, "read_table_into_df", fake_read_table_into_df)
-
-        results, error = base_data["discipline"].process_results_url("https://example.com/results", event)
-        assert error is None
-        assert len(results) == 1
-        assert results[0].object_id == existing_athlete.id
+        assert len(resolved) == 1
+        assert resolved[0].id == existing_athlete.id
 
         athletes = db_manager.query(
             f"SELECT id, first_name, last_name FROM {db_manager.TABLE_ATHLETES} WHERE country_code = ?",
@@ -289,5 +273,5 @@ def test_process_athletes_logs_resolution_and_creation(app, base_data, caplog):
         )
 
         assert resolved[0].id == existing_athlete.id
-        assert any("Resolved scraped athlete" in record.message for record in caplog.records)
+        assert any("Resolved imported athlete" in record.message for record in caplog.records)
         assert any("Created new athlete" in record.message for record in caplog.records)

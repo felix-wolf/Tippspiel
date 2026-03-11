@@ -90,16 +90,6 @@ export class Game {
     );
   }
 
-  public processUrlForEvents(url: string): Promise<Event[]> {
-    const builder = (res: any): Event[] => {
-      return res.map((event: any) => Event.fromJson(event));
-    };
-    return NetworkHelper.fetchAll(
-      `/api/game/events?game_id=${this._id}&url=${encodeURIComponent(url)}`,
-      builder,
-    );
-  }
-
   public fetchImportableEvents(): Promise<Event[]> {
     const builder = (res: any): Event[] => {
       return res.map((event: any) => Event.fromJson(event));

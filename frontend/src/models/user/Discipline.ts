@@ -1,7 +1,7 @@
 import { NetworkHelper } from "../NetworkHelper";
 import { EventType } from "./EventType";
 
-export type DisciplineImportMode = "manual" | "legacy_url" | "official_api";
+export type DisciplineImportMode = "manual" | "official_api";
 
 export class Discipline {
   private readonly _id: string;
