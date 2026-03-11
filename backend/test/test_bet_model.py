@@ -66,3 +66,45 @@ def test_bet_save_and_score(base_data, app):
         persisted = Bet.get_by_event_id_user_id(event.id, base_data["user"].id)
         assert persisted.score == 5
         assert persisted.predictions[0].actual_place == 1
+        assert persisted.predictions[0].actual_status is None
+
+
+def test_bet_score_persists_official_status(base_data, app):
+    with app.app_context():
+        event = _create_event(base_data)
+        athlete = base_data["athlete"]
+        bet = Bet(
+            user_id=base_data["user"].id,
+            event_id=event.id,
+            predictions=[],
+            score=None,
+        )
+        bet.predictions = [
+            Prediction(
+                bet_id=bet.id,
+                object_id=athlete.id,
+                object_name=athlete.last_name,
+                predicted_place=1,
+            )
+        ]
+        bet.save_to_db()
+
+        results = [
+            Result(
+                event_id=event.id,
+                place=9999,
+                object_id=athlete.id,
+                object_name="Athlete",
+                status="DNF",
+            )
+        ]
+        for res in results:
+            res.save_to_db()
+
+        calc_success = bet.calc_score(results, points_correct_bet=5, allow_partial_points=False)
+        assert calc_success
+
+        persisted = Bet.get_by_event_id_user_id(event.id, base_data["user"].id)
+        assert persisted.score == 0
+        assert persisted.predictions[0].actual_place == 9999
+        assert persisted.predictions[0].actual_status == "DNF"

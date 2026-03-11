@@ -15,6 +15,7 @@ class Result(BaseModel):
             behind: str = None,
             shooting: str = None,
             shooting_time: str = None,
+            status: str = None,
             ):
         if result_id is None:
             self.id = utils.generate_id([event_id, place, object_id])
@@ -28,6 +29,7 @@ class Result(BaseModel):
         self.behind = behind
         self.shooting = shooting
         self.shooting_time = shooting_time
+        self.status = status
 
     @staticmethod
     def from_dict(r_dict):
@@ -42,6 +44,7 @@ class Result(BaseModel):
                 behind=r_dict.get('behind'),
                 shooting=r_dict.get('shooting'),
                 shooting_time=r_dict.get('shooting_time'),
+                status=r_dict.get('status'),
             )
         else:
             return None
@@ -73,13 +76,14 @@ class Result(BaseModel):
             "behind": self.behind,
             "shooting": self.shooting,
             "shooting_time": self.shooting_time,
+            "status": self.status,
         }
 
     def save_to_db(self, commit=True, conn=None):
         sql = f"""
             INSERT INTO {db_manager.TABLE_RESULTS} 
-            (id, event_id, place, object_id, time, behind, shooting, shooting_time)
-            VALUES (?,?,?,?,?,?,?,?)
+            (id, event_id, place, object_id, time, behind, shooting, shooting_time, status)
+            VALUES (?,?,?,?,?,?,?,?,?)
         """
         params = [
             self.id,
@@ -90,6 +94,7 @@ class Result(BaseModel):
             self.behind,
             self.shooting,
             self.shooting_time,
+            self.status,
         ]
         if conn:
             conn.execute(sql, params)

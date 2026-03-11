@@ -9,6 +9,7 @@ export class Result {
   private readonly _behind?: string;
   private readonly _shooting?: string;
   private readonly _shooting_time?: string;
+  private readonly _status?: string;
 
   constructor(
     id: string,
@@ -20,6 +21,7 @@ export class Result {
     behind?: string,
     shooting?: string,
     shooting_time?: string,
+    status?: string,
   ) {
     this._id = id;
     this._event_id = event_id;
@@ -30,6 +32,7 @@ export class Result {
     this._behind = behind;
     this._shooting = shooting;
     this._shooting_time = shooting_time;
+    this._status = status;
   }
 
   public toJson(): string {
@@ -41,6 +44,7 @@ export class Result {
       object_name: this.object_name,
       time: this.time,
       behind: this.behind,
+      status: this.status,
     };
     if (this.shooting !== undefined) {
       payload.shooting = this.shooting;
@@ -62,6 +66,7 @@ export class Result {
       json["behind"],
       json["shooting"],
       json["shooting_time"],
+      json["status"],
     );
   }
 
@@ -99,5 +104,9 @@ export class Result {
 
   get shooting_time(): string | undefined {
     return this._shooting_time;
+  }
+
+  get status(): string | undefined {
+    return this._status;
   }
 }

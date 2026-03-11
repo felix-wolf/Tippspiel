@@ -8,13 +8,23 @@ type ResultsListProps = {
 };
 
 type ResultListItem = {
-  place: number;
+  place: string;
   objectName: string;
   time: string | undefined;
   behind: string | undefined;
   shooting?: string;
   shootingTime?: string;
 };
+
+function formatResultPlace(place: number, status: string | undefined): string {
+  if (status) {
+    return status;
+  }
+  if (place === 9999) {
+    return "n. klass.";
+  }
+  return place.toString();
+}
 
 export function ResultsList({ event }: ResultsListProps) {
   const hasShooting = event.results.some((result) => result.shooting);
@@ -54,7 +64,7 @@ export function ResultsList({ event }: ResultsListProps) {
         cellHeight={"short"}
         items={event.results.map((r): ResultListItem => {
           return {
-            place: r.place,
+            place: formatResultPlace(r.place, r.status),
             objectName: r.object_name,
             time: r.time,
             behind: r.behind,

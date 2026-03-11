@@ -133,6 +133,46 @@ def test_get_results_maps_official_rows():
             behind="0.0",
             shooting="0 1",
             shooting_time="1:42.0",
+            status=None,
+        )
+    ]
+
+
+def test_get_results_maps_official_status_codes():
+    session = _FakeSession(
+        {
+            ("Results", (("RaceId", "BT2526SWRLCP03SWMS"),)): """
+                <ArrayOfResult>
+                  <Result>
+                    <Rank>DNF</Rank>
+                    <GivenName>Lou</GivenName>
+                    <FamilyName>Jeanmonnot</FamilyName>
+                    <IBUId>IBU-123</IBUId>
+                    <Nat>FRA</Nat>
+                    <Result>DNF</Result>
+                    <Behind>DNF</Behind>
+                  </Result>
+                </ArrayOfResult>
+            """
+        }
+    )
+    client = IbuApiClient(session=session)
+
+    rows = client.get_results("BT2526SWRLCP03SWMS")
+
+    assert rows == [
+        IbuResultRow(
+            rank=None,
+            first_name="Lou",
+            last_name="Jeanmonnot",
+            athlete_id="IBU-123",
+            nation_code="FRA",
+            country_name=None,
+            time="DNF",
+            behind="DNF",
+            shooting=None,
+            shooting_time=None,
+            status="DNF",
         )
     ]
 

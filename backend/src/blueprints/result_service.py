@@ -60,6 +60,7 @@ def clone_results_for_event(event: Event, results: list[Result]):
             behind=result.behind,
             shooting=result.shooting,
             shooting_time=result.shooting_time,
+            status=result.status,
         )
         for result in results
     ]
@@ -208,7 +209,7 @@ def _clear_results_for_event(event: Event):
         conn.execute(
             f"""
             UPDATE {db_manager.TABLE_PREDICTIONS}
-            SET actual_place = NULL, score = 0
+            SET actual_place = NULL, actual_status = NULL, score = 0
             WHERE bet_id IN (
                 SELECT id FROM {db_manager.TABLE_BETS} WHERE event_id = ?
             )

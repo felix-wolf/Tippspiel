@@ -36,6 +36,7 @@ class IbuResultRow:
     behind: str | None
     shooting: str | None = None
     shooting_time: str | None = None
+    status: str | None = None
 
 
 @dataclass(frozen=True)
@@ -54,6 +55,15 @@ class IbuApiError(RuntimeError):
 class IbuApiClient:
     BASE_URL = "https://api.biathlonresults.com/modules/sportapi/api"
     SUPPORTED_LEVELS = (1, 2, 3, 4)
+    RESULT_STATUS_CODES = {
+        "DNS",
+        "DNF",
+        "DSQ",
+        "LAP",
+        "NM",
+        "DNQ",
+        "REL",
+    }
 
     def __init__(self, session=None, timeout=15):
         self.session = session or requests.Session()
@@ -180,6 +190,7 @@ class IbuApiClient:
         return stop_name
 
     def _build_result_row(self, record):
+        status = self._extract_result_status(record)
         return IbuResultRow(
             rank=self._to_int(self._get_text(record, "Rank", "ResultOrder", "Place")),
             first_name=self._get_text(record, "GivenName", "FirstName", "Firstname"),
@@ -198,6 +209,7 @@ class IbuApiClient:
                 "totalrangetime",
                 "totalshootingtime",
             ),
+            status=status,
         )
 
     def _build_athlete_row(self, record):
@@ -360,6 +372,46 @@ class IbuApiClient:
             return int(value)
         except (TypeError, ValueError):
             return None
+
+    @classmethod
+    def _extract_result_status(cls, record):
+        direct_status = cls._get_normalized_text(
+            record,
+            "status",
+            "resultstatus",
+            "racestatus",
+            "rankstatus",
+            "classification",
+            "reason",
+        )
+        normalized_direct_status = cls._normalize_result_status(direct_status)
+        if normalized_direct_status:
+            return normalized_direct_status
+
+        for field_name in (
+            "Rank",
+            "ResultOrder",
+            "Place",
+            "Result",
+            "TotalTime",
+            "Time",
+            "Behind",
+            "Diff",
+        ):
+            value = cls._get_text(record, field_name)
+            normalized_value = cls._normalize_result_status(value)
+            if normalized_value:
+                return normalized_value
+        return None
+
+    @classmethod
+    def _normalize_result_status(cls, value: str | None):
+        if value is None:
+            return None
+        normalized = " ".join(str(value).strip().upper().split())
+        if normalized in cls.RESULT_STATUS_CODES:
+            return normalized
+        return None
 
 
 def race_is_importable(race: IbuRace, now=None):

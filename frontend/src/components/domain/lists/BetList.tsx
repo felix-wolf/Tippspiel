@@ -17,9 +17,22 @@ type BetItemProp = {
 
 type BetResultItem = {
   tipp: string;
-  result: number | undefined;
+  result: string;
   score: number | undefined;
 };
+
+function formatPredictionResult(actualPlace: number | null | undefined, actualStatus: string | undefined): string {
+  if (actualStatus) {
+    return actualStatus;
+  }
+  if (actualPlace == null) {
+    return "";
+  }
+  if (actualPlace === 9999) {
+    return "n. klass.";
+  }
+  return actualPlace.toString();
+}
 
 function BetItem({ player, bet, canAddMissingBet, onAddMissingBet }: BetItemProp) {
   const [resultItems, setResultItems] = useState<BetResultItem[]>([]);
@@ -30,7 +43,7 @@ function BetItem({ player, bet, canAddMissingBet, onAddMissingBet }: BetItemProp
         return {
           tipp: `${pred.predicted_place ?? -1}: ${pred.object_name ?? "unknown"
             }`,
-          result: pred.actual_place,
+          result: formatPredictionResult(pred.actual_place, pred.actual_status),
           score: pred.score,
         };
       }) ?? [],

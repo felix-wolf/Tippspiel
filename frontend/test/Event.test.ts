@@ -28,6 +28,7 @@ describe("Event.toJson", () => {
         "object-1",
         "Object Name",
         1,
+        undefined,
         10,
       ),
     ];
@@ -94,6 +95,7 @@ describe("Event.toJson", () => {
       "object_id": "object-1",
       "object_name": "Object Name",
       "actual_place": "1",
+      "actual_status": "undefined",
       "score": "10"
     }],
       "score": "100"
@@ -157,6 +159,7 @@ describe("Event.toJson", () => {
       "object_id": "object-1",
       "object_name": "Object Name",
       "actual_place": "1",
+      "actual_status": "undefined",
       "score": "10"
     }],
       "score": "100"

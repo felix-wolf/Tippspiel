@@ -6,7 +6,7 @@ class Prediction(BaseModel):
 
     def __init__(
             self, bet_id: str, object_id: str, object_name: str, predicted_place: int,
-            actual_place: int = None, prediction_id: str = None, score: int = 0):
+            actual_place: int = None, prediction_id: str = None, score: int = 0, actual_status: str = None):
         if prediction_id is None:
             self.id = utils.generate_id([bet_id, object_id, predicted_place])
         else:
@@ -17,6 +17,7 @@ class Prediction(BaseModel):
         self.object_name = object_name
         self.actual_place = actual_place
         self.score = score
+        self.actual_status = actual_status
 
     def delete(self, conn=None):
         sql = f"DELETE FROM {db_manager.TABLE_PREDICTIONS} WHERE id = ?"
@@ -26,19 +27,20 @@ class Prediction(BaseModel):
         success = db_manager.execute(sql, [self.id])
         return success, self.id
 
-    def set_actual_place(self, place, points_correct_bet: int, allow_partial_points: bool, conn=None):
+    def set_actual_place(self, place, points_correct_bet: int, allow_partial_points: bool, conn=None, actual_status: str = None):
         if type(place) == str:
             place = int(place)
         self.actual_place = place
+        self.actual_status = actual_status
         if allow_partial_points:
             self.score = max(0, min(points_correct_bet, points_correct_bet - abs(self.actual_place - self.predicted_place)))
         else:
             self.score = points_correct_bet if self.actual_place == self.predicted_place else 0
-        sql = f"UPDATE {db_manager.TABLE_PREDICTIONS} SET score = ?, actual_place = ? WHERE id = ?"
+        sql = f"UPDATE {db_manager.TABLE_PREDICTIONS} SET score = ?, actual_place = ?, actual_status = ? WHERE id = ?"
         if conn:
-            conn.execute(sql, [self.score, self.actual_place, self.id])
+            conn.execute(sql, [self.score, self.actual_place, self.actual_status, self.id])
             return True
-        return db_manager.execute(sql, [self.score, self.actual_place, self.id])
+        return db_manager.execute(sql, [self.score, self.actual_place, self.actual_status, self.id])
 
     def to_dict(self):
         return {
@@ -48,7 +50,8 @@ class Prediction(BaseModel):
             "object_id": self.object_id,
             "object_name": self.object_name,
             "actual_place": self.actual_place,
-            "score": self.score
+            "score": self.score,
+            "actual_status": self.actual_status,
         }
 
     @staticmethod
@@ -74,6 +77,7 @@ class Prediction(BaseModel):
                 bet_id = p_dict["bet_id"]
             if "actual_place" in p_dict:
                 actual_place = p_dict["actual_place"]
+            actual_status = p_dict.get("actual_status")
             if "object_name" in p_dict:
                 object_name = p_dict["object_name"]
             try:
@@ -84,7 +88,8 @@ class Prediction(BaseModel):
                     object_name=object_name,
                     predicted_place=p_dict["predicted_place"],
                     actual_place=actual_place,
-                    score=score
+                    score=score,
+                    actual_status=actual_status,
                 )
             except KeyError as e:
                 print("Could not instantiate bet with given values:", p_dict)
@@ -146,13 +151,18 @@ class Bet(BaseModel):
     def calc_score(self, results, points_correct_bet, allow_partial_points, commit=True, conn=None):
         for pred in self.predictions:
             actual_place = 9999
+            actual_status = None
             if pred.object_id in [r.object_id for r in results]:
-                actual_place = next((item.place for item in results if item.object_id == pred.object_id))
+                matching_result = next((item for item in results if item.object_id == pred.object_id), None)
+                if matching_result is not None:
+                    actual_place = matching_result.place
+                    actual_status = matching_result.status
             if not pred.set_actual_place(
                 place=actual_place,
                 points_correct_bet=points_correct_bet,
                 allow_partial_points=allow_partial_points,
-                conn=conn
+                conn=conn,
+                actual_status=actual_status,
             ):
                 return False
         self.score = sum([p.score for p in self.predictions])

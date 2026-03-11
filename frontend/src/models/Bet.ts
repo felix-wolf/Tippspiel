@@ -5,6 +5,7 @@ export class Prediction {
   private readonly _object_id: string;
   private readonly _object_name: string | undefined;
   private readonly _actual_place: number | undefined;
+  private readonly _actual_status: string | undefined;
   private readonly _score: number | undefined;
 
   constructor(
@@ -14,6 +15,7 @@ export class Prediction {
     object_id: string,
     object_name: string | undefined,
     actual_place: number | undefined,
+    actual_status: string | undefined,
     score: number | undefined,
   ) {
     this._id = id;
@@ -22,6 +24,7 @@ export class Prediction {
     this._object_id = object_id;
     this._object_name = object_name;
     this._actual_place = actual_place;
+    this._actual_status = actual_status;
     this._score = score;
   }
 
@@ -33,6 +36,7 @@ export class Prediction {
       "object_id": "${this.object_id}",
       "object_name": "${this.object_name}",
       "actual_place": "${this.actual_place}",
+      "actual_status": "${this.actual_status}",
       "score": "${this.score}"
     }`;
   }
@@ -44,8 +48,9 @@ export class Prediction {
       json["predicted_place"],
       json["object_id"],
       json["object_name"],
-      json["actual_place"],
-      json["score"],
+      json["actual_place"] ?? undefined,
+      json["actual_status"] ?? undefined,
+      json["score"] ?? undefined,
     );
   }
 
@@ -75,6 +80,10 @@ export class Prediction {
 
   get score(): number | undefined {
     return this._score;
+  }
+
+  get actual_status(): string | undefined {
+    return this._actual_status;
   }
 }
 

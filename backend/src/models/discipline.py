@@ -135,8 +135,20 @@ class Discipline(BaseModel):
             return current_app.logger
         return logger
 
+    @staticmethod
+    def _reload_persisted_athlete(athlete: Athlete | None):
+        if athlete is None:
+            return None
+        persisted_athlete = Athlete.get_by_id(athlete.id)
+        if persisted_athlete is not None:
+            return persisted_athlete
+        if athlete.ibu_id:
+            return Athlete.get_by_ibu_id(athlete.ibu_id)
+        return None
+
 class Biathlon(Discipline):
     RESULT_PAGE_PREFIX = "https://www.biathlonworld.com/results/"
+    NON_CLASSIFIED_PLACE = 9999
 
     def fetch_importable_events(self, game_id, now=None):
         try:
@@ -202,13 +214,14 @@ class Biathlon(Discipline):
                 results.append(
                     Result(
                         event_id=event.id,
-                        place=row.rank,
+                        place=self._resolve_official_result_place(row),
                         object_id=country.code,
                         object_name=country.name,
                         time=row.time,
                         behind=row.behind,
                         shooting=row.shooting,
                         shooting_time=row.shooting_time,
+                        status=row.status,
                     )
                 )
             return results, None
@@ -220,6 +233,10 @@ class Biathlon(Discipline):
             for row in rows:
                 if not row.first_name or not row.last_name or not row.nation_code:
                     continue
+                country = Country.get_by_id(row.nation_code)
+                if country is None:
+                    country = Country(row.nation_code, row.country_name or row.nation_code, "🏴‍☠️")
+                    country.save_to_db()
                 athletes.append(
                     Athlete(
                         athlete_id=None,
@@ -238,18 +255,26 @@ class Biathlon(Discipline):
                 results.append(
                     Result(
                         event_id=event.id,
-                        place=official_row.rank,
+                        place=self._resolve_official_result_place(official_row),
                         object_id=athlete.id,
                         object_name=f"{athlete.first_name} {athlete.last_name}",
                         time=official_row.time,
                         behind=official_row.behind,
                         shooting=official_row.shooting,
                         shooting_time=official_row.shooting_time,
+                        status=official_row.status,
                     )
                 )
             return results, None
 
         return [], "Wettobjekt nicht bekannt"
+
+    def _resolve_official_result_place(self, row):
+        if row.rank is not None:
+            return row.rank
+        if row.status is not None:
+            return self.NON_CLASSIFIED_PLACE
+        return self.NON_CLASSIFIED_PLACE
 
     def _dedupe_country_result_rows(self, rows):
         deduped_rows = {}
@@ -321,7 +346,7 @@ class Biathlon(Discipline):
 
             athlete_from_db = Athlete.get_by_ibu_id(a.ibu_id) if a.ibu_id else None
             if athlete_from_db is not None:
-                resolved_athletes.append(athlete_from_db)
+                resolved_athletes.append(Discipline._reload_persisted_athlete(athlete_from_db) or athlete_from_db)
                 continue
 
             athlete_from_db, _ = resolve_existing_athlete(a, existing_athletes=known_athletes)
@@ -339,11 +364,15 @@ class Biathlon(Discipline):
                     athlete_from_db.last_name,
                     athlete_from_db.id,
                 )
-                resolved_athletes.append(athlete_from_db)
+                resolved_athletes.append(Discipline._reload_persisted_athlete(athlete_from_db) or athlete_from_db)
                 continue
 
             a.save_to_db()
-            saved_athlete = Athlete.get_by_id(a.id) or a
+            saved_athlete = Discipline._reload_persisted_athlete(a)
+            if saved_athlete is None:
+                raise RuntimeError(
+                    f"Imported athlete '{a.first_name} {a.last_name}' [{a.id}] could not be reloaded after save."
+                )
             Discipline._logger().info(
                 "Created new athlete '%s %s' [%s] for %s/%s.",
                 saved_athlete.first_name,

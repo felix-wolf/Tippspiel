@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from src.ibu_api import IbuResultRow
+from src.models.athlete import Athlete
 from src.models.country import Country
 from src.models.discipline import Discipline
 from src.models.event import Event
@@ -101,3 +102,87 @@ def test_biathlon_country_results_dedupe_repeated_relay_rows(app, base_data, mon
             (1, "FRA"),
             (2, "GER"),
         ]
+
+
+def test_process_athletes_reloads_existing_row_after_ignored_save(app, base_data, monkeypatch):
+    with app.app_context():
+        existing_athlete = Athlete(
+            athlete_id="existing-athlete",
+            ibu_id="IBU-EXISTING",
+            first_name="Darya",
+            last_name="Dolidovich",
+            country_code=base_data["country"].code,
+            gender="f",
+            discipline=base_data["discipline"].id,
+        )
+        existing_athlete.save_to_db()
+
+        discipline = Discipline.get_by_id(base_data["discipline"].id)
+        imported_athlete = Athlete(
+            athlete_id=None,
+            ibu_id="IBU-EXISTING",
+            first_name="Darya",
+            last_name="Dolidovich",
+            country_code=base_data["country"].code,
+            gender="f",
+            discipline=base_data["discipline"].id,
+        )
+
+        original_get_by_ibu_id = Athlete.get_by_ibu_id
+        call_counts = {"get_by_ibu_id": 0}
+
+        def flaky_get_by_ibu_id(ibu_id):
+            call_counts["get_by_ibu_id"] += 1
+            if call_counts["get_by_ibu_id"] <= 2:
+                return None
+            return original_get_by_ibu_id(ibu_id)
+
+        monkeypatch.setattr(Athlete, "get_by_ibu_id", staticmethod(flaky_get_by_ibu_id))
+
+        resolved = discipline.process_athletes([imported_athlete])
+
+        assert len(resolved) == 1
+        assert resolved[0].id == existing_athlete.id
+        assert Athlete.get_by_id(existing_athlete.id) is not None
+
+
+def test_biathlon_athlete_results_create_placeholder_country_for_unknown_code(app, base_data, monkeypatch):
+    with app.app_context():
+        event = Event(
+            name="Sprint Event",
+            game_id="game-1",
+            event_type=base_data["event_type"],
+            dt=datetime(2026, 1, 1, 12, 0, 0),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_race_id="race-athlete-1",
+        )
+
+        discipline = Discipline.get_by_id(base_data["discipline"].id)
+
+        monkeypatch.setattr(
+            "src.models.discipline.IbuApiClient.get_results",
+            lambda self, race_id: [
+                IbuResultRow(
+                    rank=30,
+                    first_name="Darya",
+                    last_name="Dolidovich",
+                    athlete_id="IBU-DARYA",
+                    nation_code="BRT",
+                    country_name="Belarus",
+                    time="45:00.0",
+                    behind="5:00.0",
+                ),
+            ],
+        )
+
+        results, error = discipline.process_official_results(event)
+
+        assert error is None
+        assert len(results) == 1
+        saved_athlete = Athlete.get_by_id(results[0].object_id)
+        assert saved_athlete is not None
+        assert saved_athlete.country_code == "BRT"
+        placeholder_country = Country.get_by_id("BRT")
+        assert placeholder_country is not None
+        assert placeholder_country.flag == "🏴‍☠️"

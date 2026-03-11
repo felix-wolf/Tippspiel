@@ -144,6 +144,7 @@ export function BetPlacer({
         bet_item.name,
         undefined,
         undefined,
+        undefined,
       );
     });
     _onSave(predictions);

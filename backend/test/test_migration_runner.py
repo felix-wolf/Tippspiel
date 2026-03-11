@@ -20,7 +20,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007"]
     assert status.pending_versions == []
 
     conn = sqlite3.connect(db_path)
@@ -44,6 +44,12 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
         event_columns = {
             row[1] for row in conn.execute("PRAGMA table_info(Events)").fetchall()
         }
+        result_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(Results)").fetchall()
+        }
+        prediction_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(Predictions)").fetchall()
+        }
         indexes = {
             row[1] for row in conn.execute("PRAGMA index_list(Events)").fetchall()
         }
@@ -52,6 +58,8 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     assert "season_id" in event_columns
     assert "shared_event_id" in event_columns
+    assert "status" in result_columns
+    assert "actual_status" in prediction_columns
     assert "idx_events_game_shared_identity" in indexes
 
     conn = sqlite3.connect(db_path)
@@ -285,7 +293,7 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007"]
 
     conn = sqlite3.connect(db_path)
     try:

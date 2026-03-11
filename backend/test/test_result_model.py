@@ -30,12 +30,13 @@ def _create_event(base_data):
 def test_result_save_and_get(base_data, app):
     with app.app_context():
         event = _create_event(base_data)
-        result = Result(event_id=event.id, place=1, object_id="athlete-1", object_name="Athlete")
+        result = Result(event_id=event.id, place=1, object_id="athlete-1", object_name="Athlete", status="DNF")
         result.save_to_db()
 
         results = Result.get_by_event_id(event.id)
         assert len(results) == 1
         assert results[0].object_id == "athlete-1"
+        assert results[0].status == "DNF"
 
 
 def test_result_delete_by_event(base_data, app):
