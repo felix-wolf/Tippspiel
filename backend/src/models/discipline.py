@@ -190,6 +190,7 @@ class Biathlon(Discipline):
             return [], "Die offizielle IBU-Quelle enthält keine Ergebnisse."
 
         if event.event_type.betting_on == "countries":
+            rows = self._dedupe_country_result_rows(rows)
             results = []
             for row in rows:
                 if not row.nation_code:
@@ -249,6 +250,51 @@ class Biathlon(Discipline):
             return results, None
 
         return [], "Wettobjekt nicht bekannt"
+
+    def _dedupe_country_result_rows(self, rows):
+        deduped_rows = {}
+        for row in rows:
+            if not row.nation_code:
+                continue
+
+            existing_row = deduped_rows.get(row.nation_code)
+            if existing_row is None:
+                deduped_rows[row.nation_code] = row
+                continue
+
+            if existing_row.rank is None and row.rank is not None:
+                deduped_rows[row.nation_code] = row
+                continue
+
+            if (
+                row.rank is not None
+                and existing_row.rank is not None
+                and row.rank < existing_row.rank
+            ):
+                Discipline._logger().warning(
+                    "Received multiple official country result rows for %s; keeping better rank %s over %s.",
+                    row.nation_code,
+                    row.rank,
+                    existing_row.rank,
+                )
+                deduped_rows[row.nation_code] = row
+                continue
+
+            Discipline._logger().info(
+                "Deduplicated repeated official country result row for %s at rank %s.",
+                row.nation_code,
+                row.rank,
+            )
+
+        return sorted(
+            deduped_rows.values(),
+            key=lambda row: (
+                row.rank is None,
+                row.rank if row.rank is not None else 9999,
+                row.nation_code or "",
+            ),
+        )
+
     def process_athletes(self, athletes: list[Athlete]):
         """
         Saves all athletes (existing as well as new) to database and
