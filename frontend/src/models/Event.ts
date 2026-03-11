@@ -1,6 +1,6 @@
 import { NetworkHelper } from "./NetworkHelper";
 import { Bet, Prediction } from "./Bet";
-import { EventType } from "./user/EventType";
+import { EventType } from "./EventType";
 import { Result } from "./Result";
 import { Utils } from "../utils.ts";
 import { EventTimeType } from "../components/domain/lists/EventList.tsx";
@@ -196,25 +196,26 @@ export class Event {
     });
   }
 
-  public toJson(): string {
-    return `{
-      "id": "${this._id}",
-      "name": "${this._name}",
-      "game_id": "${this._game_id}",
-      "datetime": "${Utils.dateToIsoString(this._datetime)}",
-      "hasBetsForUsers": "${this._hasBetsForUsers}",
-      "allow_partial_points": "${this.allowPartialPoints ? 1 : 0}",
-      "results": [${this._results.map((result) => result.toJson()).join(",")}],
-      "bets": [${this._bets.map((bet) => bet.toJson()).join(",")}],
-      "event_type": ${this._eventType.toJson()},
-      "url": ${this._eventUrl ? `"${this._eventUrl}"` : null},
-      "location": ${this._location ? JSON.stringify(this._location) : null},
-      "race_format": ${this._raceFormat ? JSON.stringify(this._raceFormat) : null},
-      "source_provider": ${this._sourceProvider ? JSON.stringify(this._sourceProvider) : null},
-      "source_event_id": ${this._sourceEventId ? JSON.stringify(this._sourceEventId) : null},
-      "source_race_id": ${this._sourceRaceId ? JSON.stringify(this._sourceRaceId) : null},
-      "season_id": ${this._seasonId ? JSON.stringify(this._seasonId) : null}
-      }`;
+  public toPayload() {
+    return {
+      id: this._id,
+      name: this._name,
+      game_id: this._game_id,
+      datetime: Utils.dateToIsoString(this._datetime),
+      allow_partial_points: this.allowPartialPoints ? 1 : 0,
+      results: this._results.map((result) => result.toPayload()),
+      bets: this._bets.map((bet) => bet.toPayload()),
+      event_type: this._eventType.toPayload(),
+      url: this._eventUrl ?? null,
+      location: this._location ?? null,
+      race_format: this._raceFormat ?? null,
+      source_provider: this._sourceProvider ?? null,
+      source_event_id: this._sourceEventId ?? null,
+      source_race_id: this._sourceRaceId ?? null,
+      season_id: this._seasonId ?? null,
+      num_bets: this._numBets,
+      points_correct_bet: this._pointsCorrectBet,
+    };
   }
 
   public delete() {
@@ -384,13 +385,14 @@ export class Event {
         event_id: event_id,
         user_id: user_id,
         predictions: predictions.map((prediction) => {
+          const payload = prediction.toPayload();
           return {
-            id: prediction.id,
-            bet_id: prediction.bet_id,
-            object_id: prediction.object_id,
-            object_name: prediction.object_name,
-            predicted_place: prediction.predicted_place,
-            score: prediction.score,
+            id: payload.id,
+            bet_id: payload.bet_id,
+            object_id: payload.object_id,
+            object_name: payload.object_name,
+            predicted_place: payload.predicted_place,
+            score: payload.score,
           };
         }),
       },
@@ -402,7 +404,7 @@ export class Event {
       return res.map((event: any) => Event.fromJson(event));
     };
     return NetworkHelper.post<Event[]>("/api/event", builder, {
-      events: events.map((event: Event) => event.toJson()),
+      events: events.map((event: Event) => JSON.stringify(event.toPayload())),
     });
   }
 

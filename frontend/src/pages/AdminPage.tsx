@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavPage } from "./NavPage";
-import { useCurrentUser } from "../models/user/UserContext";
+import { useCurrentUser } from "../contexts/UserContext";
 import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
 import { Admin, type AdminCountryDiagnostic, type AdminSharedEventDiagnostic } from "../models/Admin";
 import { Button } from "../components/design/Button";

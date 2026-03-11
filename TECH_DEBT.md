@@ -72,23 +72,7 @@ This document records the main technical debt and areas that need work across th
   - Do not swallow DB exceptions in generic helpers.
   - Centralize error-to-response translation at the blueprint/service layer.
 
-### 4. Frontend models manually build JSON strings
-- Files:
-  - `frontend/src/models/Event.ts`
-  - `frontend/src/models/Result.ts`
-  - `frontend/src/models/Bet.ts`
-- What is wrong:
-  - Several models serialize payloads by hand with template strings instead of plain objects.
-- Why it matters:
-  - The format is fragile.
-  - Optional fields can easily serialize incorrectly.
-  - Tests end up validating string shape instead of payload semantics.
-- Suggested direction:
-  - Replace `toJson(): string` with `toPayload(): object`.
-  - Let `fetch`/`JSON.stringify` handle serialization.
-  - Update tests to compare parsed objects instead of raw strings.
-
-### 5. Event import UI state is becoming hard to maintain
+### 4. Event import UI state is becoming hard to maintain
 - Files:
   - `frontend/src/components/domain/EventEditorModal.tsx`
   - `frontend/src/components/domain/OfficialEventImporter.tsx`
@@ -106,7 +90,7 @@ This document records the main technical debt and areas that need work across th
   - Replace boolean combinations with an explicit modal mode state machine.
   - Move import selection state into the importer subtree.
 
-### 6. Generic table component is too weak for current UI needs
+### 5. Generic table component is too weak for current UI needs
 - Files:
   - `frontend/src/components/design/TableList.tsx`
 - What is wrong:
@@ -121,7 +105,7 @@ This document records the main technical debt and areas that need work across th
   - Remove dead/commented code.
   - Add clearer column configuration and optional accessibility hooks.
 
-### 7. Unused Selenium dependency still remains in backend packaging metadata
+### 6. Unused Selenium dependency still remains in backend packaging metadata
 - Files:
   - `backend/pyproject.toml`
   - `backend/uv.lock`
@@ -133,11 +117,11 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Remove `selenium` from the dependency manifests once the lockfile can be regenerated cleanly.
 
-### 8. Stale discipline URL compatibility still remains in the API contract
+### 7. Stale discipline URL compatibility still remains in the API contract
 - Files:
   - `backend/src/models/discipline.py`
   - `backend/src/blueprints/game.py`
-  - `frontend/src/models/user/Discipline.ts`
+  - `frontend/src/models/Discipline.ts`
   - `frontend/src/pages/ViewBetsPage.tsx`
 - What is wrong:
   - `result_url` and `events_url` still exist in the schema and API model even though the supported biathlon flow is official import plus manual fallback.
@@ -151,7 +135,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Lower Priority / Structural Cleanup
 
-### 9. Seed/bootstrap data and runtime data model are drifting apart
+### 8. Seed/bootstrap data and runtime data model are drifting apart
 - Files:
   - `backend/src/resources/disciplines.csv`
   - `backend/src/resources/athletes.csv`
@@ -167,7 +151,7 @@ This document records the main technical debt and areas that need work across th
   - Bring seed files back in line with current production behavior.
   - Treat runtime backfills as one-off admin tools, not hidden startup behavior.
 
-### 10. Some abstract/base contracts are incomplete
+### 9. Some abstract/base contracts are incomplete
 - Files:
   - `backend/src/models/base_model.py`
   - `backend/src/models/discipline.py`
@@ -179,7 +163,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Either tighten the base contracts or simplify the inheritance model.
 
-### 11. Test coverage is better than before, but still misses some operational paths
+### 10. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -199,7 +183,6 @@ This document records the main technical debt and areas that need work across th
 - Improve backend error handling/logging consistency.
 
 ### Phase 2
-- Replace manual frontend JSON string serialization with plain payload objects.
 - Simplify event import modal state handling.
 - Clean stale discipline URL compatibility.
 
@@ -218,6 +201,8 @@ This document records the main technical debt and areas that need work across th
 - A first admin role plus admin-only event management workflow exists as of 2026-03-11.
 - Admins can preview, refresh, clear, and rescore event results, and background task endpoints can now be protected by `TIPPSPIEL_TASK_API_TOKEN`, as of 2026-03-11.
 - A dedicated admin overview for shared-event source repair and missing-country cleanup exists as of 2026-03-11.
+- API-facing frontend model serialization now uses plain payload objects, and `Discipline` / `EventType` were moved out of `models/user`, as of 2026-03-11.
+- `UserContext` now lives under `frontend/src/contexts/`, `User` now lives under `frontend/src/models/`, and the old `frontend/src/models/user/` structure is gone, as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

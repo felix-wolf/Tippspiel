@@ -1,4 +1,4 @@
-import { NetworkHelper } from "../NetworkHelper";
+import { NetworkHelper } from "./NetworkHelper";
 import { EventType } from "./EventType";
 
 export type DisciplineImportMode = "manual" | "official_api";

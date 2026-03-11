@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import TableList from "../../design/TableList";
 import { Game } from "../../../models/Game";
 import { motion } from "motion/react";
-import { User } from "../../../models/user/User";
+import { User } from "../../../models/User";
 import { MissingBetEditorModal } from "../MissingBetEditorModal";
 import { canCreatorAddMissingBet } from "../missingBetUtils";
 

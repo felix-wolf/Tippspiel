@@ -4,7 +4,7 @@ import { Event } from "../models/Event";
 import { NavPage } from "./NavPage";
 import { Prediction } from "../models/Bet";
 import { Game } from "../models/Game";
-import { useCurrentUser } from "../models/user/UserContext";
+import { useCurrentUser } from "../contexts/UserContext";
 import { ManualResultUploader } from "../components/domain/ManualResultUploader";
 import { AdminResultTools } from "../components/domain/AdminResultTools";
 import { BetList } from "../components/domain/lists/BetList";

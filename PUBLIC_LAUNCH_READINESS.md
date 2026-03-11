@@ -281,7 +281,7 @@ Goal: public signups, predictable operations, and acceptable legal/security post
 ### 16. Simplify the product surface around biathlon
 - Relevant files:
   - [backend/src/models/discipline.py](/Users/felixwolf/Documents/Developer/Python/tippspiel/backend/src/models/discipline.py)
-  - [frontend/src/models/user/Discipline.ts](/Users/felixwolf/Documents/Developer/Python/tippspiel/frontend/src/models/user/Discipline.ts)
+  - [frontend/src/models/Discipline.ts](/Users/felixwolf/Documents/Developer/Python/tippspiel/frontend/src/models/Discipline.ts)
   - [frontend/src/components/domain/EventEditorModal.tsx](/Users/felixwolf/Documents/Developer/Python/tippspiel/frontend/src/components/domain/EventEditorModal.tsx)
   - [frontend/src/pages/ViewBetsPage.tsx](/Users/felixwolf/Documents/Developer/Python/tippspiel/frontend/src/pages/ViewBetsPage.tsx)
 - Current state:

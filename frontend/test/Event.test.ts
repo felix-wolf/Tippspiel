@@ -1,17 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Bet, Prediction } from "../src/models/Bet";
 import { Event } from "../src/models/Event";
+import { EventType } from "../src/models/EventType";
 import { Result } from "../src/models/Result";
-import { EventType } from "../src/models/user/EventType";
-
-const normalizeJson = (value: string) => value.replace(/\n\s*/g, "").trim();
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("Event.toJson", () => {
-  it("serializes the event with nested bets, results and type", () => {
+describe("Event.toPayload", () => {
+  it("serializes the event as a plain payload object", () => {
     const eventType = new EventType(
       "type-1",
       "Type Name",
@@ -69,54 +67,60 @@ describe("Event.toJson", () => {
       "2526",
     );
 
-    const expectedJson1 = `{
-      "id": "event-1",
-      "name": "Sample Event",
-      "game_id": "game-1",
-      "datetime": "2024-01-02 03:04:05",
-      "hasBetsForUsers": "user-1,user-2",
-      "allow_partial_points": "1",
-      "results": [{
-      "id": "result-1",
-      "event_id": "event-1",
-      "place": "1",
-      "object_id": "object-1",
-      "object_name": "Object Name",
-      "time": "10:00",
-      "behind": "0.2"
-    }],
-      "bets": [{
-      "id": "bet-1",
-      "user_id": "user-1",
-      "predictions": [{
-      "id": "prediction-1",
-      "bet_id": "bet-1",
-      "predicted_place": "1",
-      "object_id": "object-1",
-      "object_name": "Object Name",
-      "actual_place": "1",
-      "actual_status": "undefined",
-      "score": "10"
-    }],
-      "score": "100"
-    }],
-      "event_type": {
-      "id": "type-1",
-      "name": "Type Name",
-      "discipline_id": "discipline-1",
-      "betting_on": "countries",
-      "display_name": "Type Display"
-    },
-      "url": "https://example.com/event",
-      "location": null,
-      "race_format": null,
-      "source_provider": "ibu",
-      "source_event_id": "event-source-1",
-      "source_race_id": "race-source-1",
-      "season_id": "2526"
-      }`;
-
-    expect(normalizeJson(event.toJson())).toBe(normalizeJson(expectedJson1));
+    expect(event.toPayload()).toEqual({
+      id: "event-1",
+      name: "Sample Event",
+      game_id: "game-1",
+      datetime: "2024-01-02 03:04:05",
+      allow_partial_points: 1,
+      results: [
+        {
+          id: "result-1",
+          event_id: "event-1",
+          place: 1,
+          object_id: "object-1",
+          object_name: "Object Name",
+          time: "10:00",
+          behind: "0.2",
+          status: undefined,
+        },
+      ],
+      bets: [
+        {
+          id: "bet-1",
+          user_id: "user-1",
+          predictions: [
+            {
+              id: "prediction-1",
+              bet_id: "bet-1",
+              predicted_place: 1,
+              object_id: "object-1",
+              object_name: "Object Name",
+              actual_place: 1,
+              actual_status: undefined,
+              score: 10,
+            },
+          ],
+          score: 100,
+        },
+      ],
+      event_type: {
+        id: "type-1",
+        name: "Type Name",
+        discipline_id: "discipline-1",
+        betting_on: "countries",
+        display_name: "Type Display",
+      },
+      url: "https://example.com/event",
+      location: null,
+      race_format: null,
+      source_provider: "ibu",
+      source_event_id: "event-source-1",
+      source_race_id: "race-source-1",
+      season_id: "2526",
+      num_bets: 1,
+      points_correct_bet: 10,
+    });
 
     const eventNoUrl = new Event(
       "event-1",
@@ -133,54 +137,60 @@ describe("Event.toJson", () => {
       new Date(2024, 0, 2, 3, 4, 5),
     );
 
-    const expectedJson2 = `{
-      "id": "event-1",
-      "name": "Sample Event",
-      "game_id": "game-1",
-      "datetime": "2024-01-02 03:04:05",
-      "hasBetsForUsers": "user-1,user-2",
-      "allow_partial_points": "1",
-      "results": [{
-      "id": "result-1",
-      "event_id": "event-1",
-      "place": "1",
-      "object_id": "object-1",
-      "object_name": "Object Name",
-      "time": "10:00",
-      "behind": "0.2"
-    }],
-      "bets": [{
-      "id": "bet-1",
-      "user_id": "user-1",
-      "predictions": [{
-      "id": "prediction-1",
-      "bet_id": "bet-1",
-      "predicted_place": "1",
-      "object_id": "object-1",
-      "object_name": "Object Name",
-      "actual_place": "1",
-      "actual_status": "undefined",
-      "score": "10"
-    }],
-      "score": "100"
-    }],
-      "event_type": {
-      "id": "type-1",
-      "name": "Type Name",
-      "discipline_id": "discipline-1",
-      "betting_on": "countries",
-      "display_name": "Type Display"
-    },
-      "url": null,
-      "location": null,
-      "race_format": null,
-      "source_provider": null,
-      "source_event_id": null,
-      "source_race_id": null,
-      "season_id": null
-      }`;
-
-    expect(normalizeJson(eventNoUrl.toJson())).toBe(normalizeJson(expectedJson2));
+    expect(eventNoUrl.toPayload()).toEqual({
+      id: "event-1",
+      name: "Sample Event",
+      game_id: "game-1",
+      datetime: "2024-01-02 03:04:05",
+      allow_partial_points: 1,
+      results: [
+        {
+          id: "result-1",
+          event_id: "event-1",
+          place: 1,
+          object_id: "object-1",
+          object_name: "Object Name",
+          time: "10:00",
+          behind: "0.2",
+          status: undefined,
+        },
+      ],
+      bets: [
+        {
+          id: "bet-1",
+          user_id: "user-1",
+          predictions: [
+            {
+              id: "prediction-1",
+              bet_id: "bet-1",
+              predicted_place: 1,
+              object_id: "object-1",
+              object_name: "Object Name",
+              actual_place: 1,
+              actual_status: undefined,
+              score: 10,
+            },
+          ],
+          score: 100,
+        },
+      ],
+      event_type: {
+        id: "type-1",
+        name: "Type Name",
+        discipline_id: "discipline-1",
+        betting_on: "countries",
+        display_name: "Type Display",
+      },
+      url: null,
+      location: null,
+      race_format: null,
+      source_provider: null,
+      source_event_id: null,
+      source_race_id: null,
+      season_id: null,
+      num_bets: 1,
+      points_correct_bet: 10,
+    });
   });
 });
 
@@ -246,6 +256,105 @@ describe("Event.saveBetsForUser", () => {
               predicted_place: 1,
               score: undefined,
             },
+          ],
+        }),
+      }),
+    );
+  });
+});
+
+describe("Event.saveImportedEvents", () => {
+  it("keeps the backend import wire format while building payloads from plain objects", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify([
+          {
+            id: "event-1",
+            name: "Sample Event",
+            game_id: "game-1",
+            datetime: "2024-01-02 03:04:05",
+            num_bets: 1,
+            points_correct_bet: 5,
+            allow_partial_points: false,
+            bets: [],
+            results: [],
+            has_bets_for_users: [],
+            event_type: {
+              id: "type-1",
+              name: "Type Name",
+              display_name: "Type Display",
+              discipline_id: "discipline-1",
+              betting_on: "countries",
+            },
+            url: null,
+            location: null,
+            race_format: null,
+            source_provider: null,
+            source_event_id: null,
+            source_race_id: null,
+            season_id: null,
+          },
+        ]),
+      status: 200,
+      statusText: "OK",
+    } as Response);
+
+    const eventType = new EventType(
+      "type-1",
+      "Type Name",
+      "Type Display",
+      "discipline-1",
+      "countries",
+    );
+    const event = new Event(
+      "event-1",
+      "Sample Event",
+      "game-1",
+      eventType,
+      "2024-01-02T03:04:05",
+      1,
+      5,
+      false,
+      [],
+      [],
+      [],
+      new Date(2024, 0, 2, 3, 4, 5),
+    );
+
+    await Event.saveImportedEvents([event]);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/event",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          events: [
+            JSON.stringify({
+              id: "event-1",
+              name: "Sample Event",
+              game_id: "game-1",
+              datetime: "2024-01-02 03:04:05",
+              allow_partial_points: 0,
+              results: [],
+              bets: [],
+              event_type: {
+                id: "type-1",
+                name: "Type Name",
+                discipline_id: "discipline-1",
+                betting_on: "countries",
+                display_name: "Type Display",
+              },
+              url: null,
+              location: null,
+              race_format: null,
+              source_provider: null,
+              source_event_id: null,
+              source_race_id: null,
+              season_id: null,
+              num_bets: 1,
+              points_correct_bet: 5,
+            }),
           ],
         }),
       }),

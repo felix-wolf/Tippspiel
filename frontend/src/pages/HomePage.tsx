@@ -1,5 +1,5 @@
 import { BettingGameList } from "../components/domain/lists/BettingGameList";
-import { useCurrentUser, useLogout } from "../models/user/UserContext";
+import { useCurrentUser, useLogout } from "../contexts/UserContext";
 import { Button } from "../components/design/Button";
 import { useCallback } from "react";
 import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";

@@ -8,7 +8,7 @@ import {
 } from "../../models/NotificationHelper.ts";
 import { Shakable } from "../design/Shakable.tsx";
 import { ColorUpdater } from "./ColorUpdater.tsx";
-import { useCurrentUser } from "../../models/user/UserContext.tsx";
+import { useCurrentUser } from "../../contexts/UserContext";
 import useFetch from "../../useFetch.tsx";
 import { Bell, Check, Palette } from "lucide-react";
 

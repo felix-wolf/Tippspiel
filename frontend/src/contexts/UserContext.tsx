@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { Outlet } from "react-router-dom";
-import { User } from "./User";
+import { User } from "../models/User";
 
 type LoginError = {
   status?: number;
@@ -60,8 +60,9 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
   const login = useCallback(
     async (name: string, password: string) => {
       return new Promise<void>((resolve, reject) => {
-        if (current !== null)
+        if (current !== null) {
           console.log("USER CURRENTLY NOT NULL, ALREADY LOGGED IN?");
+        }
         User.login(name, password)
           .then((user) => {
             setCurrent(user);
@@ -74,9 +75,9 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
           });
       });
     },
-
     [current],
   );
+
   const logout = useCallback(async () => {
     current
       ?.logout()
@@ -95,17 +96,11 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
   );
 }
 
-/**
- * Hook to determine whether a user is currently logged in.
- */
 export function useIsLoggedIn(): boolean {
   const { current } = useContext(UserContext);
   return current != null;
 }
 
-/**
- * Hook to retrieve the current user. Throws an error if no user is logged in.
- */
 export function useCurrentUser(): User | undefined {
   const { current } = useContext(UserContext);
   return current ?? undefined;
@@ -116,18 +111,11 @@ export function useSetCurrentUser(): (user: User | null) => void {
   return setCurrent;
 }
 
-/**
- * This hook returns a function that can be used to log in a user with
- * the given credentials.
- */
 export function useLogin(): (name: string, password: string) => Promise<void> {
   const { login } = useContext(UserContext);
   return login;
 }
 
-/**
- * This hook returns a function that can be used to log out the current user.
- */
 export function useLogout(): () => Promise<void> {
   const { logout } = useContext(UserContext);
   return logout;

@@ -1,6 +1,6 @@
-import { User } from "./user/User";
+import { User } from "./User";
 import { NetworkHelper } from "./NetworkHelper";
-import { Discipline } from "./user/Discipline";
+import { Discipline } from "./Discipline";
 import { Event } from "./Event.ts";
 
 export class Game {

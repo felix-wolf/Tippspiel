@@ -1,5 +1,5 @@
-import { NetworkHelper } from "../NetworkHelper";
-import { Utils } from "../../utils";
+import { NetworkHelper } from "./NetworkHelper";
+import { Utils } from "../utils";
 
 /**
  * A user of the system.
@@ -34,8 +34,13 @@ export class User {
     return NetworkHelper.execute("/api/logout", (_: any) => {});
   }
 
-  public toJson(): string {
-    return `{"id": "${this._id}", "name": "${this.name}", "color": "${this.color}", "is_admin": ${this.isAdmin}}`;
+  public toStoragePayload() {
+    return {
+      id: this._id,
+      name: this.name,
+      color: this.color,
+      is_admin: this.isAdmin,
+    };
   }
 
   public static login(name: string, password: string): Promise<User> {
@@ -56,7 +61,7 @@ export class User {
   }
 
   public saveToStorage() {
-    localStorage.setItem(User.storageKey, this.toJson());
+    localStorage.setItem(User.storageKey, JSON.stringify(this.toStoragePayload()));
   }
 
   public static loadFromStorage(): User | null {

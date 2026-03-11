@@ -3,7 +3,7 @@ import { DropDown, DropDownOption } from "../design/DropDown.tsx";
 import { DateTimePicker } from "../design/DateTimePicker.tsx";
 import { useEffect, useState } from "react";
 import { Utils } from "../../utils.ts";
-import { EventType } from "../../models/user/EventType.ts";
+import { EventType } from "../../models/EventType";
 import { Event } from "../../models/Event.ts";
 import { DeleteButton } from "../design/DeleteButton.tsx";
 import { Checkbox } from "../design/Checkbox.tsx";

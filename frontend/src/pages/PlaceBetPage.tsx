@@ -1,7 +1,7 @@
 import { NavPage } from "./NavPage";
 import { Event, Predictions } from "../models/Event";
 import { SiteRoutes, usePathParams } from "../../SiteRoutes";
-import { useCurrentUser } from "../models/user/UserContext";
+import { useCurrentUser } from "../contexts/UserContext";
 import { Prediction } from "../models/Bet";
 import { useNavigate } from "react-router-dom";
 import { BetPlacer } from "../components/domain/BetPlacer";

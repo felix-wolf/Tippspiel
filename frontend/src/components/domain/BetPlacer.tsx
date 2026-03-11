@@ -3,10 +3,10 @@ import { Bet, Prediction } from "../../models/Bet";
 import { BetInput, BetInputItem } from "../design/BetInput";
 import { Button } from "../design/Button";
 import { Event } from "../../models/Event";
-import { EventType } from "../../models/user/EventType";
+import { EventType } from "../../models/EventType";
 import { Country } from "../../models/Country";
 import { Athlete } from "../../models/Athlete";
-import { User } from "../../models/user/User";
+import { User } from "../../models/User";
 
 type BetPlacerProps = {
   onSave: (selectedItems: Prediction[]) => void;

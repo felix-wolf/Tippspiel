@@ -1,4 +1,4 @@
-import { EventType } from "../../models/user/EventType";
+import { EventType } from "../../models/EventType";
 import { Event } from "../../models/Event";
 import { useCallback, useEffect, useState } from "react";
 import { Game } from "../../models/Game";

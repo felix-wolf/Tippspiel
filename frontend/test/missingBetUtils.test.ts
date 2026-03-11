@@ -3,7 +3,7 @@ import { canCreatorAddMissingBet, buildMissingBetConfirmationItems } from "../sr
 import { Bet, Prediction } from "../src/models/Bet";
 import { Event } from "../src/models/Event";
 import { Result } from "../src/models/Result";
-import { EventType } from "../src/models/user/EventType";
+import { EventType } from "../src/models/EventType";
 
 function buildEvent({
   started = true,

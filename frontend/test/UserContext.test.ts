@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { User } from "../src/models/user/User";
+import { User } from "../src/models/User";
 import {
   loadInitialCurrentUser,
   mapLoginError,
   syncCurrentUserStorage,
-} from "../src/models/user/UserContext";
+} from "../src/contexts/UserContext";
 
 class LocalStorageMock {
   private store = new Map<string, string>();

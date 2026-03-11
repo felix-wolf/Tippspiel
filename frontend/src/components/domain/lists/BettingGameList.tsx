@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { BettingGameItem, BettingGameItemGame } from "./BettingGameItem";
 import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes";
-import { User } from "../../../models/user/User";
+import { User } from "../../../models/User";
 import { Game } from "../../../models/Game";
 import { GamesContext } from "../../../contexts/GameContext.ts";
 import { motion } from "motion/react";

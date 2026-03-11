@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { User } from "../../models/user/User";
+import { User } from "../../models/User";
 import Colorful from "@uiw/react-color-colorful";
 import { Button } from "../design/Button";
-import { useSetCurrentUser } from "../../models/user/UserContext";
+import { useSetCurrentUser } from "../../contexts/UserContext";
 
 type ColorUpdaterProps = {
   user: User;

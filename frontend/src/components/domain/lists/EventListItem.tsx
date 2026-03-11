@@ -1,6 +1,6 @@
 import { Badge, BadgeCheck } from "lucide-react"
 import { Event } from "../../../models/Event"
-import { useCurrentUser } from "../../../models/user/UserContext"
+import { useCurrentUser } from "../../../contexts/UserContext"
 import { Utils } from "../../../utils"
 
 type EventListItemProps = {

@@ -1,7 +1,7 @@
 import { TextField } from "../design/TextField";
 import { useEffect, useState } from "react";
 import { DropDown, DropDownOption } from "../design/DropDown";
-import { Discipline } from "../../models/user/Discipline";
+import { Discipline } from "../../models/Discipline";
 import { Shakable } from "../design/Shakable";
 
 type GameCreatorProps = {

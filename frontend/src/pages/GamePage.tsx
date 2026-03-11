@@ -2,7 +2,7 @@ import { SiteRoutes, useNavigateParams, usePathParams } from "../../SiteRoutes";
 import { useEffect, useState } from "react";
 import { Game } from "../models/Game";
 import { EventList } from "../components/domain/lists/EventList";
-import { useCurrentUser } from "../models/user/UserContext";
+import { useCurrentUser } from "../contexts/UserContext";
 import { NavPage } from "./NavPage";
 import { ScoreLine } from "../components/domain/ScoreLine";
 import { Toggler } from "../components/design/Toggler";

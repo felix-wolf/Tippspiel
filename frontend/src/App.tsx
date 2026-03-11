@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { SiteRoutes } from "../SiteRoutes";
 import { GamePage } from "./pages/GamePage";
-import UserContextLayout from "./models/user/UserContext";
+import UserContextLayout from "./contexts/UserContext";
 import { LoginPage } from "./pages/LoginPage.tsx";
 import { HomePage } from "./pages/HomePage";
 import { PlaceBetPage } from "./pages/PlaceBetPage";

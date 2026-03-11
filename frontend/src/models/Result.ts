@@ -35,11 +35,11 @@ export class Result {
     this._status = status;
   }
 
-  public toJson(): string {
-    const payload: Record<string, string | undefined> = {
+  public toPayload() {
+    const payload: Record<string, string | number | undefined> = {
       id: this.id,
       event_id: this.event_id,
-      place: `${this.place}`,
+      place: this.place,
       object_id: this.object_id,
       object_name: this.object_name,
       time: this.time,
@@ -52,7 +52,7 @@ export class Result {
     if (this.shooting_time !== undefined) {
       payload.shooting_time = this.shooting_time;
     }
-    return JSON.stringify(payload, null, 2);
+    return payload;
   }
 
   public static fromJson(json: any): Result {

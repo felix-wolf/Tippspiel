@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Prediction } from "../../models/Bet";
 import { Event, Predictions } from "../../models/Event";
-import { User } from "../../models/user/User";
+import { User } from "../../models/User";
 import { DialogModal } from "../design/Dialog";
 import { BetPlacer } from "./BetPlacer";
 import { buildMissingBetConfirmationItems } from "./missingBetUtils";
