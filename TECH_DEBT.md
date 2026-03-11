@@ -17,17 +17,16 @@ This document records the main technical debt and areas that need work across th
   - Shared race metadata now exists separately from game-specific betting configuration.
   - Game owners can no longer create, edit, or delete event information.
   - Admins can now preview, re-apply, clear, and rescore results from the regular event UI.
-  - A first admin workflow now exists, but only through the regular game UI with an admin flag.
+  - A dedicated admin overview now exists for shared-event diagnostics and missing-country cleanup.
   - There is still no dedicated admin overview for:
-    - finding broken shared races quickly
-    - managing orphaned/manual shared events globally
-    - reviewing cross-game impact before editing shared metadata
     - reviewing recent failed background jobs or corrected imports in one place
+    - persistent audit/history for admin actions
+    - broader support workflows like user moderation or game repair
 - Why it matters:
-  - The product model is cleaner and no longer blocked, but operational administration is still narrow.
+  - The product model is cleaner and a first global repair surface exists, but operational administration is still narrow.
   - As the number of games grows, editing event data game-by-game will become inefficient and error-prone.
 - Suggested direction:
-  - Add a dedicated admin overview for canonical shared events and linked games.
+  - Add persistent operation history and failed-job diagnostics to the admin overview.
   - Add safer merge/delete flows and impact previews before editing shared metadata used by multiple games.
 
 ### 2. The `Discipline` model is overloaded
@@ -218,6 +217,7 @@ This document records the main technical debt and areas that need work across th
 - Shared race metadata is normalized into canonical shared events and game owners can no longer edit event info as of 2026-03-11.
 - A first admin role plus admin-only event management workflow exists as of 2026-03-11.
 - Admins can preview, refresh, clear, and rescore event results, and background task endpoints can now be protected by `TIPPSPIEL_TASK_API_TOKEN`, as of 2026-03-11.
+- A dedicated admin overview for shared-event source repair and missing-country cleanup exists as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

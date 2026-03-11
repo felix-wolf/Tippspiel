@@ -56,6 +56,18 @@ class Country(BaseModel):
         success = db_manager.execute(sql, [self.code, self.name, self.flag])
         return success, self.code
 
+    def save_or_update(self):
+        sql = f"""
+            INSERT INTO {db_manager.TABLE_COUNTRIES}
+            (code, name, flag)
+            VALUES (?,?,?)
+            ON CONFLICT(code) DO UPDATE SET
+                name = excluded.name,
+                flag = excluded.flag
+            """
+        success = db_manager.execute(sql, [self.code, self.name, self.flag])
+        return success, self.code
+
     @staticmethod
     def get_base_data():
         countries = db_manager.load_csv("countries.csv")

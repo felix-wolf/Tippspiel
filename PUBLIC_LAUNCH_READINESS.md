@@ -125,11 +125,12 @@ Goal: public signups, predictable operations, and acceptable legal/security post
   - Multiple betting games can attach to the same underlying official race.
   - Game owners can attach official races, but canonical event data is no longer owner-editable.
   - Admins can now manually preview and re-apply official result imports for a selected event/shared race.
+  - A dedicated admin overview now exists for shared-event source repairs and missing-country cleanup.
 - Why this matters:
   - Result freshness and correctness are among the most visible user-facing features.
 - Needed steps:
-  - Add admin workflows for correcting shared race metadata when the official source is incomplete or mapped incorrectly.
-  - Add a dedicated review surface for failed official imports and source-mapping repairs.
+  - Add a dedicated review surface for failed official imports and background-job outcomes.
+  - Add persistent audit/history for admin repairs.
 
 ### 7. Improve reliability of automatic result processing
 - Relevant files:
@@ -198,23 +199,25 @@ Goal: public signups, predictable operations, and acceptable legal/security post
 - Relevant files:
   - no dedicated admin surface found in the repo
 - Current state:
-  - There is no visible admin UI or admin workflow for:
-    - abusive users
-    - broken games
-    - bad imports
-    - broad canonical shared-event corrections
-    - notification cleanup
-- Update since 2026-03-11:
   - The product now has a first admin role and admin-only event management path for shared/game events.
   - Admins can now repair event results directly from the event detail page by previewing refreshes, applying them, clearing results, or forcing a rescore.
+  - A dedicated admin page now exists for:
+    - shared-event diagnostics
+    - canonical source-mapping repairs
+    - missing-country cleanup
+  - There is still no visible admin workflow for:
+    - abusive users
+    - broken games beyond event/source repair
+    - notification cleanup
+    - persistent audit/history
 - Why this matters:
   - Public users create support and moderation needs quickly.
 - Needed steps:
   - Add at least minimal admin capabilities:
     - inspect users/games
     - disable abusive accounts
-    - repair/delete broken imports from a dedicated overview
     - review failed result imports and background-job outcomes
+    - add persistent audit/history for admin actions
 
 ## Must-Have Before Broad Public Launch
 

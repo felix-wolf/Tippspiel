@@ -6,6 +6,7 @@ import { LoginPage } from "./pages/LoginPage.tsx";
 import { HomePage } from "./pages/HomePage";
 import { PlaceBetPage } from "./pages/PlaceBetPage";
 import { ViewBetsPage } from "./pages/ViewBetsPage";
+import { AdminPage } from "./pages/AdminPage";
 import AppearanceContextLayout from "./contexts/AppearanceContext.tsx";
 import Debug from "./pages/Debug.tsx";
 import MainLayout from "./pages/MainLayout.tsx";
@@ -23,6 +24,7 @@ function AppRoutes() {
           <Route path={SiteRoutes.Login} element={<LoginPage />} />
           <Route element={<MainLayout />}>
             <Route path={SiteRoutes.Home} element={<HomePage />} />
+            <Route path={SiteRoutes.Admin} element={<AdminPage />} />
             <Route path={SiteRoutes.Game} element={<GamePage />} />
             <Route path={SiteRoutes.PlaceBet} element={<PlaceBetPage />} />
             <Route path={SiteRoutes.ViewBets} element={<ViewBetsPage />} />

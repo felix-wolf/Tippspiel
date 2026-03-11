@@ -7,6 +7,7 @@ import sys
 from config import load_config
 from src.database.migration_runner import MigrationError, assert_database_current
 from src.blueprints.athlete import athlete_blueprint
+from src.blueprints.admin import admin_blueprint
 from src.blueprints.country import country_blueprint
 from src.blueprints.discipline import discipline_blueprint
 from src.blueprints.event import event_blueprint
@@ -72,6 +73,7 @@ def create_app(env, check_migrations=True):
                 # Tests can construct the app before the temp schema exists.
                 pass
     app.register_blueprint(athlete_blueprint)
+    app.register_blueprint(admin_blueprint)
     app.register_blueprint(country_blueprint)
     app.register_blueprint(discipline_blueprint)
     app.register_blueprint(event_blueprint)

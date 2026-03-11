@@ -39,8 +39,19 @@ export function HomePage() {
         <h1 className="text-2xl font-semibold text-gray-800">
           Hallo <span className="text-sky-700">{user?.name}</span>!
         </h1>
-        <div className="w-50">
-          <Button title="Logout" onClick={logoutClick} type="negative" />
+        <div className="flex gap-3">
+          {user?.isAdmin && (
+            <div className="w-40">
+              <Button
+                title="Admin"
+                onClick={() => navigate(SiteRoutes.Admin, {})}
+                type="neutral"
+              />
+            </div>
+          )}
+          <div className="w-50">
+            <Button title="Logout" onClick={logoutClick} type="negative" />
+          </div>
         </div>
       </header>
 
