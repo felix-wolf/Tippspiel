@@ -2,16 +2,18 @@ from src.database import db_manager
 import sys
 import src.utils as utils
 from src.models.base_model import BaseModel
+from flask import current_app, has_app_context
 
 sys.path.append("..")
 
 class User(BaseModel):
 
-    def __init__(self, user_id: str, name: str, pw_hash: str, color: str = None):
+    def __init__(self, user_id: str, name: str, pw_hash: str, color: str = None, is_admin: bool = False):
         self.id = user_id
         self.name = name
         self.pw_hash = pw_hash
         self.color = color
+        self.is_admin = is_admin
 
     def to_string(self):
         return f"User{self.id, self.name, self.pw_hash}"
@@ -29,7 +31,8 @@ class User(BaseModel):
         return {
             "id": self.id,
             "name": self.name,
-            "color": self.color
+            "color": self.color,
+            "is_admin": self.is_admin,
         }
 
     def update_color(self, color):
@@ -46,6 +49,42 @@ class User(BaseModel):
             self.pw_hash = pw_hash
         return success
 
+    def update_admin_flag(self, is_admin: bool):
+        sql = f"UPDATE {db_manager.TABLE_USERS} SET is_admin = ? WHERE id = ?"
+        success = db_manager.execute(sql, [1 if is_admin else 0, self.id])
+        if success:
+            self.is_admin = is_admin
+        return success
+
+    @staticmethod
+    def configured_admin_usernames():
+        if not has_app_context():
+            return set()
+        return set(current_app.config.get("ADMIN_USERNAMES", []))
+
+    @staticmethod
+    def sync_admins(usernames: list[str] | set[str]):
+        if not usernames or not db_manager.column_exists(db_manager.TABLE_USERS, "is_admin"):
+            return True
+        placeholders = ",".join("?" for _ in usernames)
+        conn = None
+        try:
+            conn = db_manager.start_transaction()
+            conn.execute(f"UPDATE {db_manager.TABLE_USERS} SET is_admin = 0")
+            conn.execute(
+                f"UPDATE {db_manager.TABLE_USERS} SET is_admin = 1 WHERE name IN ({placeholders})",
+                list(usernames),
+            )
+            db_manager.commit_transaction(conn)
+            return True
+        except Exception:
+            if conn:
+                db_manager.rollback_transaction(conn)
+            raise
+        finally:
+            if conn:
+                conn.close()
+
     @staticmethod
     def from_dict(user_dict):
         if user_dict is None:
@@ -53,9 +92,13 @@ class User(BaseModel):
         color = None
         if "color" in user_dict:
             color = user_dict["color"]
+        is_admin = bool(user_dict.get("is_admin", False))
         if user_dict:
             try:
-                return User(user_dict['id'], user_dict['name'], user_dict['pw_hash'], color)
+                user = User(user_dict['id'], user_dict['name'], user_dict['pw_hash'], color, is_admin)
+                if user.name in User.configured_admin_usernames():
+                    user.is_admin = True
+                return user
             except KeyError as err:
                 print("Could not instantiate user with given values:", user_dict)
                 return None
@@ -66,8 +109,9 @@ class User(BaseModel):
     def create(name, pw_hash):
         user_id = utils.generate_id([name, pw_hash])
         color = utils.generateRandomHexColor()
-        sql = f"INSERT INTO {db_manager.TABLE_USERS} (id, name, pw_hash, color) VALUES (?,?,?,?)"
-        success = db_manager.execute(sql, [user_id, name, pw_hash, color])
+        is_admin = 1 if name in User.configured_admin_usernames() else 0
+        sql = f"INSERT INTO {db_manager.TABLE_USERS} (id, name, pw_hash, color, is_admin) VALUES (?,?,?,?,?)"
+        success = db_manager.execute(sql, [user_id, name, pw_hash, color, is_admin])
         return success, user_id
 
     @staticmethod

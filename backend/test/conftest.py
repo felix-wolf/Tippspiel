@@ -105,3 +105,23 @@ def client(app, base_data):
         # Flask-Login stores the user id in the session under "_user_id"
         sess["_user_id"] = base_data["user"].id
     return client
+
+
+@pytest.fixture()
+def admin_user(app):
+    with app.app_context():
+        success, admin_user_id = User.create("admin_user", hash_password("pw", app.config["SALT"]))
+        assert success
+        admin_user = User.get_by_id(admin_user_id)
+        assert admin_user is not None
+        assert admin_user.update_admin_flag(True)
+        return User.get_by_id(admin_user_id)
+
+
+@pytest.fixture()
+def admin_client(app, admin_user):
+    client = app.test_client()
+    with client.session_transaction() as sess:
+        sess.clear()
+        sess["_user_id"] = admin_user.id
+    return client

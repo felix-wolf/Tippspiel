@@ -26,6 +26,7 @@ export function GamePage() {
   const navigate = useNavigateParams();
   const [isCreator, setIsCreator] = useState(false);
   const user = useCurrentUser();
+  const isAdmin = user?.isAdmin === true;
   const { isLight } = useAppearance();
   const cache = useCache();
   const [showingSettingsModal, setShowingSettingsModal] = useState(false);
@@ -151,7 +152,8 @@ export function GamePage() {
                 game={game}
                 type={"upcoming"}
                 placeholderText={"Es sind noch keine Events eingetragen..."}
-                isCreator={isCreator}
+                canImportEvents={isCreator || isAdmin}
+                canEditEvents={isAdmin}
                 refreshToken={eventsRefreshToken}
                 onEventsChanged={() =>
                   setEventsRefreshToken((currentToken) => currentToken + 1)

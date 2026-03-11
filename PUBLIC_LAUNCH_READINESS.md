@@ -124,11 +124,12 @@ Goal: public signups, predictable operations, and acceptable legal/security post
   - Official-source identity is now enforced on canonical shared race records.
   - Multiple betting games can attach to the same underlying official race.
   - Game owners can attach official races, but canonical event data is no longer owner-editable.
+  - Admins can now manually preview and re-apply official result imports for a selected event/shared race.
 - Why this matters:
   - Result freshness and correctness are among the most visible user-facing features.
 - Needed steps:
   - Add admin workflows for correcting shared race metadata when the official source is incomplete or mapped incorrectly.
-  - Add retry/reporting around failed official imports.
+  - Add a dedicated review surface for failed official imports and source-mapping repairs.
 
 ### 7. Improve reliability of automatic result processing
 - Relevant files:
@@ -138,9 +139,12 @@ Goal: public signups, predictable operations, and acceptable legal/security post
 - Current state:
   - Automatic checks now fetch one official result set per shared race and fan it out to all linked betting games.
   - Official-source identity is enforced by DB constraints on shared events.
+  - Admins can now clear or rescore stored event results if the imported data or derived scores need repair.
+  - Background reminder/result-check endpoints now support token-based protection via `TIPPSPIEL_TASK_API_TOKEN`.
 - Why this matters:
   - Result freshness is one of the most visible user-facing features.
 - Needed steps:
+  - Roll out task-token protection in production cron/config and verify the operational path end-to-end.
   - Add better retry/reporting for failed imports.
   - Add idempotent notification safeguards if result reprocessing ever becomes necessary.
 
@@ -198,16 +202,19 @@ Goal: public signups, predictable operations, and acceptable legal/security post
     - abusive users
     - broken games
     - bad imports
-    - canonical shared-event corrections
+    - broad canonical shared-event corrections
     - notification cleanup
+- Update since 2026-03-11:
+  - The product now has a first admin role and admin-only event management path for shared/game events.
+  - Admins can now repair event results directly from the event detail page by previewing refreshes, applying them, clearing results, or forcing a rescore.
 - Why this matters:
   - Public users create support and moderation needs quickly.
 - Needed steps:
   - Add at least minimal admin capabilities:
     - inspect users/games
     - disable abusive accounts
-    - repair/delete broken imports
-    - review failed result imports
+    - repair/delete broken imports from a dedicated overview
+    - review failed result imports and background-job outcomes
 
 ## Must-Have Before Broad Public Launch
 

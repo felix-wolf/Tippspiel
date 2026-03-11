@@ -44,7 +44,7 @@ describe("UserContext auth helpers", () => {
   });
 
   it("loads the initial user from storage", () => {
-    const user = new User("user-1", "Felix", "#112233");
+    const user = new User("user-1", "Felix", "#112233", true);
     user.saveToStorage();
 
     const loaded = loadInitialCurrentUser();
@@ -52,6 +52,7 @@ describe("UserContext auth helpers", () => {
     expect(loaded?.id).toBe("user-1");
     expect(loaded?.name).toBe("Felix");
     expect(loaded?.color).toBe("#112233");
+    expect(loaded?.isAdmin).toBe(true);
   });
 
   it("syncs a current user into storage", () => {

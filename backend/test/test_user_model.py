@@ -37,3 +37,17 @@ def test_user_authenticate_upgrades_legacy_hash(base_data, app):
         upgraded = User.get_by_id(base_data["user"].id)
         assert upgraded is not None
         assert not password_hash_needs_upgrade(upgraded.pw_hash)
+
+
+def test_user_update_admin_flag(app):
+    with app.app_context():
+        success, user_id = User.create("admin-candidate", hash_password("pw", app.config["SALT"]))
+        assert success
+        user = User.get_by_id(user_id)
+        assert user is not None
+        assert user.is_admin is False
+        assert user.update_admin_flag(True)
+
+        updated = User.get_by_id(user_id)
+        assert updated is not None
+        assert updated.is_admin is True

@@ -6,6 +6,7 @@ import { Prediction } from "../models/Bet";
 import { Game } from "../models/Game";
 import { useCurrentUser } from "../models/user/UserContext";
 import { ManualResultUploader } from "../components/domain/ManualResultUploader";
+import { AdminResultTools } from "../components/domain/AdminResultTools";
 import { BetList } from "../components/domain/lists/BetList";
 import { ResultsList } from "../components/domain/lists/ResultsList";
 import useFetch from "../useFetch";
@@ -38,10 +39,12 @@ export function ViewBetsPage() {
     loading: eventLoading,
   } = eventFetchValues;
   let isCreator = false;
+  const isAdmin = user?.isAdmin === true;
 
   if (game) {
     isCreator = game.creator?.id == user?.id;
   }
+  const canManageResults = isCreator || isAdmin;
 
   useEffect(() => {
     const predictionsWithResults: Prediction[] =
@@ -63,13 +66,19 @@ export function ViewBetsPage() {
       {eventLoading && <Loader />}
       {!eventLoading && (
         <NavPage title={<span className="text-sky-800">{event?.name}</span>}>
-          {isCreator && game?.discipline?.resultMode === "official_api" && (
+          {canManageResults && game?.discipline?.resultMode === "official_api" && (
             <p className="mb-3 text-sm text-gray-500">
               Ergebnisse werden fuer offizielle Biathlon-Events automatisch
               geladen. Die manuelle Eingabe bleibt als Fallback verfuegbar.
             </p>
           )}
-          {isCreator && (
+          {isAdmin && event && (
+            <AdminResultTools
+              event={event}
+              onEventUpdated={onEventUpdated}
+            />
+          )}
+          {canManageResults && (
             <ManualResultUploader
               resultsUploaded={resultsUploaded}
               event={event}

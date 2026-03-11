@@ -35,6 +35,7 @@ def test_load_config_prefers_env_specific_file_over_base_file(monkeypatch, tmp_p
     assert loaded["SECRET_KEY"] == "prod-secret"
     assert loaded["SALT"] == "prod-salt"
     assert loaded["DB_PATH"] == "src/database/tippspiel.db"
+    assert loaded["ADMIN_USERNAMES"] == []
 
 
 def test_load_config_prefers_real_environment_over_files(monkeypatch, tmp_path):
@@ -63,9 +64,11 @@ def test_load_config_prefers_real_environment_over_files(monkeypatch, tmp_path):
     monkeypatch.setenv("TIPPSPIEL_SECRET_KEY", "shell-secret")
     monkeypatch.setenv("TIPPSPIEL_PASSWORD_SALT", "shell-salt")
     monkeypatch.setenv("TIPPSPIEL_DB_PATH", "/tmp/custom.db")
+    monkeypatch.setenv("TIPPSPIEL_ADMIN_USERNAMES", "alice, bob")
 
     loaded = config.load_config("prod")
 
     assert loaded["SECRET_KEY"] == "shell-secret"
     assert loaded["SALT"] == "shell-salt"
     assert loaded["DB_PATH"] == "/tmp/custom.db"
+    assert loaded["ADMIN_USERNAMES"] == ["alice", "bob"]

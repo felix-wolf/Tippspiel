@@ -6,6 +6,7 @@ def test_user_get_current(client, base_data):
     assert resp.status_code == 200
     payload = resp.get_json()
     assert payload["id"] == base_data["user"].id
+    assert payload["is_admin"] is False
 
 
 def test_user_get_players_by_game(client, base_data, app):
@@ -26,3 +27,11 @@ def test_user_update_color(client, base_data):
     assert resp.status_code == 200
     payload = resp.get_json()
     assert payload["color"] == "#abcdef"
+
+
+def test_admin_user_get_current(admin_client, admin_user):
+    resp = admin_client.get("/api/user")
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["id"] == admin_user.id
+    assert payload["is_admin"] is True

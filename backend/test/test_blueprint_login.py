@@ -46,3 +46,12 @@ def test_login_rejects_malformed_json(client):
     )
     assert response.status_code == 400
     assert response.get_json()["error"] == "Ungültige oder fehlende JSON-Daten."
+
+
+def test_login_endpoint_returns_admin_flag_for_admin_user(admin_client, app):
+    with app.app_context():
+        response = admin_client.post("/api/login", json={"name": "admin_user", "password": "pw"})
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data["name"] == "admin_user"
+    assert data["is_admin"] is True

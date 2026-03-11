@@ -45,5 +45,11 @@ def load_config(env: str) -> dict:
         "SALT": _require_env("TIPPSPIEL_PASSWORD_SALT", env_values),
         "DB_PATH": env_values.get("TIPPSPIEL_DB_PATH", default_db_paths.get(env, default_db_paths["dev"])),
         "FIREBASE_CREDENTIALS_PATH": env_values.get("TIPPSPIEL_FIREBASE_CREDENTIALS_PATH"),
+        "TASK_API_TOKEN": env_values.get("TIPPSPIEL_TASK_API_TOKEN"),
+        "ADMIN_USERNAMES": [
+            item.strip()
+            for item in env_values.get("TIPPSPIEL_ADMIN_USERNAMES", "").split(",")
+            if item.strip()
+        ],
         "TESTING": env_values.get("TIPPSPIEL_TESTING", "1" if env == "test" else "0") == "1",
     }

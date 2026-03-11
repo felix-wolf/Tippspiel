@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 
+from src.database import db_manager
 from src.models.discipline import Discipline
 from src.models.event import Event
 from src.models.game import Game
@@ -62,6 +63,225 @@ def clone_results_for_event(event: Event, results: list[Result]):
         )
         for result in results
     ]
+
+
+def _get_target_events(event: Event, get_full_objects: bool = True):
+    target_events = Event.get_all_by_shared_event_id(
+        event.shared_event_id,
+        get_full_objects=get_full_objects,
+    )
+    if target_events:
+        return target_events
+    target_event = Event.get_by_id(event.id, get_full_objects)
+    return [target_event] if target_event else []
+
+
+def _serialize_target_scope(event: Event, target_events: list[Event]):
+    return {
+        "scope": "shared_event" if len(target_events) > 1 else "event",
+        "target_event_id": event.id,
+        "shared_event_id": event.shared_event_id,
+        "affected_events": [
+            {
+                "event_id": target_event.id,
+                "event_name": target_event.name,
+                "game_id": target_event.game_id,
+                "has_results": len(target_event.results) > 0,
+            }
+            for target_event in target_events
+        ],
+    }
+
+
+def _ensure_official_refreshable(event: Event):
+    if event.source_provider != "ibu" or not event.source_race_id:
+        return "Dieses Event unterstützt keine offizielle Ergebnisaktualisierung."
+    return None
+
+
+def _results_equal(first: Result | None, second: Result | None):
+    if first is None and second is None:
+        return True
+    if first is None or second is None:
+        return False
+    return first.to_dict() == second.to_dict()
+
+
+def _build_result_diff(current_results: list[Result], refreshed_results: list[Result]):
+    current_by_place = {result.place: result for result in current_results}
+    refreshed_by_place = {result.place: result for result in refreshed_results}
+    changes = []
+    for place in sorted(set(current_by_place.keys()) | set(refreshed_by_place.keys())):
+        before = current_by_place.get(place)
+        after = refreshed_by_place.get(place)
+        if _results_equal(before, after):
+            continue
+        changes.append(
+            {
+                "place": place,
+                "before": before.to_dict() if before else None,
+                "after": after.to_dict() if after else None,
+            }
+        )
+    return changes
+
+
+def preview_official_result_refresh(event: Event):
+    refresh_error = _ensure_official_refreshable(event)
+    if refresh_error:
+        return None, refresh_error, 400
+
+    target_events = _get_target_events(event, get_full_objects=True)
+    if not target_events:
+        return None, "Das Event wurde nicht gefunden.", 404
+
+    representative_event = target_events[0]
+    refreshed_results, error_message, status_code = load_results(event=representative_event)
+    if error_message or refreshed_results is None:
+        return None, error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500
+
+    current_results = Event.get_by_id(event.id, get_full_object=True).results
+    changes = _build_result_diff(current_results, refreshed_results)
+    payload = {
+        **_serialize_target_scope(event, target_events),
+        "source_provider": representative_event.source_provider,
+        "source_race_id": representative_event.source_race_id,
+        "has_changes": len(changes) > 0,
+        "changes": changes,
+        "current_results": [result.to_dict() for result in current_results],
+        "fetched_results": [result.to_dict() for result in refreshed_results],
+    }
+    return payload, None, None
+
+
+def apply_official_result_refresh(event: Event, resend_notifications: bool = False):
+    refresh_error = _ensure_official_refreshable(event)
+    if refresh_error:
+        return None, refresh_error, 400
+
+    target_events = _get_target_events(event, get_full_objects=True)
+    if not target_events:
+        return None, "Das Event wurde nicht gefunden.", 404
+
+    representative_event = target_events[0]
+    shared_results, error_message, status_code = load_results(event=representative_event)
+    if error_message or shared_results is None:
+        return None, error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500
+
+    processed_events = []
+    for target_event in target_events:
+        event_results = clone_results_for_event(target_event, shared_results)
+        success, error = target_event.process_results(event_results)
+        if not success:
+            return None, error, 500
+        if resend_notifications:
+            game = Game.get_by_id(target_event.game_id)
+            if game:
+                notify_result_users(game, target_event)
+        processed_events.append(
+            {
+                "event_id": target_event.id,
+                "event_name": target_event.name,
+                "game_id": target_event.game_id,
+            }
+        )
+
+    payload = {
+        **_serialize_target_scope(event, target_events),
+        "status": "applied",
+        "processed_count": len(processed_events),
+        "processed_events": processed_events,
+        "resend_notifications": resend_notifications,
+    }
+    return payload, None, None
+
+
+def _clear_results_for_event(event: Event):
+    conn = None
+    try:
+        conn = db_manager.start_transaction()
+        Result.delete_by_event_id(event.id, commit=False, conn=conn)
+        conn.execute(
+            f"UPDATE {db_manager.TABLE_BETS} SET score = NULL WHERE event_id = ?",
+            [event.id],
+        )
+        conn.execute(
+            f"""
+            UPDATE {db_manager.TABLE_PREDICTIONS}
+            SET actual_place = NULL, score = 0
+            WHERE bet_id IN (
+                SELECT id FROM {db_manager.TABLE_BETS} WHERE event_id = ?
+            )
+            """,
+            [event.id],
+        )
+        db_manager.commit_transaction(conn)
+        return True, None
+    except Exception as exc:
+        if conn:
+            db_manager.rollback_transaction(conn)
+        return False, str(exc)
+    finally:
+        if conn:
+            conn.close()
+
+
+def clear_event_results(event: Event):
+    target_events = _get_target_events(event, get_full_objects=True)
+    if not target_events:
+        return None, "Das Event wurde nicht gefunden.", 404
+
+    cleared_events = []
+    for target_event in target_events:
+        success, error = _clear_results_for_event(target_event)
+        if not success:
+            return None, error, 500
+        cleared_events.append(
+            {
+                "event_id": target_event.id,
+                "event_name": target_event.name,
+                "game_id": target_event.game_id,
+            }
+        )
+
+    payload = {
+        **_serialize_target_scope(event, target_events),
+        "status": "cleared",
+        "cleared_count": len(cleared_events),
+        "cleared_events": cleared_events,
+    }
+    return payload, None, None
+
+
+def force_rescore_event(event: Event):
+    target_events = _get_target_events(event, get_full_objects=True)
+    if not target_events:
+        return None, "Das Event wurde nicht gefunden.", 404
+
+    rescored_events = []
+    for target_event in target_events:
+        if not target_event.results:
+            return None, "Es sind keine Ergebnisse vorhanden, die neu bewertet werden können.", 400
+        success, error = target_event.process_results(
+            clone_results_for_event(target_event, target_event.results)
+        )
+        if not success:
+            return None, error, 500
+        rescored_events.append(
+            {
+                "event_id": target_event.id,
+                "event_name": target_event.name,
+                "game_id": target_event.game_id,
+            }
+        )
+
+    payload = {
+        **_serialize_target_scope(event, target_events),
+        "status": "rescored",
+        "rescored_count": len(rescored_events),
+        "rescored_events": rescored_events,
+    }
+    return payload, None, None
 
 
 def process_event_results(event: Event, game: Game, url: str = None, results_json: list = None):

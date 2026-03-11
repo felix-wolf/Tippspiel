@@ -1,5 +1,6 @@
 from typing import Iterable
 
+from flask import current_app, request
 from flask_login import current_user
 
 from src.blueprints.api_response import error_response
@@ -70,3 +71,26 @@ def require_game_member(
     if current_user.get_id() not in [player.id for player in game.players]:
         return error_response(forbidden_message, 403)
     return None
+
+
+def require_admin_user(
+    forbidden_message: str = "Du bist für diese Aktion nicht berechtigt.",
+):
+    if not getattr(current_user, "is_admin", False):
+        return error_response(forbidden_message, 403)
+    return None
+
+
+def require_admin_user_or_task_token(
+    forbidden_message: str = "Du bist für diese Aktion nicht berechtigt.",
+    token_header: str = "X-Task-Token",
+):
+    if getattr(current_user, "is_authenticated", False) and getattr(current_user, "is_admin", False):
+        return None
+
+    expected_token = current_app.config.get("TASK_API_TOKEN")
+    provided_token = request.headers.get(token_header)
+    if expected_token and provided_token == expected_token:
+        return None
+
+    return error_response(forbidden_message, 403)

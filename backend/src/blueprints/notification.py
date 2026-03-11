@@ -2,7 +2,11 @@ from flask import Blueprint, request
 from flask_login import *
 from src.models.notification_helper import NotificationHelper
 from src.blueprints.api_response import error_response
-from src.blueprints.route_helpers import parse_json_body, require_query_arg
+from src.blueprints.route_helpers import (
+    parse_json_body,
+    require_admin_user_or_task_token,
+    require_query_arg,
+)
 from src.blueprints.notification_service import send_due_bet_reminders
 
 notification_blueprint = Blueprint('notification', __name__)
@@ -48,6 +52,9 @@ def send_test_notification():
 
 @notification_blueprint.route('/api/notification/check', methods=['GET'])
 def send_notification():
+    error = require_admin_user_or_task_token()
+    if error:
+        return error
     payload, error_message, status_code = send_due_bet_reminders()
     if error_message:
         return error_response(error_message, status_code or 500)

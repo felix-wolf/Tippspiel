@@ -249,3 +249,95 @@ describe("Event.saveBetsForUser", () => {
     );
   });
 });
+
+describe("Event admin result operations", () => {
+  it("maps preview refresh responses with result diffs", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          scope: "shared_event",
+          target_event_id: "event-1",
+          shared_event_id: "official:ibu:race-1",
+          source_provider: "ibu",
+          source_race_id: "race-1",
+          affected_events: [
+            {
+              event_id: "event-1",
+              event_name: "Race 1",
+              game_id: "game-1",
+              has_results: true,
+            },
+          ],
+          has_changes: true,
+          changes: [
+            {
+              place: 1,
+              before: {
+                id: "result-1",
+                event_id: "event-1",
+                place: 1,
+                object_id: "athlete-1",
+                object_name: "Old Name",
+              },
+              after: {
+                id: "result-1",
+                event_id: "event-1",
+                place: 1,
+                object_id: "athlete-1",
+                object_name: "New Name",
+              },
+            },
+          ],
+          current_results: [],
+          fetched_results: [],
+        }),
+      status: 200,
+      statusText: "OK",
+    } as Response);
+
+    const preview = await Event.previewResultRefresh("event-1");
+
+    expect(preview.scope).toBe("shared_event");
+    expect(preview.targetEventId).toBe("event-1");
+    expect(preview.affectedEvents[0]).toEqual({
+      eventId: "event-1",
+      eventName: "Race 1",
+      gameId: "game-1",
+      hasResults: true,
+    });
+    expect(preview.changes[0].before?.object_name).toBe("Old Name");
+    expect(preview.changes[0].after?.object_name).toBe("New Name");
+  });
+
+  it("posts apply refresh requests with the resend flag", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          scope: "event",
+          target_event_id: "event-1",
+          shared_event_id: "event-1",
+          affected_events: [],
+          status: "applied",
+          processed_count: 1,
+          resend_notifications: true,
+        }),
+      status: 200,
+      statusText: "OK",
+    } as Response);
+
+    const response = await Event.applyResultRefresh("event-1", true);
+
+    expect(response.status).toBe("applied");
+    expect(response.processedCount).toBe(1);
+    expect(response.resendNotifications).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/admin/events/event-1/results/apply-refresh",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ resend_notifications: true }),
+      }),
+    );
+  });
+});

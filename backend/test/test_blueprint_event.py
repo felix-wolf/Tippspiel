@@ -6,6 +6,7 @@ from src.models.game import Game
 from src.models.user import User
 from src.models.bet import Bet
 from src.models.result import Result
+from src.utils import hash_password
 
 
 def _create_game(app, base_data):
@@ -22,6 +23,23 @@ def _create_game(app, base_data):
 
 def _dt_string(hours_from_now=1):
     return (Event.current_time() + timedelta(hours=hours_from_now)).strftime("%d.%m.%Y, %H:%M:%S")
+
+
+def _create_admin_client(app):
+    with app.app_context():
+        success, admin_user_id = User.create("event_admin", hash_password("pw", app.config["SALT"]))
+        assert success
+        admin_user = User.get_by_id(admin_user_id)
+        assert admin_user is not None
+        assert admin_user.update_admin_flag(True)
+    admin_client = app.test_client()
+    with admin_client.session_transaction() as sess:
+        sess.clear()
+        sess["_user_id"] = admin_user_id
+    whoami = admin_client.get("/api/user")
+    assert whoami.status_code == 200
+    assert whoami.get_json()["is_admin"] is True
+    return admin_client
 
 
 def test_event_get_by_game(client, app, base_data):
@@ -65,7 +83,7 @@ def test_event_create_and_update_are_admin_only(client, base_data):
         },
     )
     assert create_resp.status_code == 403
-    assert create_resp.get_json()["error"] == "Eventdaten koennen aktuell nur von Admins bearbeitet werden."
+    assert create_resp.get_json()["error"] == "Du bist für diese Aktion nicht berechtigt."
 
     update_resp = client.put(
         "/api/event",
@@ -81,11 +99,11 @@ def test_event_create_and_update_are_admin_only(client, base_data):
         },
     )
     assert update_resp.status_code == 403
-    assert update_resp.get_json()["error"] == "Eventdaten koennen aktuell nur von Admins bearbeitet werden."
+    assert update_resp.get_json()["error"] == "Du bist für diese Aktion nicht berechtigt."
 
     delete_resp = client.delete("/api/event/delete", json={"event_id": "event-1"})
     assert delete_resp.status_code == 403
-    assert delete_resp.get_json()["error"] == "Eventdaten koennen aktuell nur von Admins bearbeitet werden."
+    assert delete_resp.get_json()["error"] == "Du bist für diese Aktion nicht berechtigt."
 
 
 def test_event_import_is_idempotent_for_existing_official_event(client, app, base_data):
@@ -166,6 +184,149 @@ def test_official_event_import_is_shared_across_games(client, app, base_data):
     assert len(second_events) == 1
     assert first_events[0]["shared_event_id"] == second_events[0]["shared_event_id"]
     assert first_events[0]["id"] != second_events[0]["id"]
+
+
+def test_admin_can_create_update_and_delete_event(client, app, base_data):
+    admin_client = _create_admin_client(app)
+    game_id = client.post(
+        "/api/game",
+        json={"name": "Admin Managed Game", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+
+    create_resp = admin_client.post(
+        "/api/event",
+        json={
+            "name": "Admin Event",
+            "game_id": game_id,
+            "type": base_data["event_type"].id,
+            "datetime": _dt_string(),
+            "num_bets": 2,
+            "points_correct_bet": 7,
+            "allow_partial_points": True,
+        },
+    )
+    assert create_resp.status_code == 200
+    created = create_resp.get_json()
+    assert created["name"] == "Admin Event"
+
+    update_resp = admin_client.put(
+        "/api/event",
+        json={
+            "name": "Admin Event Updated",
+            "game_id": game_id,
+            "type": base_data["event_type"].id,
+            "datetime": _dt_string(2),
+            "event_id": created["id"],
+            "num_bets": 3,
+            "points_correct_bet": 9,
+            "allow_partial_points": False,
+        },
+    )
+    assert update_resp.status_code == 200
+    updated = update_resp.get_json()
+    assert updated["name"] == "Admin Event Updated"
+    assert updated["num_bets"] == 3
+    assert updated["points_correct_bet"] == 9
+    assert updated["allow_partial_points"] is False
+
+    delete_resp = admin_client.delete("/api/event/delete", json={"event_id": created["id"]})
+    assert delete_resp.status_code == 200
+    assert delete_resp.get_json()["deleted_id"] == created["id"]
+
+    events_resp = client.get(f"/api/event?game_id={game_id}")
+    assert events_resp.status_code == 200
+    assert events_resp.get_json() == []
+
+
+def test_admin_can_import_official_event_into_foreign_game(client, app, base_data):
+    admin_client = _create_admin_client(app)
+    game_id = client.post(
+        "/api/game",
+        json={"name": "Foreign Game", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+
+    with app.app_context():
+        imported_event = Event(
+            name="Nove Mesto - Men Sprint",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=Event.current_time() + timedelta(hours=2),
+            allow_partial_points=True,
+            location="Nove Mesto",
+            race_format="sprint",
+            source_provider="ibu",
+            source_event_id="event-foreign",
+            source_race_id="race-foreign",
+            season_id="2526",
+            url="https://www.biathlonworld.com/results/race-foreign",
+        )
+        payload = json.dumps(imported_event.to_dict())
+
+    response = admin_client.post("/api/event", json={"events": [payload]})
+    assert response.status_code == 200
+
+    events_resp = client.get(f"/api/event?game_id={game_id}")
+    assert events_resp.status_code == 200
+    assert len(events_resp.get_json()) == 1
+
+
+def test_admin_update_of_shared_event_affects_all_linked_game_events(client, app, base_data):
+    admin_client = _create_admin_client(app)
+    first_game_id = client.post(
+        "/api/game",
+        json={"name": "Shared Edit Game 1", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+    second_game_id = client.post(
+        "/api/game",
+        json={"name": "Shared Edit Game 2", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+
+    with app.app_context():
+        event_ids = []
+        for game_id in [first_game_id, second_game_id]:
+            imported_event = Event(
+                name="Original Name",
+                game_id=game_id,
+                event_type=base_data["event_type"],
+                dt=Event.current_time() + timedelta(hours=2),
+                allow_partial_points=True,
+                location="Oberhof",
+                race_format="sprint",
+                source_provider="ibu",
+                source_event_id="event-shared",
+                source_race_id="race-shared",
+                season_id="2526",
+                url="https://www.biathlonworld.com/results/race-shared",
+            )
+            imported_event.save_to_db()
+            event_ids.append(imported_event.id)
+
+    update_resp = admin_client.put(
+        "/api/event",
+        json={
+            "name": "Updated Shared Name",
+            "game_id": first_game_id,
+            "type": base_data["event_type"].id,
+            "datetime": _dt_string(3),
+            "event_id": event_ids[0],
+            "num_bets": 5,
+            "points_correct_bet": 5,
+            "allow_partial_points": True,
+            "location": "Antholz",
+            "race_format": "individual",
+        },
+    )
+    assert update_resp.status_code == 200
+
+    first_events = client.get(f"/api/event?game_id={first_game_id}").get_json()
+    second_events = client.get(f"/api/event?game_id={second_game_id}").get_json()
+
+    assert first_events[0]["name"] == "Updated Shared Name"
+    assert second_events[0]["name"] == "Updated Shared Name"
+    assert first_events[0]["location"] == "Antholz"
+    assert second_events[0]["location"] == "Antholz"
+    assert first_events[0]["race_format"] == "individual"
+    assert second_events[0]["race_format"] == "individual"
 
 
 def test_event_save_bets_validation(client, base_data):

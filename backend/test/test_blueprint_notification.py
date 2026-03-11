@@ -70,7 +70,7 @@ def test_notification_settings_requires_platform_query(client):
     assert resp.get_json()["error"] == "Die Plattform fehlt."
 
 
-def test_notification_check_sends_due_reminder(client, app, base_data, monkeypatch):
+def test_notification_check_sends_due_reminder(admin_client, app, base_data, monkeypatch):
     sent_notifications = []
 
     def fake_send_push_notification(token, title, body):
@@ -104,10 +104,19 @@ def test_notification_check_sends_due_reminder(client, app, base_data, monkeypat
             value=True,
         )
 
-    response = client.get("/api/notification/check")
+    response = admin_client.get("/api/notification/check")
     assert response.status_code == 200
     assert response.get_json()["status"] == "success"
     assert len(sent_notifications) == 1
     assert sent_notifications[0][0] == "tok123"
     assert sent_notifications[0][1] == "Reminder Event"
     assert "Rennen startet in einer Stunde" in sent_notifications[0][2]
+
+
+def test_notification_check_requires_admin_or_task_token(app):
+    client = app.test_client()
+
+    response = client.get("/api/notification/check")
+
+    assert response.status_code == 403
+    assert response.get_json()["error"] == "Du bist für diese Aktion nicht berechtigt."

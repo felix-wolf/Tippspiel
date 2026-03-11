@@ -13,6 +13,44 @@ export type Predictions = [
   Prediction,
 ];
 
+export type AdminResultDiffEntry = {
+  place: number;
+  before: Result | null;
+  after: Result | null;
+};
+
+export type AdminResultTargetEvent = {
+  eventId: string;
+  eventName: string;
+  gameId: string;
+  hasResults: boolean;
+};
+
+export type AdminResultRefreshPreview = {
+  scope: "event" | "shared_event";
+  targetEventId: string;
+  sharedEventId?: string;
+  sourceProvider?: string;
+  sourceRaceId?: string;
+  affectedEvents: AdminResultTargetEvent[];
+  hasChanges: boolean;
+  changes: AdminResultDiffEntry[];
+  currentResults: Result[];
+  fetchedResults: Result[];
+};
+
+export type AdminResultOperationResponse = {
+  scope: "event" | "shared_event";
+  targetEventId: string;
+  sharedEventId?: string;
+  affectedEvents: AdminResultTargetEvent[];
+  status: string;
+  processedCount?: number;
+  clearedCount?: number;
+  rescoredCount?: number;
+  resendNotifications?: boolean;
+};
+
 export class Event {
   private readonly _id: string;
   private readonly _name: string;
@@ -185,6 +223,41 @@ export class Event {
     });
   }
 
+  public static previewResultRefresh(eventId: string): Promise<AdminResultRefreshPreview> {
+    return NetworkHelper.post(
+      `/api/admin/events/${eventId}/results/preview-refresh`,
+      Event.adminResultRefreshPreviewFromJson,
+      {},
+    );
+  }
+
+  public static applyResultRefresh(
+    eventId: string,
+    resendNotifications: boolean = false,
+  ): Promise<AdminResultOperationResponse> {
+    return NetworkHelper.post(
+      `/api/admin/events/${eventId}/results/apply-refresh`,
+      Event.adminResultOperationFromJson,
+      { resend_notifications: resendNotifications },
+    );
+  }
+
+  public static clearResults(eventId: string): Promise<AdminResultOperationResponse> {
+    return NetworkHelper.delete(
+      `/api/admin/events/${eventId}/results`,
+      Event.adminResultOperationFromJson,
+      {},
+    );
+  }
+
+  public static rescoreResults(eventId: string): Promise<AdminResultOperationResponse> {
+    return NetworkHelper.post(
+      `/api/admin/events/${eventId}/results/rescore`,
+      Event.adminResultOperationFromJson,
+      {},
+    );
+  }
+
   public static buildCacheKey(eventId: string) {
     return `event${eventId}`;
   }
@@ -219,6 +292,62 @@ export class Event {
       json["source_race_id"],
       json["season_id"],
     );
+  }
+
+  private static adminTargetEventFromJson(json: any): AdminResultTargetEvent {
+    return {
+      eventId: json["event_id"],
+      eventName: json["event_name"],
+      gameId: json["game_id"],
+      hasResults: Boolean(json["has_results"]),
+    };
+  }
+
+  private static adminResultDiffEntryFromJson(json: any): AdminResultDiffEntry {
+    return {
+      place: json["place"],
+      before: json["before"] ? Result.fromJson(json["before"]) : null,
+      after: json["after"] ? Result.fromJson(json["after"]) : null,
+    };
+  }
+
+  private static adminResultRefreshPreviewFromJson(json: any): AdminResultRefreshPreview {
+    return {
+      scope: json["scope"],
+      targetEventId: json["target_event_id"],
+      sharedEventId: json["shared_event_id"] ?? undefined,
+      sourceProvider: json["source_provider"] ?? undefined,
+      sourceRaceId: json["source_race_id"] ?? undefined,
+      affectedEvents: (json["affected_events"] ?? []).map((event: any) =>
+        Event.adminTargetEventFromJson(event),
+      ),
+      hasChanges: Boolean(json["has_changes"]),
+      changes: (json["changes"] ?? []).map((change: any) =>
+        Event.adminResultDiffEntryFromJson(change),
+      ),
+      currentResults: (json["current_results"] ?? []).map((result: any) =>
+        Result.fromJson(result),
+      ),
+      fetchedResults: (json["fetched_results"] ?? []).map((result: any) =>
+        Result.fromJson(result),
+      ),
+    };
+  }
+
+  private static adminResultOperationFromJson(json: any): AdminResultOperationResponse {
+    return {
+      scope: json["scope"],
+      targetEventId: json["target_event_id"],
+      sharedEventId: json["shared_event_id"] ?? undefined,
+      affectedEvents: (json["affected_events"] ?? []).map((event: any) =>
+        Event.adminTargetEventFromJson(event),
+      ),
+      status: json["status"],
+      processedCount: json["processed_count"],
+      clearedCount: json["cleared_count"],
+      rescoredCount: json["rescored_count"],
+      resendNotifications: json["resend_notifications"],
+    };
   }
 
   public static fetchOne(event_id: string): Promise<Event> {

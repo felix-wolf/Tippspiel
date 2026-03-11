@@ -64,6 +64,13 @@ def create_app(env, check_migrations=True):
             if not app.config.get("TESTING"):
                 raise err
     login_manager.init_app(app)
+    with app.app_context():
+        if User.configured_admin_usernames():
+            try:
+                User.sync_admins(User.configured_admin_usernames())
+            except Exception:
+                # Tests can construct the app before the temp schema exists.
+                pass
     app.register_blueprint(athlete_blueprint)
     app.register_blueprint(country_blueprint)
     app.register_blueprint(discipline_blueprint)

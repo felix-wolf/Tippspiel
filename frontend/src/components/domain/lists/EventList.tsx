@@ -10,12 +10,14 @@ import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes.ts";
 import { EventListItem } from "./EventListItem.tsx";
 
 export type EventTimeType = "upcoming" | "past";
+type EventChangeType = "create" | "update" | "delete" | "import";
 
 type EventListProps = {
   type: EventTimeType;
   game: Game;
   placeholderText?: string;
-  isCreator?: boolean;
+  canImportEvents?: boolean;
+  canEditEvents?: boolean;
   refreshToken?: number;
   onEventsChanged?: () => void;
 };
@@ -24,10 +26,13 @@ export function EventList({
   type,
   game,
   placeholderText,
-  isCreator = false,
+  canImportEvents = false,
+  canEditEvents = false,
   refreshToken = 0,
   onEventsChanged,
 }: EventListProps) {
+  const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
+  const [editorKey, setEditorKey] = useState(0);
   const [showingAddEventModal, setShowingAddEventModal] = useState(false);
   const [currPage, setCurrPage] = useState(1);
   const navigate = useNavigateParams();
@@ -63,10 +68,10 @@ export function EventList({
   const { data: events, refetch, loading } = eventsFetchValues;
   const { data: numEvents, refetch: refetchNumEvents } = numEventsFetchValues;
 
-  function refreshEvents() {
+  function refreshEvents(changeType: EventChangeType) {
     onEventsChanged?.();
     refetchNumEvents(true);
-    if (currPage != 1) {
+    if ((changeType == "create" || changeType == "import") && currPage != 1) {
       setCurrPage(1);
       return;
     }
@@ -100,12 +105,34 @@ export function EventList({
 
   return (
     <div className="mb-3">
-      {isCreator && (
+      {(canImportEvents || canEditEvents) && (
         <EventEditorModal
           isOpen={showingAddEventModal}
+          types={game?.discipline.eventTypes ?? []}
           game={game}
-          onEventsImported={refreshEvents}
+          canImportEvents={canImportEvents}
+          canManageEventData={canEditEvents}
+          onEventsChanged={refreshEvents}
           onClose={() => setShowingAddEventModal(false)}
+        />
+      )}
+      {canEditEvents && (
+        <EventEditorModal
+          game={game}
+          key={editorKey}
+          isOpen={eventEditId != undefined}
+          types={game?.discipline.eventTypes}
+          canImportEvents={false}
+          canManageEventData={canEditEvents}
+          onEventsChanged={(changeType) => {
+            setEventEditId(undefined);
+            refreshEvents(changeType);
+          }}
+          onClose={() => {
+            setEventEditId(undefined);
+            setEditorKey(editorKey + 1);
+          }}
+          event={events?.find((e) => e.id == eventEditId)}
         />
       )}
       <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -113,7 +140,7 @@ export function EventList({
           <>
             <Calendar size={20} />
             Anstehende Events
-            {isCreator && game.discipline.eventImportMode === "official_api" && (
+            {(canImportEvents || canEditEvents) && (
               <button className="border border-sky-400 bg-white/70 rounded-xl p-1 shadow-sm cursor-pointer" onClick={() => setShowingAddEventModal(true)}>
                 <Plus />
               </button>
@@ -131,6 +158,8 @@ export function EventList({
               event={e}
               isUpcoming={type == "upcoming"}
               onViewEventClicked={() => handleEventClick(e.id, currPage.toString())}
+              onEditEventClicked={() => setEventEditId(e.id)}
+              canEditEvents={canEditEvents}
               />
             ))}
           </div>

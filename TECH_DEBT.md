@@ -6,21 +6,29 @@ This document records the main technical debt and areas that need work across th
 
 ## High Priority
 
-### 1. Event administration is now centralized, but no admin tooling exists yet
+### 1. Event administration exists now, but the admin surface is still minimal
 - Files:
   - `backend/src/database/migrations/0004_shared_events.sql`
   - `backend/src/blueprints/event.py`
+  - `backend/src/blueprints/result.py`
   - `frontend/src/components/domain/EventEditorModal.tsx`
+  - `frontend/src/components/domain/AdminResultTools.tsx`
 - What is wrong:
   - Shared race metadata now exists separately from game-specific betting configuration.
   - Game owners can no longer create, edit, or delete event information.
-  - There is still no admin UI or admin API workflow to manage canonical race data.
+  - Admins can now preview, re-apply, clear, and rescore results from the regular event UI.
+  - A first admin workflow now exists, but only through the regular game UI with an admin flag.
+  - There is still no dedicated admin overview for:
+    - finding broken shared races quickly
+    - managing orphaned/manual shared events globally
+    - reviewing cross-game impact before editing shared metadata
+    - reviewing recent failed background jobs or corrected imports in one place
 - Why it matters:
-  - The product model is cleaner, but manual correction of bad or missing event data is currently blocked.
-  - Non-official/manual disciplines now depend on future admin tooling to remain operational.
+  - The product model is cleaner and no longer blocked, but operational administration is still narrow.
+  - As the number of games grows, editing event data game-by-game will become inefficient and error-prone.
 - Suggested direction:
-  - Add explicit admin roles and admin-only endpoints for canonical event CRUD.
-  - Build a minimal admin surface for shared race management before expanding beyond the IBU-only biathlon path.
+  - Add a dedicated admin overview for canonical shared events and linked games.
+  - Add safer merge/delete flows and impact previews before editing shared metadata used by multiple games.
 
 ### 2. The `Discipline` model is overloaded
 - Files:
@@ -208,6 +216,8 @@ This document records the main technical debt and areas that need work across th
 - Official event identity is enforced at the DB level and `season_id` is persisted as of 2026-03-11.
 - Recent result polling now processes all eligible events in one run and reports per-event failures as of 2026-03-11.
 - Shared race metadata is normalized into canonical shared events and game owners can no longer edit event info as of 2026-03-11.
+- A first admin role plus admin-only event management workflow exists as of 2026-03-11.
+- Admins can preview, refresh, clear, and rescore event results, and background task endpoints can now be protected by `TIPPSPIEL_TASK_API_TOKEN`, as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

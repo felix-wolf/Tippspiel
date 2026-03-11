@@ -491,13 +491,13 @@ class Event(BaseModel):
         if name != self.name:
             self.name = name
         if event_type_id != self.event_type.id:
-            # delete all associated bets since event type was changed
-            bets = Bet.get_by_event_id(self.id)
-
-            for bet in bets:
-                deletion_successful = bet.delete()
-                if not deletion_successful:
-                    return False, None
+            linked_events = Event.get_all_by_shared_event_id(self.shared_event_id, get_full_objects=False)
+            for linked_event in linked_events:
+                bets = Bet.get_by_event_id(linked_event.id)
+                for bet in bets:
+                    deletion_successful = bet.delete()
+                    if not deletion_successful:
+                        return False, None
             event_type = EventType.get_by_id(event_type_id)
             self.event_type = event_type
         if dt != self.dt:
@@ -577,10 +577,31 @@ class Event(BaseModel):
         return success
 
     def delete(self):
-        return db_manager.execute(
-            sql=f"DELETE FROM {db_manager.TABLE_EVENTS} WHERE id = ?",
-            params=[self.id]
+        conn = None
+        try:
+            conn = db_manager.start_transaction()
+            conn.execute(
+                f"DELETE FROM {db_manager.TABLE_EVENTS} WHERE id = ?",
+                [self.id],
             )
+            remaining_link = conn.execute(
+                f"SELECT 1 FROM {db_manager.TABLE_EVENTS} WHERE shared_event_id = ? LIMIT 1",
+                [self.shared_event_id],
+            ).fetchone()
+            if remaining_link is None:
+                conn.execute(
+                    f"DELETE FROM {db_manager.TABLE_SHARED_EVENTS} WHERE id = ?",
+                    [self.shared_event_id],
+                )
+            db_manager.commit_transaction(conn)
+            return True
+        except Exception:
+            if conn:
+                db_manager.rollback_transaction(conn)
+            raise
+        finally:
+            if conn:
+                conn.close()
 
 
     @staticmethod
