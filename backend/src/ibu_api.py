@@ -198,7 +198,8 @@ class IbuApiClient:
             athlete_id=self._get_text(record, "IBUId", "AthleteId", "AthleteID", "BibAthleteId"),
             nation_code=self._get_text(record, "Nat", "NAT", "NationCode", "CountryCode"),
             country_name=self._get_text(record, "Country", "Nation", "CountryName"),
-            time=self._get_text(record, "Result", "TotalTime", "Time"),
+            # Prefer the absolute final time over the presentation-oriented result field.
+            time=self._get_text(record, "TotalTime", "Time", "Result"),
             behind=self._get_text(record, "Behind", "Diff"),
             shooting=self._build_shooting_summary(record),
             shooting_time=self._get_normalized_text(

@@ -138,6 +138,46 @@ def test_get_results_maps_official_rows():
     ]
 
 
+def test_get_results_prefers_total_time_over_result_for_absolute_time():
+    session = _FakeSession(
+        {
+            ("Results", (("RaceId", "BT2526SWRLCP03SWMS"),)): """
+                <ArrayOfResult>
+                  <Result>
+                    <Rank>2</Rank>
+                    <GivenName>Franziska</GivenName>
+                    <FamilyName>Preuss</FamilyName>
+                    <IBUId>IBU-456</IBUId>
+                    <Nat>GER</Nat>
+                    <Result>+12.3</Result>
+                    <TotalTime>39:24.4</TotalTime>
+                    <Behind>+12.3</Behind>
+                  </Result>
+                </ArrayOfResult>
+            """
+        }
+    )
+    client = IbuApiClient(session=session)
+
+    rows = client.get_results("BT2526SWRLCP03SWMS")
+
+    assert rows == [
+        IbuResultRow(
+            rank=2,
+            first_name="Franziska",
+            last_name="Preuss",
+            athlete_id="IBU-456",
+            nation_code="GER",
+            country_name=None,
+            time="39:24.4",
+            behind="+12.3",
+            shooting=None,
+            shooting_time=None,
+            status=None,
+        )
+    ]
+
+
 def test_get_results_maps_official_status_codes():
     session = _FakeSession(
         {
