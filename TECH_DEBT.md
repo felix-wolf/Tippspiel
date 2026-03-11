@@ -72,23 +72,20 @@ This document records the main technical debt and areas that need work across th
   - Do not swallow DB exceptions in generic helpers.
   - Centralize error-to-response translation at the blueprint/service layer.
 
-### 4. Event import UI state is becoming hard to maintain
+### 4. Event import UI still has some complexity, but the modal state is now explicit
 - Files:
   - `frontend/src/components/domain/EventEditorModal.tsx`
   - `frontend/src/components/domain/OfficialEventImporter.tsx`
   - `frontend/src/components/domain/lists/EventImportList.tsx`
 - What is wrong:
-  - The modal now coordinates multiple modes:
-    - edit existing event
-    - official import
-    - manual creation fallback
-  - State is spread across several booleans.
+  - The modal now uses an explicit mode state instead of coordinating multiple booleans.
+  - Import selection now lives in the importer subtree instead of leaking across the modal.
+  - The remaining complexity is mostly split across three collaborating components rather than hidden boolean combinations.
 - Why it matters:
-  - UI regressions become more likely as the flow grows.
-  - It is easy to end up with impossible or unclear state combinations.
+  - The riskiest modal-state combinations are now gone, but the import/create/edit flow is still a fairly dense UI surface.
 - Suggested direction:
-  - Replace boolean combinations with an explicit modal mode state machine.
-  - Move import selection state into the importer subtree.
+  - Keep the explicit mode machine intact as new editor features are added.
+  - Add one or two focused UI tests around the modal flow if richer component-test tooling is introduced later.
 
 ### 5. Generic table component is too weak for current UI needs
 - Files:
