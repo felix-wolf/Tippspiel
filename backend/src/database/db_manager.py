@@ -76,8 +76,9 @@ def open_connection():
 
 
 def start():
-    # get connect, create db if not exist
-    execute_script("create.sql")
+    from src.database.migration_runner import migrate_to_latest
+
+    migrate_to_latest(current_app.config["DB_PATH"])
 
 
 def start_transaction():
@@ -219,89 +220,6 @@ def refresh_analytics_views():
         cursor.execute("DROP VIEW IF EXISTS VIEW_GamePredictionStats")
         cursor.execute(VIEW_GAME_PREDICTION_STATS_SQL)
         conn.commit()
-    finally:
-        if conn is not None:
-            conn.close()
-
-
-def ensure_event_location_schema():
-    ensure_event_schema()
-
-
-def ensure_athlete_schema():
-    if not table_exists(TABLE_ATHLETES):
-        return
-    if not column_exists(TABLE_ATHLETES, "ibu_id"):
-        execute(f"ALTER TABLE {TABLE_ATHLETES} ADD COLUMN ibu_id TEXT")
-
-
-def ensure_result_schema():
-    if not table_exists(TABLE_RESULTS):
-        return
-    if not column_exists(TABLE_RESULTS, "shooting"):
-        execute(f"ALTER TABLE {TABLE_RESULTS} ADD COLUMN shooting TEXT")
-    if not column_exists(TABLE_RESULTS, "shooting_time"):
-        execute(f"ALTER TABLE {TABLE_RESULTS} ADD COLUMN shooting_time TEXT")
-
-
-def ensure_discipline_schema():
-    if not table_exists(TABLE_DISCIPLINES):
-        return
-    if not column_exists(TABLE_DISCIPLINES, "event_import_mode"):
-        execute(
-            f"ALTER TABLE {TABLE_DISCIPLINES} ADD COLUMN event_import_mode TEXT NOT NULL DEFAULT 'manual'"
-        )
-    if not column_exists(TABLE_DISCIPLINES, "result_mode"):
-        execute(
-            f"ALTER TABLE {TABLE_DISCIPLINES} ADD COLUMN result_mode TEXT NOT NULL DEFAULT 'manual'"
-        )
-    execute(
-        f"""
-        UPDATE {TABLE_DISCIPLINES}
-        SET
-            result_url = 'biathlonworld.com/results',
-            events_url = NULL,
-            event_import_mode = 'official_api',
-            result_mode = 'official_api'
-        WHERE id = 'biathlon'
-        """
-    )
-
-
-def ensure_event_schema():
-    if not table_exists(TABLE_EVENTS):
-        return
-    if not column_exists(TABLE_EVENTS, "location"):
-        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN location TEXT")
-    if not column_exists(TABLE_EVENTS, "race_format"):
-        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN race_format TEXT")
-    if not column_exists(TABLE_EVENTS, "source_provider"):
-        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN source_provider TEXT")
-    if not column_exists(TABLE_EVENTS, "source_event_id"):
-        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN source_event_id TEXT")
-    if not column_exists(TABLE_EVENTS, "source_race_id"):
-        execute(f"ALTER TABLE {TABLE_EVENTS} ADD COLUMN source_race_id TEXT")
-    ensure_result_schema()
-    ensure_athlete_schema()
-    ensure_discipline_schema()
-    refresh_analytics_views()
-
-
-def execute_script(script_name):
-    """Executes a SQL script from the resources folder."""
-    with open(f'src/resources/{script_name}', 'r') as sql_file:
-        sql_script = sql_file.read()
-    try:
-        conn = open_connection()
-        cursor = conn.cursor()
-        cursor.executescript(sql_script)
-        conn.commit()
-    except sqlite3.IntegrityError as err:
-        print(err, sql_script)
-        raise err
-    except Exception as err:
-        print(err, sql_script)
-        raise err
     finally:
         if conn is not None:
             conn.close()

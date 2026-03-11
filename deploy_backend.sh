@@ -14,6 +14,9 @@ uv sync
 # run backend tests before deploying
 uv run pytest -q || { echo "Tests failed. Aborting deploy."; exit 1; }
 
+# run migrations before starting backend
+uv run python migrate.py --env prod up || { echo "Migrations failed. Aborting deploy."; exit 1; }
+
 # copy systemd service file
 sudo cp /home/felix/tippspiel/backend/tippspiel_backend.service /etc/systemd/system/
 

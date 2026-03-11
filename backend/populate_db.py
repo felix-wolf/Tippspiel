@@ -1,16 +1,16 @@
 import src.database.db_manager as db_manager
+from src.database.migration_runner import migrate_to_latest
 from src.models.event_type import EventType
 from src.models.athlete import Athlete
 from src.models.country import Country
 from src.models.discipline import Discipline
-from main import create_app
 import sqlite3
 import argparse
 
 
 def populate_db(db_path):
     print("creating table schema")
-    execute_script("create.sql", db_path)
+    migrate_to_latest(db_path)
 
     print("Inserting event types")
     event_types = EventType.get_base_data()
@@ -93,21 +93,6 @@ def execute(sql, params=None, commit=True, db_path=None):
         conn.close()
         print(e, sql, params)
         return False
-
-
-def execute_script(script_name, db_path):
-    with open(f'src/resources/{script_name}', 'r') as sql_file:
-        sql_script = sql_file.read()
-    try:
-        conn = open_connection(db_path)
-        cursor = conn.cursor()
-        cursor.executescript(sql_script)
-        conn.commit()
-        conn.close()
-    except sqlite3.IntegrityError as err:
-        print(err)
-    except Exception as err:
-        print(err)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

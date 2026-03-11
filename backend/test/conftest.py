@@ -9,7 +9,7 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_ROOT))
 
 from main import create_app
-from src.database import db_manager
+from src.database.migration_runner import migrate_to_latest
 from src.models.country import Country
 from src.models.discipline import Biathlon
 from src.models.athlete import Athlete
@@ -27,7 +27,7 @@ def app(tmp_path):
     os.environ["TIPPSPIEL_TESTING"] = "1"
     os.environ["TIPPSPIEL_DB_PATH"] = str(tmp_path / "tippspiel_test.db")
     os.environ.pop("TIPPSPIEL_FIREBASE_CREDENTIALS_PATH", None)
-    app = create_app("test")
+    app = create_app("test", check_migrations=False)
     app.config.update(
         {
             "TESTING": True,
@@ -35,7 +35,7 @@ def app(tmp_path):
         }
     )
     with app.app_context():
-        db_manager.execute_script("create.sql")
+        migrate_to_latest(app.config["DB_PATH"])
         yield app
     if (tmp_path / "tippspiel_test.db").exists():
         (tmp_path / "tippspiel_test.db").unlink()

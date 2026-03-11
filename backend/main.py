@@ -5,7 +5,7 @@ from flask_login import *
 from src.models.user import User
 import sys
 from config import load_config
-from src.database import db_manager
+from src.database.migration_runner import MigrationError, assert_database_current
 from src.blueprints.athlete import athlete_blueprint
 from src.blueprints.country import country_blueprint
 from src.blueprints.discipline import discipline_blueprint
@@ -32,7 +32,7 @@ def hash_password(pw, salt):
     return hashlib.sha256("".join([pw, salt]).encode('utf-8')).hexdigest()
 
 
-def create_app(env):
+def create_app(env, check_migrations=True):
     print("Starting app in", env, "environment")
     app = Flask(__name__)
     try:
@@ -40,8 +40,12 @@ def create_app(env):
     except RuntimeError as err:
         print(err)
         sys.exit()
-    with app.app_context():
-        db_manager.ensure_event_schema()
+    if check_migrations:
+        try:
+            assert_database_current(app.config["DB_PATH"])
+        except MigrationError as err:
+            print(err)
+            raise
     app.secret_key = app.config["SECRET_KEY"]
     app.logger.setLevel(logging.INFO)
     # Initialize firebase once; skip in tests if credentials are unavailable.

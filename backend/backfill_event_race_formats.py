@@ -80,7 +80,6 @@ def main():
     app = create_app(args.env)
 
     with app.app_context():
-        db_manager.ensure_event_schema()
         event_rows = get_events_missing_race_format()
         updates = build_race_format_updates(event_rows)
         unresolved_names = collect_unresolved_event_names(

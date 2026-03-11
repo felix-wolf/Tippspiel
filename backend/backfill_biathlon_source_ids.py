@@ -187,7 +187,6 @@ def main():
     app = create_app(args.env)
 
     with app.app_context():
-        db_manager.ensure_event_schema()
         event_rows = get_future_biathlon_events_missing_source_ids()
         races = IbuApiClient().get_importable_races()
         updates, ambiguous, unresolved = build_source_id_updates(event_rows, races)

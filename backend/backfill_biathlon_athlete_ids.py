@@ -143,7 +143,6 @@ def main():
     app = create_app(args.env)
 
     with app.app_context():
-        db_manager.ensure_athlete_schema()
         local_athletes = get_biathlon_athletes_missing_ibu_id()
         client = IbuApiClient()
         official_athletes = official_athletes_from_race_results(
