@@ -9,6 +9,7 @@ from src.blueprints.route_helpers import (
     parse_json_body,
     require_game_member,
     require_query_arg,
+    require_game_owner_or_admin,
     require_game_owner,
 )
 from src.blueprints.game_service import import_events_from_url, import_official_events
@@ -57,7 +58,7 @@ def handle_events_import_url():
         game, error = get_game_or_error(game_id)
         if error:
             return error
-        error = require_game_owner(game)
+        error = require_game_owner_or_admin(game)
         if error:
             return error
         url = request.args.get("url", None)
@@ -74,7 +75,7 @@ def handle_importable_events():
     game, error = get_game_or_error(game_id)
     if error:
         return error
-    error = require_game_owner(game)
+    error = require_game_owner_or_admin(game)
     if error:
         return error
     events, error_message, status_code = import_official_events(game=game)

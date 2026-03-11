@@ -64,6 +64,17 @@ def require_game_owner(
     return None
 
 
+def require_game_owner_or_admin(
+    game,
+    forbidden_message: str = "Du bist für diese Aktion nicht berechtigt.",
+):
+    if game.creator.id == current_user.get_id():
+        return None
+    if getattr(current_user, "is_admin", False):
+        return None
+    return error_response(forbidden_message, 403)
+
+
 def require_game_member(
     game,
     forbidden_message: str = "Du bist für diese Aktion nicht berechtigt.",
