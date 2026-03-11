@@ -7,8 +7,6 @@ export class Discipline {
   private readonly _id: string;
   private readonly _name: string;
   private readonly _eventTypes: EventType[];
-  private readonly _resultUrl: string | undefined;
-  private readonly _eventsUrl: string | undefined;
   private readonly _eventImportMode: DisciplineImportMode;
   private readonly _resultMode: DisciplineImportMode;
 
@@ -16,16 +14,12 @@ export class Discipline {
     id: string,
     name: string,
     eventTypes: EventType[],
-    resultUrl: string | undefined,
-    eventsUrl: string | undefined,
     eventImportMode: DisciplineImportMode,
     resultMode: DisciplineImportMode,
   ) {
     this._id = id;
     this._name = name;
     this._eventTypes = eventTypes;
-    this._resultUrl = resultUrl;
-    this._eventsUrl = eventsUrl;
     this._eventImportMode = eventImportMode;
     this._resultMode = resultMode;
   }
@@ -40,14 +34,6 @@ export class Discipline {
 
   get eventTypes(): EventType[] {
     return this._eventTypes;
-  }
-
-  get resultUrl(): string | undefined {
-    return this._resultUrl;
-  }
-
-  get eventsUrl(): string | undefined {
-    return this._eventsUrl;
   }
 
   get eventImportMode(): DisciplineImportMode {
@@ -65,8 +51,6 @@ export class Discipline {
       json["event_types"].map((e_type_data: any) =>
         EventType.fromJson(e_type_data),
       ),
-      json["result_url"],
-      json["events_url"],
       json["event_import_mode"] ?? "manual",
       json["result_mode"] ?? "manual",
     );

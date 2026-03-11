@@ -11,7 +11,7 @@ EXPECTED_BASELINE_TABLE_COLUMNS = {
     "Countries": {"code", "name", "flag"},
     "Athletes": {"id", "ibu_id", "first_name", "last_name", "country_code", "gender", "discipline"},
     "Users": {"id", "name", "pw_hash", "color"},
-    "Disciplines": {"id", "name", "result_url", "events_url", "event_import_mode", "result_mode"},
+    "Disciplines": {"id", "name", "event_import_mode", "result_mode"},
     "Games": {"id", "name", "discipline", "pw_hash", "owner_id", "visible"},
     "GamePlayers": {"player_id", "game_id"},
     "EventTypes": {"id", "name", "display_name", "discipline_id", "betting_on"},

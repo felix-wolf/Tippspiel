@@ -152,42 +152,13 @@ def test_join_game_requires_password_field(client, base_data):
     assert join_resp.get_json()["error"] == "Erforderliche Angaben fehlen."
 
 
-def test_game_events_import_url_is_unsupported(client, app, base_data):
-    with app.app_context():
-        success, game_id = Game.create(
-            user_id=base_data["user"].id,
-            name="Import Game",
-            pw_hash=None,
-            discipline_name=base_data["discipline"].id,
-        )
-        assert success
-
+def test_game_events_import_url_route_is_removed(client):
     response = client.get(
         "/api/game/events",
-        query_string={"game_id": game_id, "url": "https://example.com/events/world-cup"},
+        query_string={"game_id": "missing", "url": "https://example.com/events/world-cup"},
     )
 
-    assert response.status_code == 410
-    assert response.get_json()["error"] == "URL-basierter Event-Import wird nicht mehr unterstützt."
-
-
-def test_admin_can_access_game_events_import_url(app, admin_client, base_data):
-    with app.app_context():
-        success, game_id = Game.create(
-            user_id=base_data["user"].id,
-            name="Admin Import Game",
-            pw_hash=None,
-            discipline_name=base_data["discipline"].id,
-        )
-        assert success
-
-    response = admin_client.get(
-        "/api/game/events",
-        query_string={"game_id": game_id, "url": "https://example.com/events/world-cup"},
-    )
-
-    assert response.status_code == 410
-    assert response.get_json()["error"] == "URL-basierter Event-Import wird nicht mehr unterstützt."
+    assert response.status_code == 404
 
 
 def test_game_importable_events_returns_official_candidates(client, app, base_data, monkeypatch):

@@ -20,7 +20,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008"]
     assert status.pending_versions == []
 
     conn = sqlite3.connect(db_path)
@@ -44,6 +44,9 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
         event_columns = {
             row[1] for row in conn.execute("PRAGMA table_info(Events)").fetchall()
         }
+        discipline_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(Disciplines)").fetchall()
+        }
         result_columns = {
             row[1] for row in conn.execute("PRAGMA table_info(Results)").fetchall()
         }
@@ -58,6 +61,8 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     assert "season_id" in event_columns
     assert "shared_event_id" in event_columns
+    assert "result_url" not in discipline_columns
+    assert "events_url" not in discipline_columns
     assert "status" in result_columns
     assert "actual_status" in prediction_columns
     assert "idx_events_game_shared_identity" in indexes
@@ -293,13 +298,16 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008"]
 
     conn = sqlite3.connect(db_path)
     try:
+        discipline_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(Disciplines)").fetchall()
+        }
         discipline = conn.execute(
             """
-            SELECT result_url, events_url, event_import_mode, result_mode
+            SELECT event_import_mode, result_mode
             FROM Disciplines
             WHERE id = 'biathlon'
             """
@@ -307,7 +315,9 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
     finally:
         conn.close()
 
-    assert discipline == ("biathlonworld.com/results", None, "official_api", "official_api")
+    assert "result_url" not in discipline_columns
+    assert "events_url" not in discipline_columns
+    assert discipline == ("official_api", "official_api")
 
     conn = sqlite3.connect(db_path)
     try:

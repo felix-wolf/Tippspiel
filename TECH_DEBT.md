@@ -102,25 +102,9 @@ This document records the main technical debt and areas that need work across th
   - Remove dead/commented code.
   - Add clearer column configuration and optional accessibility hooks.
 
-### 6. Stale discipline URL compatibility still remains in the API contract
-- Files:
-  - `backend/src/models/discipline.py`
-  - `backend/src/blueprints/game.py`
-  - `frontend/src/models/Discipline.ts`
-  - `frontend/src/pages/ViewBetsPage.tsx`
-- What is wrong:
-  - `result_url` and `events_url` still exist in the schema and API model even though the supported biathlon flow is official import plus manual fallback.
-  - `/api/game/events` still exists only as a compatibility endpoint that returns `410`.
-- Why it matters:
-  - The product contract is broader than the actual supported feature set.
-  - Dead compatibility surface increases maintenance cost and confusion.
-- Suggested direction:
-  - Decide whether URL-based import/result support is permanently removed.
-  - If yes, remove the stale schema/API fields and the compatibility endpoint in a proper migration.
-
 ## Lower Priority / Structural Cleanup
 
-### 7. Seed/bootstrap data and runtime data model are drifting apart
+### 6. Seed/bootstrap data and runtime data model are drifting apart
 - Files:
   - `backend/src/resources/disciplines.csv`
   - `backend/src/resources/athletes.csv`
@@ -136,7 +120,7 @@ This document records the main technical debt and areas that need work across th
   - Bring seed files back in line with current production behavior.
   - Treat runtime backfills as one-off admin tools, not hidden startup behavior.
 
-### 8. Some abstract/base contracts are incomplete
+### 7. Some abstract/base contracts are incomplete
 - Files:
   - `backend/src/models/base_model.py`
   - `backend/src/models/discipline.py`
@@ -148,7 +132,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Either tighten the base contracts or simplify the inheritance model.
 
-### 9. Test coverage is better than before, but still misses some operational paths
+### 8. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -168,7 +152,6 @@ This document records the main technical debt and areas that need work across th
 
 ### Phase 2
 - Simplify event import modal state handling.
-- Clean stale discipline URL compatibility.
 
 ### Phase 3
 - Clean seed data and bootstrap drift.
@@ -189,5 +172,6 @@ This document records the main technical debt and areas that need work across th
 - `UserContext` now lives under `frontend/src/contexts/`, `User` now lives under `frontend/src/models/`, and the old `frontend/src/models/user/` structure is gone, as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
 - The stale Selenium dependency was removed from backend packaging metadata on 2026-03-11.
+- Discipline-level URL compatibility fields and the dead `/api/game/events` endpoint were removed on 2026-03-11.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

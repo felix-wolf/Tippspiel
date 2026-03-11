@@ -2,10 +2,6 @@ from src.models.discipline import Discipline
 from src.models.game import Game
 
 
-def import_events_from_url(game: Game, url: str):
-    return None, "URL-basierter Event-Import wird nicht mehr unterstützt.", 410
-
-
 def import_official_events(game: Game):
     discipline = Discipline.get_by_id(game.discipline.id)
     if not discipline:

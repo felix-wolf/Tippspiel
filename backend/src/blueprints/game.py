@@ -12,7 +12,7 @@ from src.blueprints.route_helpers import (
     require_game_owner_or_admin,
     require_game_owner,
 )
-from src.blueprints.game_service import import_events_from_url, import_official_events
+from src.blueprints.game_service import import_official_events
 
 from flask_login import *
 
@@ -49,24 +49,6 @@ def handle_game_request():
             return Game.get_by_id(game_id).to_dict()
         else:
             return error_response("Das Tippspiel konnte nicht erstellt werden.", 500)
-
-@game_blueprint.route("/api/game/events")
-@login_required
-def handle_events_import_url():
-    if request.method == "GET":
-        game_id = request.args.get("game_id", None)
-        game, error = get_game_or_error(game_id)
-        if error:
-            return error
-        error = require_game_owner_or_admin(game)
-        if error:
-            return error
-        url = request.args.get("url", None)
-        events, error_message, status_code = import_events_from_url(game=game, url=url)
-        if error_message:
-            return error_response(error_message, status_code or 500)
-        return [event.to_dict() for event in events]
-
 
 @game_blueprint.route("/api/game/events/importable")
 @login_required

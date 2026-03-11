@@ -20,8 +20,6 @@ def test_process_results_rolls_back_on_error(app):
             discipline_id="biathlon",
             name="Biathlon",
             event_types=[],
-            result_url="http://example.com/results",
-            events_url="http://example.com/events",
         )
         discipline.save_to_db()
 

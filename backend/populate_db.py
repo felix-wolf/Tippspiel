@@ -31,16 +31,14 @@ def populate_db(db_path):
     for discipline in disciplines:
         sql = f"""
                 INSERT OR IGNORE INTO {db_manager.TABLE_DISCIPLINES} 
-                (id, name, result_url, events_url, event_import_mode, result_mode)
-                VALUES (?,?,?,?,?,?)
+                (id, name, event_import_mode, result_mode)
+                VALUES (?,?,?,?)
                 """
         execute(
             sql,
             [
                 discipline.id,
                 discipline.name,
-                discipline.result_url,
-                discipline.events_url,
                 discipline.event_import_mode,
                 discipline.result_mode,
             ],

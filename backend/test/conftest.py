@@ -52,8 +52,6 @@ def base_data(app):
             discipline_id="biathlon",
             name="Biathlon",
             event_types=[],
-            result_url="https://example.com/results",
-            events_url="https://example.com/events",
             event_import_mode="official_api",
             result_mode="official_api",
         )

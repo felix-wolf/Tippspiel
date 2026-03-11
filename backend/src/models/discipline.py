@@ -22,14 +22,17 @@ class Discipline(BaseModel):
     RESULT_MODE_MANUAL = "manual"
     RESULT_MODE_OFFICIAL_API = "official_api"
 
-    def __init__(self, discipline_id: str, name: str, event_types: list[EventType], result_url: str = None,
-                 events_url: str = None, event_import_mode: str = EVENT_IMPORT_MODE_MANUAL,
-                 result_mode: str = RESULT_MODE_MANUAL):
+    def __init__(
+        self,
+        discipline_id: str,
+        name: str,
+        event_types: list[EventType],
+        event_import_mode: str = EVENT_IMPORT_MODE_MANUAL,
+        result_mode: str = RESULT_MODE_MANUAL,
+    ):
         self.id = discipline_id
         self.name = name
         self.event_types = event_types
-        self.result_url = result_url
-        self.events_url = events_url
         self.event_import_mode = event_import_mode
         self.result_mode = result_mode
 
@@ -44,22 +47,14 @@ class Discipline(BaseModel):
             "id": self.id,
             "name": self.name,
             "event_types": [e.to_dict() for e in self.event_types],
-            "result_url": self.result_url,
-            "events_url": self.events_url,
             "event_import_mode": self.event_import_mode,
             "result_mode": self.result_mode,
         }
 
     @staticmethod
     def from_dict(a_dict, event_types):
-        result_url = None
-        events_url = None
         event_import_mode = Discipline.EVENT_IMPORT_MODE_MANUAL
         result_mode = Discipline.RESULT_MODE_MANUAL
-        if "result_url" in a_dict:
-            result_url = a_dict["result_url"]
-        if "events_url" in a_dict:
-            events_url = a_dict["events_url"]
         if "event_import_mode" in a_dict and a_dict["event_import_mode"]:
             event_import_mode = a_dict["event_import_mode"]
         if "result_mode" in a_dict and a_dict["result_mode"]:
@@ -69,15 +64,17 @@ class Discipline(BaseModel):
                 if a_dict['id'] == 'biathlon':
                     return Biathlon(
                         discipline_id=a_dict['id'], name=a_dict['name'],
-                        event_types=event_types, result_url=result_url, events_url=events_url,
-                        event_import_mode=event_import_mode, result_mode=result_mode
+                        event_types=event_types,
+                        event_import_mode=event_import_mode,
+                        result_mode=result_mode,
                     )
 
                 elif a_dict['id'] == 'skispringen':
                     return Skispringen(
                         discipline_id=a_dict['id'], name=a_dict['name'],
-                        event_types=event_types, result_url=result_url, events_url=events_url,
-                        event_import_mode=event_import_mode, result_mode=result_mode
+                        event_types=event_types,
+                        event_import_mode=event_import_mode,
+                        result_mode=result_mode,
                     )
                 # no matching Discipline
                 return None
@@ -106,16 +103,14 @@ class Discipline(BaseModel):
     def save_to_db(self):
         sql = f"""
             INSERT OR IGNORE INTO {db_manager.TABLE_DISCIPLINES}
-            (id, name, result_url, events_url, event_import_mode, result_mode)
-            VALUES (?,?,?,?,?,?)
+            (id, name, event_import_mode, result_mode)
+            VALUES (?,?,?,?)
             """
         success = db_manager.execute(
             sql,
             [
                 self.id,
                 self.name,
-                self.result_url,
-                self.events_url,
                 self.event_import_mode,
                 self.result_mode,
             ],
