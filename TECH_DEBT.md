@@ -102,19 +102,7 @@ This document records the main technical debt and areas that need work across th
   - Remove dead/commented code.
   - Add clearer column configuration and optional accessibility hooks.
 
-### 6. Unused Selenium dependency still remains in backend packaging metadata
-- Files:
-  - `backend/pyproject.toml`
-  - `backend/uv.lock`
-- What is wrong:
-  - The runtime scraping code is gone, but the dependency manifests still include `selenium`.
-- Why it matters:
-  - The dependency graph is now larger than necessary.
-  - It obscures what the backend actually needs in production.
-- Suggested direction:
-  - Remove `selenium` from the dependency manifests once the lockfile can be regenerated cleanly.
-
-### 7. Stale discipline URL compatibility still remains in the API contract
+### 6. Stale discipline URL compatibility still remains in the API contract
 - Files:
   - `backend/src/models/discipline.py`
   - `backend/src/blueprints/game.py`
@@ -132,7 +120,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Lower Priority / Structural Cleanup
 
-### 8. Seed/bootstrap data and runtime data model are drifting apart
+### 7. Seed/bootstrap data and runtime data model are drifting apart
 - Files:
   - `backend/src/resources/disciplines.csv`
   - `backend/src/resources/athletes.csv`
@@ -148,7 +136,7 @@ This document records the main technical debt and areas that need work across th
   - Bring seed files back in line with current production behavior.
   - Treat runtime backfills as one-off admin tools, not hidden startup behavior.
 
-### 9. Some abstract/base contracts are incomplete
+### 8. Some abstract/base contracts are incomplete
 - Files:
   - `backend/src/models/base_model.py`
   - `backend/src/models/discipline.py`
@@ -160,7 +148,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Either tighten the base contracts or simplify the inheritance model.
 
-### 10. Test coverage is better than before, but still misses some operational paths
+### 9. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -176,7 +164,6 @@ This document records the main technical debt and areas that need work across th
 
 ### Phase 1
 - Split `Discipline` into smaller import/result adapters.
-- Drop the unused Selenium dependency from backend packaging.
 - Improve backend error handling/logging consistency.
 
 ### Phase 2
@@ -201,5 +188,6 @@ This document records the main technical debt and areas that need work across th
 - API-facing frontend model serialization now uses plain payload objects, and `Discipline` / `EventType` were moved out of `models/user`, as of 2026-03-11.
 - `UserContext` now lives under `frontend/src/contexts/`, `User` now lives under `frontend/src/models/`, and the old `frontend/src/models/user/` structure is gone, as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
+- The stale Selenium dependency was removed from backend packaging metadata on 2026-03-11.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

@@ -11,7 +11,6 @@ dependencies = [
     "html5lib",
     "beautifulsoup4",
     "requests",
-    "selenium",
     "pytest",
     "inquirer",
     "firebase-admin",

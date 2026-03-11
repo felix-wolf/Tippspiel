@@ -6,7 +6,7 @@ The repository is split into a Flask backend and a React frontend. Both parts ar
 
 ## Repository at a Glance
 
-- `backend/`: Flask application, SQLite database access, Firebase integration, scraping/import logic, and pytest test suite
+- `backend/`: Flask application, SQLite database access, Firebase integration, official data import/integration logic, and pytest test suite
 - `frontend/`: React + TypeScript + Vite application, component library, domain models, and Vitest test suite
 - `deploy_backend.sh`: backend deployment entry point
 - `deploy_frontend.sh`: local frontend deployment script
@@ -22,7 +22,7 @@ The data layer is built around SQLite and custom model/database helpers in [`bac
 
 - authentication and session handling
 - game creation and protected game joins
-- event management and event imports from URLs
+- event management, official event import, and admin event maintenance
 - bet submission and result processing
 - score calculation and standings
 - notification-related endpoints and helpers
@@ -49,7 +49,7 @@ The UI talks to the backend through typed domain/network helpers in [`frontend/s
 - SQLite
 - Firebase Admin SDK
 - pytest
-- pandas, BeautifulSoup, lxml, html5lib, requests, selenium for import/scraping workflows
+- pandas, BeautifulSoup, lxml, html5lib, requests for import/data-processing workflows
 - `uv` for dependency management and execution
 
 ### Frontend
