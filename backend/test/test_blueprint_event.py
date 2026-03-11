@@ -46,7 +46,7 @@ def test_event_get_by_game(client, app, base_data):
     assert payload[0]["name"] == "Test Event"
 
 
-def test_event_create_and_update(client, base_data):
+def test_event_create_and_update_are_admin_only(client, base_data):
     game_id = client.post(
         "/api/game",
         json={"name": "Ev Game", "password": None, "discipline": base_data["discipline"].id},
@@ -64,10 +64,8 @@ def test_event_create_and_update(client, base_data):
             "allow_partial_points": True,
         },
     )
-    assert create_resp.status_code == 200
-    created = create_resp.get_json()
-    assert created["location"] is None
-    assert created["race_format"] is None
+    assert create_resp.status_code == 403
+    assert create_resp.get_json()["error"] == "Eventdaten koennen aktuell nur von Admins bearbeitet werden."
 
     update_resp = client.put(
         "/api/event",
@@ -76,40 +74,18 @@ def test_event_create_and_update(client, base_data):
             "game_id": game_id,
             "type": base_data["event_type"].id,
             "datetime": _dt_string(2),
-            "event_id": created["id"],
+            "event_id": "event-1",
             "num_bets": 1,
             "points_correct_bet": 3,
             "allow_partial_points": False,
         },
     )
-    assert update_resp.status_code == 200
-    updated = update_resp.get_json()
-    assert updated["name"] == "Event 1 Updated"
+    assert update_resp.status_code == 403
+    assert update_resp.get_json()["error"] == "Eventdaten koennen aktuell nur von Admins bearbeitet werden."
 
-
-def test_event_create_derives_location_for_biathlon_name(client, base_data):
-    game_id = client.post(
-        "/api/game",
-        json={"name": "Ev Game 2", "password": None, "discipline": base_data["discipline"].id},
-    ).get_json()["id"]
-
-    create_resp = client.post(
-        "/api/event",
-        json={
-            "name": "Antholz - Women Sprint",
-            "game_id": game_id,
-            "type": base_data["event_type"].id,
-            "datetime": _dt_string(),
-            "num_bets": 1,
-            "points_correct_bet": 5,
-            "allow_partial_points": True,
-        },
-    )
-    assert create_resp.status_code == 200
-
-    created = create_resp.get_json()
-    assert created["location"] == "Antholz"
-    assert created["race_format"] == "sprint"
+    delete_resp = client.delete("/api/event/delete", json={"event_id": "event-1"})
+    assert delete_resp.status_code == 403
+    assert delete_resp.get_json()["error"] == "Eventdaten koennen aktuell nur von Admins bearbeitet werden."
 
 
 def test_event_import_is_idempotent_for_existing_official_event(client, app, base_data):
@@ -130,6 +106,7 @@ def test_event_import_is_idempotent_for_existing_official_event(client, app, bas
             source_provider="ibu",
             source_event_id="event-123",
             source_race_id="race-123",
+            season_id="2526",
             url="https://www.biathlonworld.com/results/race-123",
         )
         payload = imported_event.to_dict()
@@ -145,6 +122,50 @@ def test_event_import_is_idempotent_for_existing_official_event(client, app, bas
     events_payload = events_resp.get_json()
     assert len(events_payload) == 1
     assert events_payload[0]["source_race_id"] == "race-123"
+    assert events_payload[0]["season_id"] == "2526"
+    assert events_payload[0]["shared_event_id"] == "official:ibu:race-123"
+
+
+def test_official_event_import_is_shared_across_games(client, app, base_data):
+    first_game_id = client.post(
+        "/api/game",
+        json={"name": "Import Game 1", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+    second_game_id = client.post(
+        "/api/game",
+        json={"name": "Import Game 2", "password": None, "discipline": base_data["discipline"].id},
+    ).get_json()["id"]
+
+    with app.app_context():
+        payloads = []
+        for game_id in [first_game_id, second_game_id]:
+            imported_event = Event(
+                name="Oberhof (GER) - Women Sprint",
+                game_id=game_id,
+                event_type=base_data["event_type"],
+                dt=Event.current_time() + timedelta(hours=2),
+                allow_partial_points=True,
+                location="Oberhof (GER)",
+                race_format="sprint",
+                source_provider="ibu",
+                source_event_id="event-123",
+                source_race_id="race-123",
+                season_id="2526",
+                url="https://www.biathlonworld.com/results/race-123",
+            )
+            payloads.append(json.dumps(imported_event.to_dict()))
+
+    for payload in payloads:
+        response = client.post("/api/event", json={"events": [payload]})
+        assert response.status_code == 200
+
+    first_events = client.get(f"/api/event?game_id={first_game_id}").get_json()
+    second_events = client.get(f"/api/event?game_id={second_game_id}").get_json()
+
+    assert len(first_events) == 1
+    assert len(second_events) == 1
+    assert first_events[0]["shared_event_id"] == second_events[0]["shared_event_id"]
+    assert first_events[0]["id"] != second_events[0]["id"]
 
 
 def test_event_save_bets_validation(client, base_data):
@@ -152,19 +173,18 @@ def test_event_save_bets_validation(client, base_data):
         "/api/game",
         json={"name": "Bet Game", "password": None, "discipline": base_data["discipline"].id},
     ).get_json()["id"]
-    create_resp = client.post(
-        "/api/event",
-        json={
-            "name": "Bet Event",
-            "game_id": game_id,
-            "type": base_data["event_type"].id,
-            "datetime": _dt_string(),
-            "num_bets": 2,
-            "points_correct_bet": 5,
-            "allow_partial_points": False,
-        },
-    )
-    event_id = create_resp.get_json()["id"]
+    with client.application.app_context():
+        event = Event(
+            name="Bet Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=Event.current_time() + timedelta(hours=1),
+            allow_partial_points=False,
+            num_bets=2,
+            points_correct_bet=5,
+        )
+        event.save_to_db()
+        event_id = event.id
 
     # wrong number of predictions
     fail_resp = client.post(

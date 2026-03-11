@@ -166,7 +166,13 @@ def test_results_check_ignores_legacy_url_only_event(client, app, base_data):
 
     response = client.get("/api/results/check")
     assert response.status_code == 200
-    assert response.get_json() == {"status": "checked"}
+    assert response.get_json() == {
+        "status": "checked",
+        "processed_count": 0,
+        "failed_count": 0,
+        "processed_events": [],
+        "failed_events": [],
+    }
 
 
 def test_results_check_prefers_official_source_ids(client, app, base_data, monkeypatch):
@@ -201,5 +207,136 @@ def test_results_check_prefers_official_source_ids(client, app, base_data, monke
     response = client.get("/api/results/check")
     assert response.status_code == 200
     payload = response.get_json()
-    assert payload["name"] == "Official Auto Result Event"
-    assert payload["results"][0]["place"] == 1
+    assert payload["processed_count"] == 1
+    assert payload["failed_count"] == 0
+    assert payload["processed_events"] == [
+        {
+            "event_id": event.id,
+            "event_name": "Official Auto Result Event",
+            "game_id": game_id,
+        }
+    ]
+
+
+def test_results_check_processes_all_due_events(client, app, base_data, monkeypatch):
+    def fake_process_official_results(self, event):
+        return [Result(event.id, 1, base_data["athlete"].id)], None
+
+    from src.models.discipline import Biathlon
+    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Batch Result Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        first_event = Event(
+            name="Official Auto Result Event 1",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() - timedelta(hours=2),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-123",
+            source_race_id="race-123",
+        )
+        first_event.save_to_db()
+
+        second_event = Event(
+            name="Official Auto Result Event 2",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() - timedelta(hours=3),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-456",
+            source_race_id="race-456",
+        )
+        second_event.save_to_db()
+
+    response = client.get("/api/results/check")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["processed_count"] == 2
+    assert payload["failed_count"] == 0
+    assert {item["event_id"] for item in payload["processed_events"]} == {
+        first_event.id,
+        second_event.id,
+    }
+
+    with app.app_context():
+        assert len(Result.get_by_event_id(first_event.id)) == 1
+        assert len(Result.get_by_event_id(second_event.id)) == 1
+
+
+def test_results_check_continues_after_single_event_failure(client, app, base_data, monkeypatch):
+    def fake_process_official_results(self, event):
+        if event.source_race_id == "race-bad":
+            return [], "IBU source unavailable"
+        return [Result(event.id, 1, base_data["athlete"].id)], None
+
+    from src.models.discipline import Biathlon
+    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Partial Failure Result Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        bad_event = Event(
+            name="Official Auto Result Event Bad",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() - timedelta(hours=2),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-bad",
+            source_race_id="race-bad",
+        )
+        bad_event.save_to_db()
+
+        good_event = Event(
+            name="Official Auto Result Event Good",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() - timedelta(hours=3),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-good",
+            source_race_id="race-good",
+        )
+        good_event.save_to_db()
+
+    response = client.get("/api/results/check")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["processed_count"] == 1
+    assert payload["failed_count"] == 1
+    assert payload["processed_events"] == [
+        {
+            "event_id": good_event.id,
+            "event_name": "Official Auto Result Event Good",
+            "game_id": game_id,
+        }
+    ]
+    assert payload["failed_events"] == [
+        {
+            "event_id": bad_event.id,
+            "event_name": "Official Auto Result Event Bad",
+            "game_id": game_id,
+            "status_code": 500,
+            "error": "IBU source unavailable",
+        }
+    ]
+
+    with app.app_context():
+        assert len(Result.get_by_event_id(bad_event.id)) == 0
+        assert len(Result.get_by_event_id(good_event.id)) == 1

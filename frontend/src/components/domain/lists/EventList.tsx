@@ -10,7 +10,6 @@ import { SiteRoutes, useNavigateParams } from "../../../../SiteRoutes.ts";
 import { EventListItem } from "./EventListItem.tsx";
 
 export type EventTimeType = "upcoming" | "past";
-type EventChangeType = "create" | "update" | "delete" | "import";
 
 type EventListProps = {
   type: EventTimeType;
@@ -29,8 +28,6 @@ export function EventList({
   refreshToken = 0,
   onEventsChanged,
 }: EventListProps) {
-  const [eventEditId, setEventEditId] = useState<string | undefined>(undefined);
-  const [editorKey, setEditorKey] = useState(0);
   const [showingAddEventModal, setShowingAddEventModal] = useState(false);
   const [currPage, setCurrPage] = useState(1);
   const navigate = useNavigateParams();
@@ -66,10 +63,10 @@ export function EventList({
   const { data: events, refetch, loading } = eventsFetchValues;
   const { data: numEvents, refetch: refetchNumEvents } = numEventsFetchValues;
 
-  function refreshEvents(changeType: EventChangeType) {
+  function refreshEvents() {
     onEventsChanged?.();
     refetchNumEvents(true);
-    if ((changeType == "create" || changeType == "import") && currPage != 1) {
+    if (currPage != 1) {
       setCurrPage(1);
       return;
     }
@@ -106,33 +103,17 @@ export function EventList({
       {isCreator && (
         <EventEditorModal
           isOpen={showingAddEventModal}
-          types={game?.discipline.eventTypes ?? []}
           game={game}
-          onEventsChanged={refreshEvents}
+          onEventsImported={refreshEvents}
           onClose={() => setShowingAddEventModal(false)}
         />
       )}
-      <EventEditorModal
-        game={game}
-        key={editorKey}
-        isOpen={eventEditId != undefined}
-        types={game?.discipline.eventTypes}
-        onEventsChanged={() => {
-          setEventEditId(undefined);
-          refreshEvents("update");
-        }}
-        onClose={() => {
-          setEventEditId(undefined);
-          setEditorKey(editorKey + 1);
-        }}
-        event={events?.find((e) => e.id == eventEditId)}
-      />
       <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
         {type == "upcoming" ? (
           <>
             <Calendar size={20} />
             Anstehende Events
-            {isCreator && (
+            {isCreator && game.discipline.eventImportMode === "official_api" && (
               <button className="border border-sky-400 bg-white/70 rounded-xl p-1 shadow-sm cursor-pointer" onClick={() => setShowingAddEventModal(true)}>
                 <Plus />
               </button>
@@ -150,8 +131,6 @@ export function EventList({
               event={e}
               isUpcoming={type == "upcoming"}
               onViewEventClicked={() => handleEventClick(e.id, currPage.toString())}
-              onEditEventClicked={() => setEventEditId(e.id)}
-              isCreator={isCreator}
               />
             ))}
           </div>

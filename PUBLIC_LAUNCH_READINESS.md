@@ -121,13 +121,13 @@ Goal: public signups, predictable operations, and acceptable legal/security post
   - [backend/src/blueprints/result_service.py](/Users/felixwolf/Documents/Developer/Python/tippspiel/backend/src/blueprints/result_service.py)
 - Current state:
   - The core biathlon path now has one source of truth.
-  - Official-source identity is still enforced only in application code.
-  - Result polling still processes one event per run.
+  - Official-source identity is now enforced on canonical shared race records.
+  - Multiple betting games can attach to the same underlying official race.
+  - Game owners can attach official races, but canonical event data is no longer owner-editable.
 - Why this matters:
   - Result freshness and correctness are among the most visible user-facing features.
 - Needed steps:
-  - Add DB constraints and indexes for official race identity.
-  - Process all due events in a run.
+  - Add admin workflows for correcting shared race metadata when the official source is incomplete or mapped incorrectly.
   - Add retry/reporting around failed official imports.
 
 ### 7. Improve reliability of automatic result processing
@@ -136,14 +136,13 @@ Goal: public signups, predictable operations, and acceptable legal/security post
   - [backend/src/models/event.py](/Users/felixwolf/Documents/Developer/Python/tippspiel/backend/src/models/event.py)
   - [backend/src/ibu_api.py](/Users/felixwolf/Documents/Developer/Python/tippspiel/backend/src/ibu_api.py)
 - Current state:
-  - Automatic checks only process one due event per run.
-  - Official-source identity is not yet enforced by DB constraints.
+  - Automatic checks now fetch one official result set per shared race and fan it out to all linked betting games.
+  - Official-source identity is enforced by DB constraints on shared events.
 - Why this matters:
   - Result freshness is one of the most visible user-facing features.
 - Needed steps:
-  - Process all due events in a run.
-  - Add DB constraints/indexes for official race identity.
   - Add better retry/reporting for failed imports.
+  - Add idempotent notification safeguards if result reprocessing ever becomes necessary.
 
 ### 8. Operationalize migration rollout
 - Relevant files:
@@ -199,6 +198,7 @@ Goal: public signups, predictable operations, and acceptable legal/security post
     - abusive users
     - broken games
     - bad imports
+    - canonical shared-event corrections
     - notification cleanup
 - Why this matters:
   - Public users create support and moderation needs quickly.

@@ -84,7 +84,7 @@ class Event(BaseModel):
             event_id: str = None, bets: list[Bet] = None, results: list[Result] = None,
             location: str = None, race_format: str = None, url: str = None,
             source_provider: str = None, source_event_id: str = None, source_race_id: str = None,
-            season_id: str = None,
+            season_id: str = None, shared_event_id: str = None,
             ):
         if bets is None:
             bets = []
@@ -115,6 +115,17 @@ class Event(BaseModel):
         self.source_event_id = source_event_id
         self.source_race_id = source_race_id
         self.season_id = season_id
+        self.shared_event_id = shared_event_id or Event.build_shared_event_id(
+            event_id=self.id,
+            source_provider=self.source_provider,
+            source_race_id=self.source_race_id,
+        )
+
+    @staticmethod
+    def build_shared_event_id(event_id: str, source_provider: str | None = None, source_race_id: str | None = None):
+        if source_provider and source_race_id:
+            return f"official:{source_provider}:{source_race_id}"
+        return event_id
 
     def to_dict(self):
         bets = []
@@ -142,6 +153,7 @@ class Event(BaseModel):
             "source_event_id": self.source_event_id,
             "source_race_id": self.source_race_id,
             "season_id": self.season_id,
+            "shared_event_id": self.shared_event_id,
 
         }
 
@@ -202,6 +214,7 @@ class Event(BaseModel):
                     source_event_id=e_dict.get("source_event_id"),
                     source_race_id=e_dict.get("source_race_id"),
                     season_id=e_dict.get("season_id"),
+                    shared_event_id=e_dict.get("shared_event_id"),
                 )
             except KeyError as e:
                 print("Could not instantiate event with given values:", e_dict, e)
@@ -213,7 +226,7 @@ class Event(BaseModel):
     def get_all_by_game_id(game_id: str, get_full_objects: bool, page: int = None, past: bool = False):
         now = datetime.now(ZoneInfo("Europe/Berlin"))
         sql = f"""
-            SELECT e.* FROM {db_manager.TABLE_EVENTS} e
+            SELECT e.* FROM VIEW_{db_manager.TABLE_EVENTS} e
             WHERE e.game_id = ? and e.datetime {"<" if past else ">"} '{now.strftime("%Y-%m-%d %H:%M:%S")}'
             ORDER BY e.datetime {"DESC" if past else "ASC"}
             """
@@ -223,6 +236,16 @@ class Event(BaseModel):
         if res:
             return [Event.get_by_id(e["id"], get_full_objects) for e in res]
         return []
+
+    @staticmethod
+    def get_all_by_shared_event_id(shared_event_id: str, get_full_objects: bool = False):
+        res = db_manager.query(
+            f"SELECT e.id FROM {db_manager.TABLE_EVENTS} e WHERE e.shared_event_id = ? ORDER BY e.game_id",
+            [shared_event_id],
+        )
+        if not res:
+            return []
+        return [Event.get_by_id(row["id"], get_full_objects) for row in res]
 
     @staticmethod
     def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, race_format: str = None, url: str = None, source_provider: str = None, source_event_id: str = None, source_race_id: str = None, season_id: str = None):
@@ -249,72 +272,135 @@ class Event(BaseModel):
         placeholders = ",".join("?" for _ in game_ids)
         existing_rows = db_manager.query(
             f"""
-            SELECT id, game_id, source_provider, source_race_id
+            SELECT id, game_id, shared_event_id
             FROM {db_manager.TABLE_EVENTS}
             WHERE game_id IN ({placeholders})
             """,
             game_ids,
         )
         existing_ids = {row["id"] for row in existing_rows}
-        existing_official_keys = {
-            (row["game_id"], row["source_provider"], row["source_race_id"])
+        existing_game_shared_keys = {
+            (row["game_id"], row["shared_event_id"])
             for row in existing_rows
-            if row["source_provider"] and row["source_race_id"]
+            if row["shared_event_id"]
         }
 
         events_to_save = []
         pending_ids = set()
-        pending_official_keys = set()
+        pending_game_shared_keys = set()
         for event in events:
-            official_key = None
-            if event.source_provider and event.source_race_id:
-                official_key = (event.game_id, event.source_provider, event.source_race_id)
+            event.shared_event_id = Event.build_shared_event_id(
+                event_id=event.id,
+                source_provider=event.source_provider,
+                source_race_id=event.source_race_id,
+            )
+            game_shared_key = (event.game_id, event.shared_event_id)
             if event.id in existing_ids or event.id in pending_ids:
                 continue
-            if official_key and (
-                    official_key in existing_official_keys
-                    or official_key in pending_official_keys
+            if event.shared_event_id and (
+                    game_shared_key in existing_game_shared_keys
+                    or game_shared_key in pending_game_shared_keys
             ):
                 continue
             events_to_save.append(event)
             pending_ids.add(event.id)
-            if official_key:
-                pending_official_keys.add(official_key)
+            pending_game_shared_keys.add(game_shared_key)
 
         if not events_to_save:
             return True
 
-        sql = f"""
-            INSERT INTO {db_manager.TABLE_EVENTS}
-            (id, name, location, race_format, game_id, event_type_id, datetime, source_provider, source_event_id, source_race_id, url)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
-        """
-        success = db_manager.execute_many(
-            sql=sql,
-            params=[
-                (
-                    event.id,
-                    event.name,
-                    event.location,
-                    event.race_format,
-                    event.game_id,
-                    event.event_type.id,
-                    Event.datetime_to_string(event.dt),
-                    event.source_provider,
-                    event.source_event_id,
-                    event.source_race_id,
-                    event.url,
-                )
-                for event in events_to_save
-            ],
+        conn = None
+        try:
+            conn = db_manager.start_transaction()
+            for event in events_to_save:
+                if not event._save_shared_event(conn=conn):
+                    raise ValueError("shared event could not be saved")
+            sql = f"""
+                INSERT INTO {db_manager.TABLE_EVENTS}
+                (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, season_id, url, shared_event_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """
+            conn.executemany(
+                sql,
+                [
+                    (
+                        event.id,
+                        event.name,
+                        event.location,
+                        event.race_format,
+                        event.game_id,
+                        event.event_type.id,
+                        Event.datetime_to_string(event.dt),
+                        event.num_bets,
+                        event.points_correct_bet,
+                        1 if event.allow_partial_points else 0,
+                        event.source_provider,
+                        event.source_event_id,
+                        event.source_race_id,
+                        event.season_id,
+                        event.url,
+                        event.shared_event_id,
+                    )
+                    for event in events_to_save
+                ],
             )
-        return success
+            db_manager.commit_transaction(conn)
+            return True
+        except Exception:
+            if conn:
+                db_manager.rollback_transaction(conn)
+            raise
+        finally:
+            if conn:
+                conn.close()
+
+    def _save_shared_event(self, conn=None):
+        sql = f"""
+            INSERT INTO {db_manager.TABLE_SHARED_EVENTS}
+            (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, url)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(id) DO UPDATE SET
+                name = excluded.name,
+                location = excluded.location,
+                race_format = excluded.race_format,
+                event_type_id = excluded.event_type_id,
+                datetime = excluded.datetime,
+                source_provider = excluded.source_provider,
+                source_event_id = excluded.source_event_id,
+                source_race_id = excluded.source_race_id,
+                season_id = excluded.season_id,
+                url = excluded.url
+        """
+        params = [
+            self.shared_event_id,
+            self.name,
+            self.location,
+            self.race_format,
+            self.event_type.id,
+            Event.datetime_to_string(self.dt),
+            self.source_provider,
+            self.source_event_id,
+            self.source_race_id,
+            self.season_id,
+            self.url,
+        ]
+        if conn:
+            conn.execute(sql, params)
+            return True
+        return db_manager.execute(sql, params)
 
     def save_to_db(self, commit=True):
+        self.shared_event_id = Event.build_shared_event_id(
+            event_id=self.id,
+            source_provider=self.source_provider,
+            source_race_id=self.source_race_id,
+        )
+        if not self._save_shared_event():
+            return False, self.id
         sql = f"""
         INSERT INTO {db_manager.TABLE_EVENTS}
-            (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, url)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, season_id, url, shared_event_id)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """
         success = db_manager.execute(
             sql, [
@@ -322,7 +408,9 @@ class Event(BaseModel):
                 self.event_type.id, Event.datetime_to_string(self.dt),
                 self.num_bets, self.points_correct_bet, self.allow_partial_points,
                 self.source_provider, self.source_event_id, self.source_race_id,
-                self.url
+                self.season_id,
+                self.url,
+                self.shared_event_id,
             ],
             commit=commit)
         return success, self.id
@@ -434,6 +522,12 @@ class Event(BaseModel):
             self.source_provider = source_provider
             self.source_event_id = source_event_id
             self.source_race_id = source_race_id
+        self.shared_event_id = Event.build_shared_event_id(
+            event_id=self.id,
+            source_provider=self.source_provider,
+            source_race_id=self.source_race_id,
+        )
+        self._save_shared_event()
         if success:
             sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
                     name = ?,
@@ -446,7 +540,8 @@ class Event(BaseModel):
                     allow_partial_points = ?,
                     source_provider = ?,
                     source_event_id = ?,
-                    source_race_id = ?
+                    source_race_id = ?,
+                    shared_event_id = ?
                     WHERE id = ?
                 """
             success = db_manager.execute(
@@ -463,6 +558,7 @@ class Event(BaseModel):
                     self.source_provider,
                     self.source_event_id,
                     self.source_race_id,
+                    self.shared_event_id,
                     self.id,
                 ]
             )

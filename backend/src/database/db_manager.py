@@ -9,6 +9,7 @@ TABLE_GAME_PLAYERS = "GamePlayers"
 TABLE_COUNTRIES = "Countries"
 TABLE_USERS = "Users"
 TABLE_EVENTS = "Events"
+TABLE_SHARED_EVENTS = "SharedEvents"
 TABLE_EVENT_TYPES = "EventTypes"
 TABLE_BETS = "Bets"
 TABLE_PREDICTIONS = "Predictions"
@@ -17,12 +18,31 @@ TABLE_RESULTS = "Results"
 TABLE_DEVICE_TOKENS = "DeviceTokens"
 VIEW_EVENTS_SQL = f"""
 CREATE VIEW VIEW_{TABLE_EVENTS} AS
-    SELECT e.*, g.discipline, COUNT(b.id) > 0 as has_bets
+    SELECT
+        e.id,
+        COALESCE(se.name, e.name) AS name,
+        COALESCE(se.location, e.location) AS location,
+        COALESCE(se.race_format, e.race_format) AS race_format,
+        e.game_id,
+        COALESCE(se.event_type_id, e.event_type_id) AS event_type_id,
+        COALESCE(se.datetime, e.datetime) AS datetime,
+        e.num_bets,
+        e.points_correct_bet,
+        e.allow_partial_points,
+        COALESCE(se.source_provider, e.source_provider) AS source_provider,
+        COALESCE(se.source_event_id, e.source_event_id) AS source_event_id,
+        COALESCE(se.source_race_id, e.source_race_id) AS source_race_id,
+        COALESCE(se.season_id, e.season_id) AS season_id,
+        COALESCE(se.url, e.url) AS url,
+        e.shared_event_id,
+        g.discipline,
+        COUNT(b.id) > 0 AS has_bets
     FROM {TABLE_EVENTS} e
+    LEFT JOIN {TABLE_SHARED_EVENTS} se ON se.id = e.shared_event_id
     INNER JOIN {TABLE_GAMES} g on e.game_id = g.id
     LEFT JOIN {TABLE_BETS} b ON e.id = b.event_id
     GROUP BY e.id
-    ORDER BY e.datetime
+    ORDER BY COALESCE(se.datetime, e.datetime)
 """
 VIEW_GAME_PREDICTION_STATS_SQL = f"""
 CREATE VIEW VIEW_GamePredictionStats AS
@@ -31,14 +51,14 @@ CREATE VIEW VIEW_GamePredictionStats AS
         g.name AS game_name,
         g.discipline AS discipline_id,
         e.id AS event_id,
-        e.name AS event_name,
-        e.location AS event_location,
-        e.race_format AS event_race_format,
-        e.datetime AS event_datetime,
+        COALESCE(se.name, e.name) AS event_name,
+        COALESCE(se.location, e.location) AS event_location,
+        COALESCE(se.race_format, e.race_format) AS event_race_format,
+        COALESCE(se.datetime, e.datetime) AS event_datetime,
         e.num_bets,
         e.points_correct_bet,
         e.allow_partial_points,
-        et.id AS event_type_id,
+        COALESCE(se.event_type_id, e.event_type_id) AS event_type_id,
         et.name AS event_type_name,
         et.display_name AS event_type_display_name,
         b.id AS bet_id,
@@ -62,9 +82,10 @@ CREATE VIEW VIEW_GamePredictionStats AS
     FROM {TABLE_PREDICTIONS} p
     INNER JOIN {TABLE_BETS} b ON b.id = p.bet_id
     INNER JOIN {TABLE_EVENTS} e ON e.id = b.event_id
+    LEFT JOIN {TABLE_SHARED_EVENTS} se ON se.id = e.shared_event_id
     INNER JOIN {TABLE_GAMES} g ON g.id = e.game_id
     INNER JOIN {TABLE_USERS} u ON u.id = b.user_id
-    INNER JOIN {TABLE_EVENT_TYPES} et ON et.id = e.event_type_id
+    INNER JOIN {TABLE_EVENT_TYPES} et ON et.id = COALESCE(se.event_type_id, e.event_type_id)
     LEFT JOIN VIEW_{TABLE_PREDICTIONS} vp ON vp.id = p.id
 """
 
@@ -209,7 +230,18 @@ def execute_many(sql, params=None, commit=True):
 
 
 def refresh_analytics_views():
-    if not all(table_exists(table_name) for table_name in [TABLE_EVENTS, TABLE_GAMES, TABLE_BETS, TABLE_PREDICTIONS, TABLE_USERS, TABLE_EVENT_TYPES]):
+    if not all(
+        table_exists(table_name)
+        for table_name in [
+            TABLE_EVENTS,
+            TABLE_SHARED_EVENTS,
+            TABLE_GAMES,
+            TABLE_BETS,
+            TABLE_PREDICTIONS,
+            TABLE_USERS,
+            TABLE_EVENT_TYPES,
+        ]
+    ):
         return
     conn = None
     try:

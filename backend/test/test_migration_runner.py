@@ -20,7 +20,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004"]
     assert status.pending_versions == []
 
     conn = sqlite3.connect(db_path)
@@ -36,7 +36,23 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     assert "SchemaMigrations" in tables
     assert "Events" in tables
+    assert "SharedEvents" in tables
     assert "Results" in tables
+
+    conn = sqlite3.connect(db_path)
+    try:
+        event_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(Events)").fetchall()
+        }
+        indexes = {
+            row[1] for row in conn.execute("PRAGMA index_list(Events)").fetchall()
+        }
+    finally:
+        conn.close()
+
+    assert "season_id" in event_columns
+    assert "shared_event_id" in event_columns
+    assert "idx_events_game_shared_identity" in indexes
 
 
 def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration(tmp_path):
@@ -259,7 +275,7 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004"]
 
     conn = sqlite3.connect(db_path)
     try:
@@ -274,6 +290,17 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
         conn.close()
 
     assert discipline == ("biathlonworld.com/results", None, "official_api", "official_api")
+
+    conn = sqlite3.connect(db_path)
+    try:
+        event_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(Events)").fetchall()
+        }
+    finally:
+        conn.close()
+
+    assert "season_id" in event_columns
+    assert "shared_event_id" in event_columns
 
 
 def test_create_app_fails_when_migrations_are_pending(tmp_path, monkeypatch):
@@ -300,3 +327,76 @@ def test_assert_database_current_accepts_fully_migrated_database(tmp_path):
     status = assert_database_current(str(db_path))
 
     assert status.is_current is True
+
+
+def test_shared_official_event_identity_is_enforced_globally_but_attachable_to_multiple_games(tmp_path):
+    db_path = tmp_path / "unique.db"
+
+    migrate_to_latest(str(db_path))
+
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute("INSERT INTO Disciplines (id, name) VALUES ('biathlon', 'Biathlon')")
+        conn.execute(
+            """
+            INSERT INTO EventTypes (id, name, display_name, discipline_id, betting_on)
+            VALUES ('event-type-1', 'women', 'Women', 'biathlon', 'athletes')
+            """
+        )
+        conn.execute("INSERT INTO Users (id, name, pw_hash) VALUES ('user-1', 'user-1', 'hash')")
+        conn.execute(
+            """
+            INSERT INTO Games (id, name, discipline, owner_id, visible)
+            VALUES ('game-1', 'Game 1', 'biathlon', 'user-1', 1)
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO Games (id, name, discipline, owner_id, visible)
+            VALUES ('game-2', 'Game 2', 'biathlon', 'user-1', 1)
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO SharedEvents (
+                id, name, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id
+            )
+            VALUES ('official:ibu:race-source-1', 'Race 1', 'event-type-1', '2026-01-01 12:00:00', 'ibu', 'event-source-1', 'race-source-1', '2526')
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO Events (
+                id, name, game_id, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, shared_event_id
+            )
+            VALUES ('event-1', 'Race 1', 'game-1', 'event-type-1', '2026-01-01 12:00:00', 'ibu', 'event-source-1', 'race-source-1', '2526', 'official:ibu:race-source-1')
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO Events (
+                id, name, game_id, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, shared_event_id
+            )
+            VALUES ('event-2', 'Race 1', 'game-2', 'event-type-1', '2026-01-01 12:00:00', 'ibu', 'event-source-1', 'race-source-1', '2526', 'official:ibu:race-source-1')
+            """
+        )
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                """
+                INSERT INTO SharedEvents (
+                    id, name, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id
+                )
+                VALUES ('official:ibu:race-source-2', 'Race 2', 'event-type-1', '2026-01-02 12:00:00', 'ibu', 'event-source-2', 'race-source-1', '2526')
+                """
+            )
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                """
+                INSERT INTO Events (
+                    id, name, game_id, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, shared_event_id
+                )
+                VALUES ('event-3', 'Race 1', 'game-1', 'event-type-1', '2026-01-01 12:00:00', 'ibu', 'event-source-1', 'race-source-1', '2526', 'official:ibu:race-source-1')
+                """
+            )
+    finally:
+        conn.close()

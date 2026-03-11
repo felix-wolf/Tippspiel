@@ -6,35 +6,23 @@ This document records the main technical debt and areas that need work across th
 
 ## High Priority
 
-### 1. Official-source event identity is not enforced at the database level
+### 1. Event administration is now centralized, but no admin tooling exists yet
 - Files:
-  - `backend/src/database/migrations/0001_current_schema.sql`
-  - `backend/src/models/event.py`
+  - `backend/src/database/migrations/0004_shared_events.sql`
+  - `backend/src/blueprints/event.py`
+  - `frontend/src/components/domain/EventEditorModal.tsx`
 - What is wrong:
-  - Duplicate official imports are now filtered in Python, but there is no DB-level uniqueness on `(game_id, source_provider, source_race_id)`.
-  - `season_id` is exposed in the API/import flow but is not persisted in the `Events` table.
+  - Shared race metadata now exists separately from game-specific betting configuration.
+  - Game owners can no longer create, edit, or delete event information.
+  - There is still no admin UI or admin API workflow to manage canonical race data.
 - Why it matters:
-  - App-side duplicate filtering is weaker than DB guarantees.
-  - A future code path can still create duplicate official events.
-  - Season grouping metadata disappears after persisted events are reloaded from the database.
+  - The product model is cleaner, but manual correction of bad or missing event data is currently blocked.
+  - Non-official/manual disciplines now depend on future admin tooling to remain operational.
 - Suggested direction:
-  - Add a unique index for official-source identity.
-  - Persist `season_id` if it is considered part of the event model.
-  - Add supporting indexes for event polling and official result lookup.
+  - Add explicit admin roles and admin-only endpoints for canonical event CRUD.
+  - Build a minimal admin surface for shared race management before expanding beyond the IBU-only biathlon path.
 
-### 2. Result polling only processes one event per run
-- Files:
-  - `backend/src/blueprints/result_service.py`
-- What is wrong:
-  - `check_recent_results()` returns after the first successful event or first error.
-- Why it matters:
-  - If multiple races finish around the same time, only one is processed per invocation.
-  - One bad event can block all later due events in that run.
-- Suggested direction:
-  - Process all eligible events in one run.
-  - Collect per-event outcomes and log/report failures without aborting the whole batch.
-
-### 3. The `Discipline` model is overloaded
+### 2. The `Discipline` model is overloaded
 - Files:
   - `backend/src/models/discipline.py`
   - `backend/src/blueprints/game_service.py`
@@ -59,7 +47,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Medium Priority
 
-### 4. Error handling and logging are inconsistent and often low-signal
+### 3. Error handling and logging are inconsistent and often low-signal
 - Files:
   - `backend/src/database/db_manager.py`
   - `backend/src/models/*.py`
@@ -77,7 +65,7 @@ This document records the main technical debt and areas that need work across th
   - Do not swallow DB exceptions in generic helpers.
   - Centralize error-to-response translation at the blueprint/service layer.
 
-### 5. Frontend models manually build JSON strings
+### 4. Frontend models manually build JSON strings
 - Files:
   - `frontend/src/models/Event.ts`
   - `frontend/src/models/Result.ts`
@@ -93,7 +81,7 @@ This document records the main technical debt and areas that need work across th
   - Let `fetch`/`JSON.stringify` handle serialization.
   - Update tests to compare parsed objects instead of raw strings.
 
-### 6. Event import UI state is becoming hard to maintain
+### 5. Event import UI state is becoming hard to maintain
 - Files:
   - `frontend/src/components/domain/EventEditorModal.tsx`
   - `frontend/src/components/domain/OfficialEventImporter.tsx`
@@ -111,7 +99,7 @@ This document records the main technical debt and areas that need work across th
   - Replace boolean combinations with an explicit modal mode state machine.
   - Move import selection state into the importer subtree.
 
-### 8. Generic table component is too weak for current UI needs
+### 6. Generic table component is too weak for current UI needs
 - Files:
   - `frontend/src/components/design/TableList.tsx`
 - What is wrong:
@@ -126,7 +114,7 @@ This document records the main technical debt and areas that need work across th
   - Remove dead/commented code.
   - Add clearer column configuration and optional accessibility hooks.
 
-### 9. Unused Selenium dependency still remains in backend packaging metadata
+### 7. Unused Selenium dependency still remains in backend packaging metadata
 - Files:
   - `backend/pyproject.toml`
   - `backend/uv.lock`
@@ -138,7 +126,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Remove `selenium` from the dependency manifests once the lockfile can be regenerated cleanly.
 
-### 10. Stale discipline URL compatibility still remains in the API contract
+### 8. Stale discipline URL compatibility still remains in the API contract
 - Files:
   - `backend/src/models/discipline.py`
   - `backend/src/blueprints/game.py`
@@ -156,7 +144,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Lower Priority / Structural Cleanup
 
-### 11. Seed/bootstrap data and runtime data model are drifting apart
+### 9. Seed/bootstrap data and runtime data model are drifting apart
 - Files:
   - `backend/src/resources/disciplines.csv`
   - `backend/src/resources/athletes.csv`
@@ -172,7 +160,7 @@ This document records the main technical debt and areas that need work across th
   - Bring seed files back in line with current production behavior.
   - Treat runtime backfills as one-off admin tools, not hidden startup behavior.
 
-### 12. Some abstract/base contracts are incomplete
+### 10. Some abstract/base contracts are incomplete
 - Files:
   - `backend/src/models/base_model.py`
   - `backend/src/models/discipline.py`
@@ -184,7 +172,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Either tighten the base contracts or simplify the inheritance model.
 
-### 13. Test coverage is better than before, but still misses some operational paths
+### 11. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -199,17 +187,17 @@ This document records the main technical debt and areas that need work across th
 ## Suggested Work Order
 
 ### Phase 1
-- Add DB constraints/indexes for official source ids.
-- Change result polling to process all eligible events in one run.
+- Split `Discipline` into smaller import/result adapters.
 - Drop the unused Selenium dependency from backend packaging.
+- Improve backend error handling/logging consistency.
 
 ### Phase 2
-- Split `Discipline` into smaller import/result adapters.
 - Replace manual frontend JSON string serialization with plain payload objects.
 - Simplify event import modal state handling.
+- Clean stale discipline URL compatibility.
 
 ### Phase 3
-- Clean seed data and stale discipline URL compatibility.
+- Clean seed data and bootstrap drift.
 - Refactor or replace the generic table abstraction.
 - Tighten the shared model/base contracts.
 - Add thin workflow tests for import, result processing, and migration-sensitive paths.
@@ -217,6 +205,9 @@ This document records the main technical debt and areas that need work across th
 ## Notes
 
 - Explicit migrations replaced startup schema mutation on 2026-03-11.
+- Official event identity is enforced at the DB level and `season_id` is persisted as of 2026-03-11.
+- Recent result polling now processes all eligible events in one run and reports per-event failures as of 2026-03-11.
+- Shared race metadata is normalized into canonical shared events and game owners can no longer edit event info as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

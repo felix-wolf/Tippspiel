@@ -1,9 +1,7 @@
 from flask import Blueprint, request
 from src.models.event import Event
-from src.models.game import Game
 from src.models.event_type import EventType
 import json
-from datetime import datetime
 from src.blueprints.api_response import error_response
 from src.blueprints.route_helpers import (
     get_event_or_error,
@@ -16,6 +14,7 @@ from src.blueprints.route_helpers import (
 from flask_login import *
 
 event_blueprint = Blueprint('event', __name__)
+ADMIN_EVENT_MESSAGE = "Eventdaten koennen aktuell nur von Admins bearbeitet werden."
 
 @event_blueprint.route("/api/event", methods=["GET", "POST", "PUT"])
 @login_required
@@ -62,85 +61,21 @@ def handle_event_request():
                 event_type = EventType.from_dict(e_dict['event_type'])
                 event = Event.from_dict(e_dict, event_type)
                 parsed_events.append(event)
+            for game_id in {event.game_id for event in parsed_events}:
+                game, error = get_game_or_error(game_id)
+                if error:
+                    return error
+                error = require_game_owner(game)
+                if error:
+                    return error
             success = Event.save_events(parsed_events)
             if success:
                 return [e.to_dict() for e in parsed_events]
             else:
                 return error_response("Die Events konnten nicht gespeichert werden.", 500)
-        # posting a single event
-        payload, error = parse_json_body(
-            payload,
-            required_fields=["name", "game_id", "type", "datetime", "num_bets", "points_correct_bet"],
-        )
-        if error:
-            return error_response("Erforderliche Angaben fehlen.", 400)
-        name = payload.get("name")
-        game_id = payload.get("game_id")
-        event_type = payload.get("type")
-        dt = payload.get("datetime")
-        allow_partial_points = bool(payload.get("allow_partial_points"))
-        num_bets = payload.get("num_bets")
-        points_correct_bet = payload.get("points_correct_bet")
-        location = payload.get("location")
-        race_format = payload.get("race_format")
-        game, error = get_game_or_error(game_id)
-        if error:
-            return error
-        error = require_game_owner(game)
-        if error:
-            return error
-        dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
-        success, event_id, event = Event.create(
-            name=name, game_id=game_id, event_type_id=event_type, dt=dt, 
-            num_bets=num_bets, points_correct_bet=points_correct_bet,
-            allow_partial_points=allow_partial_points, location=location,
-            race_format=race_format,
-        )
-        if success:
-            return event.to_dict()
-        else:
-            return error_response("Das Event konnte nicht erstellt werden.", 500)
+        return error_response(ADMIN_EVENT_MESSAGE, 403)
     elif request.method == "PUT":
-        payload, error = parse_json_body(
-            request.get_json(silent=True),
-            required_fields=["event_id", "name", "game_id", "type", "datetime", "num_bets", "points_correct_bet"],
-        )
-        if error:
-            return error_response("Erforderliche Angaben fehlen.", 400)
-        name = payload.get("name")
-        game_id = payload.get("game_id")
-        event_type = payload.get("type")
-        dt = payload.get("datetime")
-        event_id = payload.get("event_id")
-        num_bets = payload.get("num_bets")
-        points_correct_bet = payload.get("points_correct_bet")
-        allow_partial_points = bool(payload.get("allow_partial_points"))
-        location = payload.get("location")
-        race_format = payload.get("race_format")
-        game, error = get_game_or_error(game_id)
-        if error:
-            return error
-        error = require_game_owner(game)
-        if error:
-            return error
-        event, error = get_event_or_error(event_id)
-        if error:
-            return error
-        dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
-        success, event = event.update(
-            name=name,
-            event_type_id=event_type,
-            dt=dt,
-            num_bets=num_bets,
-            points_correct_bet=points_correct_bet,
-            allow_partial_points=allow_partial_points,
-            location=location,
-            race_format=race_format,
-        )
-        if success:
-            return event.to_dict()
-        else:
-            return error_response("Das Event konnte nicht aktualisiert werden.", 500)
+        return error_response(ADMIN_EVENT_MESSAGE, 403)
 
 
 @event_blueprint.route("/api/event/delete", methods=["DELETE"])
@@ -153,21 +88,7 @@ def delete_event():
         )
         if error:
             return error
-        event_id = payload.get("event_id")
-        event, error = get_event_or_error(event_id)
-        if error:
-            return error
-        game, error = get_game_or_error(event.game_id)
-        if error:
-            return error
-        error = require_game_owner(game)
-        if error:
-            return error
-        success = event.delete()
-        if success:
-            return {"deleted_id": event_id}
-        else:
-            return error_response("Das Event konnte nicht gelöscht werden.", 500)
+        return error_response(ADMIN_EVENT_MESSAGE, 403)
 
 
 @event_blueprint.route("/api/event/save_bets", methods=["POST"])
