@@ -12,6 +12,7 @@ from src.blueprints.route_helpers import (
     require_game_member,
     require_game_owner,
 )
+from src.services.disciplines import get_discipline_services
 
 from flask_login import *
 
@@ -210,8 +211,40 @@ def save_bets():
         error = require_game_member(game)
         if error:
             return error
+
+        # Validate against start list if available
+        services = get_discipline_services(event.event_type.discipline_id)
+        start_list, _ = services.result_processor.get_start_list(event.event_type.discipline_id, event)
+        if start_list:
+            start_list_set = set(start_list)
+            for pred in predictions:
+                obj_id = pred.get("object_id")
+                if obj_id not in start_list_set:
+                    return error_response(
+                        f"Der Athlet/Die Nation '{pred.get('object_name')}' steht nicht auf der Startliste.",
+                        400,
+                    )
+
         success, event_id = event.save_bet(target_user_id, predictions)
         if not success:
             return error_response("Die Wette konnte nicht gespeichert werden.", 400)
         if success:
             return Event.get_by_id(event_id).to_dict()
+
+
+@event_blueprint.route("/api/event/start_list", methods=["GET"])
+@login_required
+def get_start_list():
+    event_id = request.args.get("event_id")
+    if not event_id:
+        return error_response("Die Event-ID fehlt.", 400)
+    event, error = get_event_or_error(event_id)
+    if error:
+        return error
+
+    services = get_discipline_services(event.event_type.discipline_id)
+    start_list, error_msg = services.result_processor.get_start_list(event.event_type.discipline_id, event)
+    if error_msg:
+        return {"start_list": [], "message": error_msg}
+
+    return {"start_list": start_list}

@@ -358,6 +358,13 @@ export class Event {
     );
   }
 
+  public static fetchStartList(eventId: string): Promise<string[]> {
+    return NetworkHelper.fetchOne(
+      `/api/event/start_list?event_id=${eventId}`,
+      (json: any) => json["start_list"] as string[],
+    );
+  }
+
   public static saveBets(
     event_id: string,
     predictions: Predictions,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bet, Prediction } from "../../models/Bet";
 import { BetInput, BetInputItem } from "../design/BetInput";
 import { Button } from "../design/Button";
@@ -29,6 +29,8 @@ export function BetPlacer({
   );
   const [completed, setCompleted] = useState(false);
   const [items, setItems] = useState<BetInputItem[]>([]);
+  const [startList, setStartList] = useState<string[] | undefined>(undefined);
+  const [invalidPredictions, setInvalidPredictions] = useState<number[]>([]);
   const [userBet, setUserBet] = useState<Bet | undefined>(undefined);
   let selectionsNeeded = 10;
   if (tryLoadExistingBet || event) {
@@ -38,6 +40,17 @@ export function BetPlacer({
       selectionsNeeded = event.numBets;
     }
   }
+
+  const filteredItems = useMemo(() => {
+    if (!startList || startList.length === 0) return items;
+    return items.filter((item) => startList.includes(item.id ?? ""));
+  }, [items, startList]);
+
+  useEffect(() => {
+    Event.fetchStartList(event.id)
+      .then((list) => setStartList(list))
+      .catch(() => setStartList(undefined));
+  }, [event.id]);
 
   useEffect(() => {
     loadData(event.type)
@@ -112,12 +125,22 @@ export function BetPlacer({
   }
 
   function calcCompleted(bets: BetInputItem[]) {
+    const allSelected = bets.filter((bet) => bet.id).length == selectionsNeeded;
     const equal = bets
       .map((bet, index) => bet.id == userBet?.predictions[index].object_id)
       .every((eq) => eq);
-    setCompleted(
-      bets.filter((bet) => bet.id).length == selectionsNeeded && !equal,
-    );
+
+    const invalid = [];
+    if (startList && startList.length > 0) {
+      bets.forEach((bet, index) => {
+        if (bet.id && !startList.includes(bet.id)) {
+          invalid.push(index + 1);
+        }
+      });
+    }
+    setInvalidPredictions(invalid);
+
+    setCompleted(allSelected && !equal && invalid.length === 0);
   }
 
   const onSelectItem = useCallback(
@@ -131,7 +154,7 @@ export function BetPlacer({
       setPlacedPredictions(bets);
       calcCompleted(bets);
     },
-    [placedPredictions],
+    [placedPredictions, startList, userBet, selectionsNeeded],
   );
 
   const onSave = useCallback(() => {
@@ -157,14 +180,27 @@ export function BetPlacer({
         event.preventDefault();
       }}
     >
-      <p className="text-sm text-slate-700">
-        Wähle deine Top-{placedPredictions.length} für dieses Rennen. Je genauer dein Tipp, desto mehr Punkte bekommst du.
-      </p>
+      <div className="space-y-1">
+        <p className="text-sm text-slate-700">
+          Wähle deine Top-{placedPredictions.length} für dieses Rennen. Je genauer dein Tipp, desto mehr Punkte bekommst du.
+        </p>
+        {startList && startList.length > 0 && (
+          <p className="text-xs text-sky-700 font-medium">
+            ✓ Startliste geladen ({startList.length} Teilnehmer)
+          </p>
+        )}
+        {invalidPredictions.length > 0 && (
+          <p className="text-xs text-red-600 font-semibold">
+            ⚠ Position {invalidPredictions.join(", ")} steht nicht auf der Startliste.
+          </p>
+        )}
+      </div>
+
       {placedPredictions?.map((item, index) => (
         <BetInput
           key={`${index} ${item.id} ${item.name}`}
           place={index + 1}
-          items={items}
+          items={filteredItems}
           totalNumOfInputs={selectionsNeeded}
           prev_selected={item}
           onSelect={onSelectItem}
@@ -176,7 +212,7 @@ export function BetPlacer({
           <BetInput
             key={index}
             place={index + 1}
-            items={items}
+            items={filteredItems}
             totalNumOfInputs={selectionsNeeded}
             onSelect={onSelectItem}
             onClear={() => setCompleted(false)}

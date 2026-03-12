@@ -19,6 +19,9 @@ class DisciplineResultProcessor(Protocol):
     def process_official_results(self, discipline, event):
         ...
 
+    def get_start_list(self, discipline, event):
+        ...
+
 
 class DisciplineAthleteResolver(Protocol):
     def resolve_athletes(self, athletes):
@@ -40,6 +43,9 @@ class UnsupportedEventImporter:
 class UnsupportedResultProcessor:
     def process_official_results(self, discipline, event):
         return [], "Disziplin nicht auswertbar"
+
+    def get_start_list(self, discipline, event):
+        return None, "Disziplin nicht auswertbar"
 
 
 class PassthroughAthleteResolver:

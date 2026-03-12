@@ -226,6 +226,33 @@ class BiathlonResultProcessor:
 
         return [], "Wettobjekt nicht bekannt"
 
+    def get_start_list(self, discipline, event):
+        try:
+            response = IbuApiClient().get_results(event.source_race_id)
+        except (IbuApiError, requests.RequestException):
+            return None, "Die Startliste konnte nicht von der offiziellen IBU-Quelle geladen werden."
+
+        rows = response.rows if hasattr(response, "rows") else response
+        if not rows:
+            return None, "Die offizielle IBU-Quelle enthält keine Startliste."
+
+        if event.event_type.betting_on == "countries":
+            return sorted(list(set(row.nation_code for row in rows if row.nation_code))), None
+
+        if event.event_type.betting_on == "athletes":
+            ibu_ids = [row.athlete_id for row in rows if row.athlete_id]
+            if not ibu_ids:
+                return [], None
+
+            athlete_ids = []
+            for ibu_id in ibu_ids:
+                athlete = Athlete.get_by_ibu_id(ibu_id)
+                if athlete:
+                    athlete_ids.append(athlete.id)
+            return athlete_ids, None
+
+        return None, "Wettobjekt nicht bekannt"
+
     def _ensure_country(self, nation_code: str, country_name: str | None):
         country = Country.get_by_id(nation_code)
         if country is None:
