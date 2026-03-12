@@ -146,7 +146,7 @@ export function GamePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-6 flex flex-col"
+              className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-4 sm:p-6 flex flex-col"
             >
               <EventList
                 game={game}
@@ -226,13 +226,13 @@ function LazyGameStatsPanel({
 
 function ScoreboardSkeleton() {
   return (
-    <div className="w-full max-w-6xl backdrop-blur-md bg-white/30 border border-white/40 rounded-3xl shadow-lg p-6 animate-pulse my-4">
+    <div className="w-full max-w-6xl backdrop-blur-md bg-white/30 border border-white/40 rounded-3xl shadow-lg p-4 sm:p-6 animate-pulse my-4">
       {/* header line */}
       <div className="h-5 w-40 bg-slate-300/70 rounded mb-4" />
       {/* fake chart area */}
       <div className="h-48 w-full bg-slate-300/60 rounded-xl mb-4" />
       {/* fake legend / controls */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <div className="h-6 w-24 bg-slate-300/70 rounded-full" />
         <div className="h-6 w-20 bg-slate-300/70 rounded-full" />
         <div className="h-6 w-32 bg-slate-300/70 rounded-full" />

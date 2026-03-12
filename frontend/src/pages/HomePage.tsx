@@ -35,13 +35,13 @@ export function HomePage() {
   return (
     <>
       {/* Header */}
-      <header className="flex justify-between items-center w-full max-w-5xl mb-10">
-        <h1 className="text-2xl font-semibold text-gray-800">
+      <header className="flex w-full max-w-5xl flex-col gap-4 mb-8 sm:mb-10 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-semibold text-gray-800 text-center sm:text-left">
           Hallo <span className="text-sky-700">{user?.name}</span>!
         </h1>
-        <div className="flex gap-3">
+        <div className="grid w-full grid-cols-1 gap-3 sm:w-auto sm:grid-cols-2">
           {user?.isAdmin && (
-            <div className="w-40">
+            <div className="w-full sm:w-40">
               <Button
                 title="Admin"
                 onClick={() => navigate(SiteRoutes.Admin, {})}
@@ -49,7 +49,7 @@ export function HomePage() {
               />
             </div>
           )}
-          <div className="w-50">
+          <div className="w-full sm:w-50">
             <Button title="Logout" onClick={logoutClick} type="negative" />
           </div>
         </div>
@@ -63,6 +63,7 @@ export function HomePage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
+            className="w-full max-w-6xl"
           >
             <GamesContext.Provider value={data}>
               <BettingGameList user={user} show_games={"user"} />
@@ -89,13 +90,13 @@ export function HomePage() {
 
 function EventsSkeleton() {
   return (
-    <div className="w-full max-w-6xl backdrop-blur-md bg-white/30 border border-white/40 rounded-3xl shadow-lg p-6 animate-pulse">
+    <div className="w-full max-w-6xl backdrop-blur-md bg-white/30 border border-white/40 rounded-3xl shadow-lg p-4 sm:p-6 animate-pulse">
       <div className="h-5 w-52 bg-slate-200/70 rounded mb-4" />
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="flex justify-between items-center bg-white/70 rounded-2xl px-4 py-3"
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white/70 rounded-2xl px-4 py-3"
           >
             <div className="space-y-1">
               <div className="h-4 w-52 bg-slate-200/80 rounded" />

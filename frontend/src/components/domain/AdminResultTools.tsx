@@ -164,10 +164,10 @@ export function AdminResultTools({ event, onEventUpdated }: AdminResultToolsProp
 
 function ResultDiffRow({ change }: { change: AdminResultDiffEntry }) {
   return (
-    <div className="grid grid-cols-[56px_1fr_24px_1fr] items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-sm">
+    <div className="flex flex-col gap-1 rounded-xl bg-white/5 px-3 py-2 text-sm sm:grid sm:grid-cols-[56px_1fr_24px_1fr] sm:items-center sm:gap-2">
       <span className="font-semibold text-sky-200">#{change.place}</span>
       <span className="text-slate-300">{formatResultLabel(change.before)}</span>
-      <span className="text-center text-slate-500">&gt;</span>
+      <span className="text-slate-500 sm:text-center">&gt;</span>
       <span className="text-white">{formatResultLabel(change.after)}</span>
     </div>
   );

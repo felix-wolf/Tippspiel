@@ -77,36 +77,40 @@ function BetItem({ player, bet, canAddMissingBet, onAddMissingBet }: BetItemProp
       className="rounded-2xl bg-white/70 border border-slate-200 shadow-sm p-3 sm:p-4 flex flex-col"
       whileHover={{ y: -2 }}
     >
-      <div className="flex items-baseline justify-between mb-3">
-        <h3 className="text-base sm:text-lg font-semibold text-slate-900">
-          {player.name}
-        </h3>
-        {canAddMissingBet && (
-          <button
-            className="rounded-lg bg-sky-500 px-3 py-1 text-sm font-semibold text-white hover:bg-sky-600"
-            onClick={onAddMissingBet}
-          >
-            Tipp nachtragen
-          </button>
-        )}
-        {bet?.hasPredictions() && bet.hasResults() && (
-          <div className="text-lg font-semibold text-sky-700">
-            Score:{" "}
-            <span className="text-slate-900 tabular-nums">
-              {bet?.score ?? 0}
-            </span>
-          </div>
-        )}
-        {bet?.hasPredictions() && !bet.hasResults() && (
-          <div className="text-lg font-semibold text-slate-500 italic">
-            Ergebnis ausstehend
-          </div>
-        )}
-        {!bet && (
-          <div className="text-lg font-semibold text-slate-500 italic">
-            Nicht getippt
-          </div>
-        )}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 break-words">
+            {player.name}
+          </h3>
+        </div>
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          {canAddMissingBet && (
+            <button
+              className="rounded-lg bg-sky-500 px-3 py-1 text-sm font-semibold text-white hover:bg-sky-600"
+              onClick={onAddMissingBet}
+            >
+              Tipp nachtragen
+            </button>
+          )}
+          {bet?.hasPredictions() && bet.hasResults() && (
+            <div className="text-lg font-semibold text-sky-700">
+              Score:{" "}
+              <span className="text-slate-900 tabular-nums">
+                {bet?.score ?? 0}
+              </span>
+            </div>
+          )}
+          {bet?.hasPredictions() && !bet.hasResults() && (
+            <div className="text-lg font-semibold text-slate-500 italic">
+              Ergebnis ausstehend
+            </div>
+          )}
+          {!bet && (
+            <div className="text-lg font-semibold text-slate-500 italic">
+              Nicht getippt
+            </div>
+          )}
+        </div>
       </div>
 
       {resultItems.length > 0 && (
@@ -174,7 +178,7 @@ export function BetList({ game, event, isCreator, onEventUpdated }: BetListProps
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg w-full max-w-6xl p-6 mb-8"
+      className="backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg w-full max-w-6xl p-4 sm:p-6 mb-8"
     >
       <MissingBetEditorModal
         event={event}

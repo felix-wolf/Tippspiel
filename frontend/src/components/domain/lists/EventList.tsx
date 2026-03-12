@@ -135,7 +135,7 @@ export function EventList({
           event={events?.find((e) => e.id == eventEditId)}
         />
       )}
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4 flex flex-wrap items-center gap-2">
         {type == "upcoming" ? (
           <>
             <Calendar size={20} />
@@ -164,7 +164,7 @@ export function EventList({
             ))}
           </div>
           {!loading && (numEvents ?? 0) > 5 && (
-            <div className="flex flex-row items-center">
+            <div className="flex items-center justify-center">
               <Toggler
                 highlight={false}
                 items={getPageItems(currPage)}

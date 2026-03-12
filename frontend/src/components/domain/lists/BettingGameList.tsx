@@ -87,10 +87,10 @@ export function BettingGameList({
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg w-full max-w-5xl p-6 mb-8"
+        className="backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg w-full max-w-6xl p-4 sm:p-6 mb-8"
       >
         <div className="text-xl font-semibold text-gray-800 mb-4">{show_games == "user" ? "Deine Tippspiele" : "Andere Tippspiele"}</div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {games.length != 0 && games
             .sort((a, b) =>
               !!a.game?.name && !!b.game?.name

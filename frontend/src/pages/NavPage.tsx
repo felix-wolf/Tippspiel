@@ -13,25 +13,21 @@ export function NavPage({ title, navBarLeftItem, children }: NavPageProps) {
   return (
     <>
       {/* Header */}
-      <header className={`
-       w-full max-w-6xl mb-8
-        flex items-center justify-between
-        `}>
-        <div className="min-w-18">
+      <header className="w-full max-w-6xl mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
           <Button
             onClick={() => navigate(-1)}
             title={"Zurück"}
             type="neutral"
             icon={<ArrowLeft size={18} />}
           />
+          {navBarLeftItem && <div className="sm:hidden">{navBarLeftItem}</div>}
         </div>
-        <h1 className={`
-          text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 text-center min-w-20 max-w-2xl
-        `}>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 text-center w-full max-w-2xl break-words">
           {title}
         </h1>
-        {navBarLeftItem && navBarLeftItem}
-        {!navBarLeftItem && <div className="min-w-18" />}
+        {navBarLeftItem && <div className="hidden sm:block sm:w-auto sm:shrink-0">{navBarLeftItem}</div>}
+        {!navBarLeftItem && <div className="hidden sm:block sm:w-18 sm:shrink-0" />}
       </header>
       {children}
     </>

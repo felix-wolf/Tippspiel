@@ -145,7 +145,7 @@ export function GameStatsPanel({
 }: GameStatsPanelProps) {
   if (loading || !stats) {
     return (
-      <section className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-6 my-4">
+      <section className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-4 sm:p-6 my-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-5">
           <div className="flex items-center gap-2 text-slate-800 font-semibold">
             <Trophy size={18} />
@@ -164,7 +164,7 @@ export function GameStatsPanel({
 
   if (stats.overview.resolved_predictions === 0) {
     return (
-      <section className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-6 my-4">
+      <section className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-4 sm:p-6 my-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-2">
           <div className="flex items-center gap-2 text-slate-800 font-semibold">
             <Trophy size={18} />
@@ -184,7 +184,7 @@ export function GameStatsPanel({
   }
 
   return (
-    <section className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-6 my-4">
+    <section className="w-full max-w-6xl backdrop-blur-md bg-white/40 border border-white/40 rounded-3xl shadow-lg p-4 sm:p-6 my-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-5">
         <div className="flex items-center gap-2 text-slate-800 font-semibold">
           <Trophy size={18} />

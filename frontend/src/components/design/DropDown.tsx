@@ -27,7 +27,7 @@ export function DropDown({
   );
   return (
     <select
-      className="text-white text-l bg-sky-600 rounded-md p-2"
+      className="w-full rounded-md bg-sky-600 p-2 text-sm text-white sm:w-auto sm:text-base"
       onChange={(event) => onChange(event)}
       value={selectedId ?? initial?.id}
     >

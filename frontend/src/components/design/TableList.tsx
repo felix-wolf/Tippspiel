@@ -73,7 +73,7 @@ export default function TableList<T extends object>({
   return (
     <div
       className={[
-        "text-left text-gray-800",
+        "text-left text-gray-800 overflow-x-auto",
         maxHeight !== undefined ? "max-h-110 overflow-y-auto" : "h-full",
       ].join(" ")}
     >

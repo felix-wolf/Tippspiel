@@ -209,7 +209,7 @@ export function AdminPage() {
   if (!isAdmin) {
     return (
       <NavPage title="Admin">
-        <section className="w-full max-w-4xl rounded-3xl border border-white/40 bg-white/50 p-6 shadow-lg">
+        <section className="w-full max-w-4xl rounded-3xl border border-white/40 bg-white/50 p-4 sm:p-6 shadow-lg">
           <p className="text-lg font-semibold text-slate-800">Kein Admin-Zugriff</p>
           <p className="mt-2 text-sm text-slate-600">
             Diese Seite ist nur für Admin-Nutzer verfügbar.
@@ -221,8 +221,8 @@ export function AdminPage() {
 
   return (
     <NavPage title="Admin Ops">
-      <section className="w-full max-w-6xl rounded-3xl border border-white/40 bg-white/55 p-6 shadow-lg backdrop-blur-md">
-        <div className="grid gap-3 md:grid-cols-2">
+      <section className="w-full max-w-6xl rounded-3xl border border-white/40 bg-white/55 p-4 sm:p-6 shadow-lg backdrop-blur-md">
+        <div className="grid gap-3 sm:grid-cols-2">
           <Button
             title="Shared Events"
             onClick={() => setActiveTab("shared_events")}
@@ -262,7 +262,7 @@ export function AdminPage() {
                   <Button title="Fehlende Source" onClick={() => setSharedFilter("missing_source")} type={sharedFilter === "missing_source" ? "positive" : "neutral"} />
                 </div>
               </div>
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1 sm:max-h-96 lg:max-h-[70vh]">
                 {filteredSharedEvents.length === 0 && (
                   <p className="text-sm text-slate-600">Keine Shared Events für den aktuellen Filter.</p>
                 )}
@@ -276,8 +276,8 @@ export function AdminPage() {
                     }`}
                     onClick={() => setSelectedSharedEventId(item.sharedEventId)}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
                         <p className="font-semibold text-slate-900">{item.name}</p>
                         <p className="text-sm text-slate-600">{item.location ?? "Ohne Ort"} · {item.datetime}</p>
                       </div>
@@ -381,7 +381,7 @@ export function AdminPage() {
                 value={countrySearch}
                 onChange={(event) => setCountrySearch(event.target.value)}
               />
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1 sm:max-h-96 lg:max-h-[70vh]">
                 {filteredCountries.length === 0 && (
                   <p className="text-sm text-slate-600">Keine fehlenden Länder gefunden.</p>
                 )}
@@ -395,7 +395,7 @@ export function AdminPage() {
                     }`}
                     onClick={() => setSelectedCountryCode(country.code)}
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <p className="font-semibold text-slate-900">{country.flag} {country.code}</p>
                       <span className="text-xs text-slate-500">{country.athleteCount} Athleten</span>
                     </div>
