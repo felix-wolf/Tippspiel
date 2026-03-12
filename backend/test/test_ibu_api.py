@@ -1,7 +1,7 @@
 from datetime import datetime
 from xml.etree import ElementTree
 
-from src.ibu_api import IbuApiClient, IbuAthleteRow, IbuResultRow, race_is_importable
+from src.ibu_api import IbuApiClient, IbuAthleteRow, IbuResultRow, IbuResultsResponse, race_is_importable
 
 
 class _FakeResponse:
@@ -121,21 +121,26 @@ def test_get_results_maps_official_rows():
 
     rows = client.get_results("BT2526SWRLCP03SWMS")
 
-    assert rows == [
-        IbuResultRow(
-            rank=1,
-            first_name="Lou",
-            last_name="Jeanmonnot",
-            athlete_id="IBU-123",
-            nation_code="FRA",
-            country_name=None,
-            time="39:12.1",
-            behind="0.0",
-            shooting="0 1",
-            shooting_time="1:42.0",
-            status=None,
-        )
-    ]
+    assert rows == IbuResultsResponse(
+        kind="results",
+        rows=[
+            IbuResultRow(
+                rank=1,
+                first_name="Lou",
+                last_name="Jeanmonnot",
+                athlete_id="IBU-123",
+                nation_code="FRA",
+                country_name=None,
+                time="39:12.1",
+                behind="0.0",
+                shooting="0 1",
+                shooting_time="1:42.0",
+                status=None,
+            )
+        ],
+        is_start_list=False,
+        is_result=True,
+    )
 
 
 def test_get_results_prefers_total_time_over_result_for_absolute_time():
@@ -161,21 +166,26 @@ def test_get_results_prefers_total_time_over_result_for_absolute_time():
 
     rows = client.get_results("BT2526SWRLCP03SWMS")
 
-    assert rows == [
-        IbuResultRow(
-            rank=2,
-            first_name="Franziska",
-            last_name="Preuss",
-            athlete_id="IBU-456",
-            nation_code="GER",
-            country_name=None,
-            time="39:24.4",
-            behind="+12.3",
-            shooting=None,
-            shooting_time=None,
-            status=None,
-        )
-    ]
+    assert rows == IbuResultsResponse(
+        kind="results",
+        rows=[
+            IbuResultRow(
+                rank=2,
+                first_name="Franziska",
+                last_name="Preuss",
+                athlete_id="IBU-456",
+                nation_code="GER",
+                country_name=None,
+                time="39:24.4",
+                behind="+12.3",
+                shooting=None,
+                shooting_time=None,
+                status=None,
+            )
+        ],
+        is_start_list=False,
+        is_result=True,
+    )
 
 
 def test_get_results_maps_official_status_codes():
@@ -200,21 +210,85 @@ def test_get_results_maps_official_status_codes():
 
     rows = client.get_results("BT2526SWRLCP03SWMS")
 
-    assert rows == [
-        IbuResultRow(
-            rank=None,
-            first_name="Lou",
-            last_name="Jeanmonnot",
-            athlete_id="IBU-123",
-            nation_code="FRA",
-            country_name=None,
-            time="DNF",
-            behind="DNF",
-            shooting=None,
-            shooting_time=None,
-            status="DNF",
-        )
-    ]
+    assert rows == IbuResultsResponse(
+        kind="results",
+        rows=[
+            IbuResultRow(
+                rank=None,
+                first_name="Lou",
+                last_name="Jeanmonnot",
+                athlete_id="IBU-123",
+                nation_code="FRA",
+                country_name=None,
+                time="DNF",
+                behind="DNF",
+                shooting=None,
+                shooting_time=None,
+                status="DNF",
+            )
+        ],
+        is_start_list=False,
+        is_result=True,
+    )
+
+
+def test_get_results_classifies_explicit_start_list_payload():
+    session = _FakeSession(
+        {
+            ("Results", (("RaceId", "BT2526SWRLCP08SMSP"),)): """
+                {
+                    "RaceId": "BT2526SWRLCP08SMSP",
+                    "IsStartList": true,
+                    "IsResult": false,
+                    "Results": [
+                        {
+                            "ResultOrder": 10001,
+                            "IBUId": "BTKAZ12409200001",
+                            "GivenName": "Vladislav",
+                            "FamilyName": "KIREYEV",
+                            "Nat": "KAZ",
+                            "StartTime": "2026-03-12T14:15:30Z"
+                        }
+                    ]
+                }
+            """
+        }
+    )
+    client = IbuApiClient(session=session)
+
+    response = client.get_results("BT2526SWRLCP08SMSP")
+
+    assert response.kind == "start_list"
+    assert response.is_start_list is True
+    assert response.is_result is False
+    assert response.rows[0].athlete_id == "BTKAZ12409200001"
+
+
+def test_get_results_classifies_start_list_without_top_level_flags():
+    session = _FakeSession(
+        {
+            ("Results", (("RaceId", "BT2526SWRLCP08SMSP"),)): """
+                {
+                    "Results": [
+                        {
+                            "ResultOrder": 10001,
+                            "IBUId": "BTKAZ12409200001",
+                            "GivenName": "Vladislav",
+                            "FamilyName": "KIREYEV",
+                            "Nat": "KAZ",
+                            "StartTime": "2026-03-12T14:15:30Z"
+                        }
+                    ]
+                }
+            """
+        }
+    )
+    client = IbuApiClient(session=session)
+
+    response = client.get_results("BT2526SWRLCP08SMSP")
+
+    assert response.kind == "start_list"
+    assert response.rows[0].athlete_id == "BTKAZ12409200001"
 
 
 def test_get_athletes_maps_official_rows():

@@ -8,6 +8,7 @@ from src.models.game import Game
 from src.models.notification_helper import NotificationHelper
 from src.models.result import Result
 from src.services.disciplines import get_discipline_services
+from src.services.disciplines.base import OfficialResultsNotReady
 from src.time_utils import berlin_now, ensure_berlin_time
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,8 @@ def load_results(event: Event, url: str = None, results_json: list = None):
         services = get_discipline_services(discipline.id)
         results, error = services.result_processor.process_official_results(discipline, event)
         if error:
+            if isinstance(error, OfficialResultsNotReady):
+                return None, error.message, 409
             return None, error, 500
         return results, None, None
 
@@ -310,6 +313,7 @@ def process_event_results(event: Event, game: Game, url: str = None, results_jso
 def check_recent_results(now=None):
     current_time = ensure_berlin_time(now) if now else berlin_now()
     processed_events = []
+    deferred_events = []
     failed_events = []
     due_events_by_shared_id = {}
     games_by_id = {game.id: game for game in Game.get_all()}
@@ -336,6 +340,18 @@ def check_recent_results(now=None):
             url=representative_event.url,
         )
         if error_message or not shared_results:
+            if status_code == 409:
+                for event in events:
+                    deferred_events.append(
+                        {
+                            "event_id": event.id,
+                            "event_name": event.name,
+                            "game_id": event.game_id,
+                            "status_code": 409,
+                            "reason": error_message or "Die offiziellen Ergebnisse sind noch nicht verfuegbar.",
+                        }
+                    )
+                continue
             for event in events:
                 logger.warning(
                     "Automatic result import failed for event %s (%s): %s",
@@ -392,7 +408,9 @@ def check_recent_results(now=None):
     return {
         "status": "checked",
         "processed_count": len(processed_events),
+        "deferred_count": len(deferred_events),
         "failed_count": len(failed_events),
         "processed_events": processed_events,
+        "deferred_events": deferred_events,
         "failed_events": failed_events,
     }, None, None

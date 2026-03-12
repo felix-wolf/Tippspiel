@@ -40,6 +40,14 @@ class IbuResultRow:
 
 
 @dataclass(frozen=True)
+class IbuResultsResponse:
+    kind: str
+    rows: list[IbuResultRow]
+    is_start_list: bool = False
+    is_result: bool = True
+
+
+@dataclass(frozen=True)
 class IbuAthleteRow:
     athlete_id: str | None
     first_name: str | None
@@ -117,10 +125,22 @@ class IbuApiClient:
         return races
 
     def get_results(self, race_id: str):
-        return [
-            self._build_result_row(record)
-            for record in self._fetch_records("Results", {"RaceId": race_id})
-        ]
+        response = self._fetch_path_payload("Results", {"RaceId": race_id})
+        records = self._extract_records("Results", response)
+        rows = [self._build_result_row(record) for record in records]
+        kind = self._classify_results_payload(response, records)
+        is_start_list = False
+        is_result = True
+        if isinstance(response, dict):
+            is_start_list = bool(response.get("IsStartList"))
+            if "IsResult" in response:
+                is_result = bool(response.get("IsResult"))
+        return IbuResultsResponse(
+            kind=kind,
+            rows=rows,
+            is_start_list=is_start_list,
+            is_result=is_result,
+        )
 
     def get_athletes(self, season_id: str):
         return [
@@ -223,6 +243,9 @@ class IbuApiClient:
         )
 
     def _fetch_records(self, path: str, params: dict[str, str | int]):
+        return self._extract_records(path, self._fetch_path_payload(path, params))
+
+    def _fetch_path_payload(self, path: str, params: dict[str, str | int]):
         response = self.session.get(
             f"{self.BASE_URL}/{path}",
             params=params,
@@ -231,35 +254,38 @@ class IbuApiClient:
         response.raise_for_status()
         response_text = response.text.lstrip()
         if response_text and not response_text.startswith("<"):
-            return self._json_records_for_path(path, response_text)
+            return self._json_payload_for_path(path, response_text)
         try:
             root = ElementTree.fromstring(response.text)
         except ElementTree.ParseError as exc:
             raise IbuApiError(f"Could not parse IBU response for {path}.") from exc
-        return self._iter_records(root)
+        return root
 
     @staticmethod
-    def _json_records_for_path(path: str, response_text: str):
+    def _json_payload_for_path(path: str, response_text: str):
         try:
             payload = json.loads(response_text)
         except json.JSONDecodeError as exc:
             raise IbuApiError(f"Could not parse IBU response for {path}.") from exc
+        return payload
+
+    @classmethod
+    def _extract_records(cls, path: str, payload):
         if isinstance(payload, list):
             return payload
-        if not isinstance(payload, dict):
+        if isinstance(payload, dict):
+            if path == "Results":
+                results = payload.get("Results")
+                return results if isinstance(results, list) else []
+            if path.lower() == "athletes":
+                athletes = payload.get("Athletes")
+                return athletes if isinstance(athletes, list) else []
+
+            for value in payload.values():
+                if isinstance(value, list):
+                    return value
             return []
-
-        if path == "Results":
-            results = payload.get("Results")
-            return results if isinstance(results, list) else []
-        if path.lower() == "athletes":
-            athletes = payload.get("Athletes")
-            return athletes if isinstance(athletes, list) else []
-
-        for value in payload.values():
-            if isinstance(value, list):
-                return value
-        return []
+        return cls._iter_records(payload)
 
     @staticmethod
     def _iter_records(root):
@@ -413,6 +439,31 @@ class IbuApiClient:
         if normalized in cls.RESULT_STATUS_CODES:
             return normalized
         return None
+
+    @classmethod
+    def _classify_results_payload(cls, payload, records):
+        if isinstance(payload, dict):
+            if payload.get("IsStartList") is True and payload.get("IsResult") is False:
+                return "start_list"
+            if payload.get("IsResult") is True:
+                return "results"
+        if cls._looks_like_start_list_records(records):
+            return "start_list"
+        return "results"
+
+    @classmethod
+    def _looks_like_start_list_records(cls, records):
+        if not records:
+            return False
+        qualifying_rows = 0
+        for record in records:
+            rank = cls._get_text(record, "Rank", "Place")
+            total_time = cls._get_text(record, "TotalTime", "Time", "Result")
+            start_time = cls._get_text(record, "StartTime", "StartInfo")
+            result_order = cls._to_int(cls._get_text(record, "ResultOrder"))
+            if rank is None and total_time is None and start_time and result_order is not None and result_order >= 1000:
+                qualifying_rows += 1
+        return qualifying_rows == len(records)
 
 
 def race_is_importable(race: IbuRace, now=None):

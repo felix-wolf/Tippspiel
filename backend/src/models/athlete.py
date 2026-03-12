@@ -185,9 +185,12 @@ class Athlete(BaseModel):
                     continue
                 race_gender = Athlete._normalize_ibu_gender(race.gender)
                 try:
-                    results = client.get_results(race.race_id)
+                    results_response = client.get_results(race.race_id)
                 except (IbuApiError, requests.RequestException):
                     continue
+                if getattr(results_response, "kind", "results") != "results":
+                    continue
+                results = results_response.rows if hasattr(results_response, "rows") else results_response
                 for result in results:
                     if not result.first_name or not result.last_name or not result.nation_code:
                         continue

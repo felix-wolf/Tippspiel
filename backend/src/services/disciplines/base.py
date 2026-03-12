@@ -4,6 +4,12 @@ from dataclasses import dataclass
 from typing import Protocol
 
 
+@dataclass(frozen=True)
+class OfficialResultsNotReady:
+    message: str
+    kind: str = "start_list"
+
+
 class DisciplineEventImporter(Protocol):
     def fetch_importable_events(self, discipline, game_id: str, now=None):
         ...

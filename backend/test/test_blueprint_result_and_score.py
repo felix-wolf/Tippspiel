@@ -267,8 +267,10 @@ def test_results_check_ignores_legacy_url_only_event(admin_client, app, base_dat
     assert response.get_json() == {
         "status": "checked",
         "processed_count": 0,
+        "deferred_count": 0,
         "failed_count": 0,
         "processed_events": [],
+        "deferred_events": [],
         "failed_events": [],
     }
 
@@ -306,6 +308,7 @@ def test_results_check_prefers_official_source_ids(admin_client, app, base_data,
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["processed_count"] == 1
+    assert payload["deferred_count"] == 0
     assert payload["failed_count"] == 0
     assert payload["processed_events"] == [
         {
@@ -360,6 +363,7 @@ def test_results_check_processes_all_due_events(admin_client, app, base_data, mo
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["processed_count"] == 2
+    assert payload["deferred_count"] == 0
     assert payload["failed_count"] == 0
     assert {item["event_id"] for item in payload["processed_events"]} == {
         first_event.id,
@@ -417,6 +421,7 @@ def test_results_check_continues_after_single_event_failure(admin_client, app, b
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["processed_count"] == 1
+    assert payload["deferred_count"] == 0
     assert payload["failed_count"] == 1
     assert payload["processed_events"] == [
         {
@@ -453,7 +458,7 @@ def test_results_check_accepts_task_token(app, monkeypatch):
     app.config["TASK_API_TOKEN"] = "cron-secret"
     monkeypatch.setattr(
         "src.blueprints.result.check_recent_results",
-        lambda: ({"status": "checked", "processed_count": 0, "failed_count": 0, "processed_events": [], "failed_events": []}, None, None),
+        lambda: ({"status": "checked", "processed_count": 0, "deferred_count": 0, "failed_count": 0, "processed_events": [], "deferred_events": [], "failed_events": []}, None, None),
     )
     client = app.test_client()
 
@@ -461,6 +466,130 @@ def test_results_check_accepts_task_token(app, monkeypatch):
 
     assert response.status_code == 200
     assert response.get_json()["status"] == "checked"
+
+
+def test_admin_result_refresh_preview_returns_409_for_start_list(admin_client, app, base_data, monkeypatch):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Preview Start List Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+        event = Event(
+            name="Preview Start List Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() + timedelta(hours=1),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-startlist-preview",
+            source_race_id="race-startlist-preview",
+        )
+        event.save_to_db()
+        event_id = event.id
+
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    from src.services.disciplines.base import OfficialResultsNotReady
+
+    def fake_process_official_results(self, discipline, event):
+        return [], OfficialResultsNotReady("Die offizielle IBU-Quelle liefert derzeit nur eine Startliste und noch keine Ergebnisse.")
+
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
+
+    response = admin_client.post(f"/api/admin/events/{event_id}/results/preview-refresh", json={})
+
+    assert response.status_code == 409
+    assert "Startliste" in response.get_json()["error"]
+
+
+def test_admin_result_refresh_apply_returns_409_for_start_list(admin_client, app, base_data, monkeypatch):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Apply Start List Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+        event = Event(
+            name="Apply Start List Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() + timedelta(hours=1),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-startlist-apply",
+            source_race_id="race-startlist-apply",
+        )
+        event.save_to_db()
+        event_id = event.id
+
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    from src.services.disciplines.base import OfficialResultsNotReady
+
+    def fake_process_official_results(self, discipline, event):
+        return [], OfficialResultsNotReady("Die offizielle IBU-Quelle liefert derzeit nur eine Startliste und noch keine Ergebnisse.")
+
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
+
+    response = admin_client.post(f"/api/admin/events/{event_id}/results/apply-refresh", json={})
+
+    assert response.status_code == 409
+    assert "Startliste" in response.get_json()["error"]
+
+
+def test_results_check_defers_start_list_events(admin_client, app, base_data, monkeypatch):
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    from src.services.disciplines.base import OfficialResultsNotReady
+
+    def fake_process_official_results(self, discipline, event):
+        return [], OfficialResultsNotReady("Die offizielle IBU-Quelle liefert derzeit nur eine Startliste und noch keine Ergebnisse.")
+
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
+
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Deferred Result Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        event = Event(
+            name="Official Running Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() - timedelta(hours=2),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_event_id="event-running",
+            source_race_id="race-running",
+        )
+        event.save_to_db()
+
+    response = admin_client.get("/api/results/check")
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "status": "checked",
+        "processed_count": 0,
+        "deferred_count": 1,
+        "failed_count": 0,
+        "processed_events": [],
+        "deferred_events": [
+            {
+                "event_id": event.id,
+                "event_name": "Official Running Event",
+                "game_id": game_id,
+                "status_code": 409,
+                "reason": "Die offizielle IBU-Quelle liefert derzeit nur eine Startliste und noch keine Ergebnisse.",
+            }
+        ],
+        "failed_events": [],
+    }
 
 
 def test_admin_result_refresh_preview_returns_diff_for_shared_events(admin_client, app, base_data, monkeypatch):

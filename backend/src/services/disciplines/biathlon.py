@@ -11,6 +11,7 @@ from src.models.athlete import Athlete
 from src.models.country import Country
 from src.models.event import Event
 from src.models.result import Result
+from src.services.disciplines.base import OfficialResultsNotReady
 
 
 logger = logging.getLogger(__name__)
@@ -152,9 +153,14 @@ class BiathlonResultProcessor:
 
     def process_official_results(self, discipline, event):
         try:
-            rows = IbuApiClient().get_results(event.source_race_id)
+            response = IbuApiClient().get_results(event.source_race_id)
         except (IbuApiError, requests.RequestException):
             return [], "Die Ergebnisse konnten nicht von der offiziellen IBU-Quelle geladen werden."
+        rows = response.rows if hasattr(response, "rows") else response
+        if getattr(response, "kind", "results") == "start_list":
+            return [], OfficialResultsNotReady(
+                "Die offizielle IBU-Quelle liefert derzeit nur eine Startliste und noch keine Ergebnisse."
+            )
         if not rows:
             return [], "Die offizielle IBU-Quelle enthält keine Ergebnisse."
 

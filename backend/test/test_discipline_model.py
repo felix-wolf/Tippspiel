@@ -7,6 +7,7 @@ from src.models.discipline import Discipline
 from src.models.event import Event
 from src.models.event_type import EventType
 from src.services.disciplines import get_discipline_services
+from src.services.disciplines.base import OfficialResultsNotReady
 
 
 def test_discipline_save_and_get(base_data, app):
@@ -51,48 +52,55 @@ def test_biathlon_country_results_dedupe_repeated_relay_rows(app, base_data, mon
 
         monkeypatch.setattr(
             "src.services.disciplines.biathlon.IbuApiClient.get_results",
-            lambda self, race_id: [
-                IbuResultRow(
-                    rank=1,
-                    first_name="A",
-                    last_name="Athlete",
-                    athlete_id="ibu-1",
-                    nation_code="FRA",
-                    country_name="France",
-                    time="1:00:00",
-                    behind="0.0",
-                ),
-                IbuResultRow(
-                    rank=1,
-                    first_name="B",
-                    last_name="Athlete",
-                    athlete_id="ibu-2",
-                    nation_code="FRA",
-                    country_name="France",
-                    time="1:00:00",
-                    behind="0.0",
-                ),
-                IbuResultRow(
-                    rank=2,
-                    first_name="C",
-                    last_name="Athlete",
-                    athlete_id="ibu-3",
-                    nation_code="GER",
-                    country_name="Germany",
-                    time="1:01:00",
-                    behind="1:00",
-                ),
-                IbuResultRow(
-                    rank=2,
-                    first_name="D",
-                    last_name="Athlete",
-                    athlete_id="ibu-4",
-                    nation_code="GER",
-                    country_name="Germany",
-                    time="1:01:00",
-                    behind="1:00",
-                ),
-            ],
+            lambda self, race_id: type(
+                "FakeResponse",
+                (),
+                {
+                    "kind": "results",
+                    "rows": [
+                        IbuResultRow(
+                            rank=1,
+                            first_name="A",
+                            last_name="Athlete",
+                            athlete_id="ibu-1",
+                            nation_code="FRA",
+                            country_name="France",
+                            time="1:00:00",
+                            behind="0.0",
+                        ),
+                        IbuResultRow(
+                            rank=1,
+                            first_name="B",
+                            last_name="Athlete",
+                            athlete_id="ibu-2",
+                            nation_code="FRA",
+                            country_name="France",
+                            time="1:00:00",
+                            behind="0.0",
+                        ),
+                        IbuResultRow(
+                            rank=2,
+                            first_name="C",
+                            last_name="Athlete",
+                            athlete_id="ibu-3",
+                            nation_code="GER",
+                            country_name="Germany",
+                            time="1:01:00",
+                            behind="1:00",
+                        ),
+                        IbuResultRow(
+                            rank=2,
+                            first_name="D",
+                            last_name="Athlete",
+                            athlete_id="ibu-4",
+                            nation_code="GER",
+                            country_name="Germany",
+                            time="1:01:00",
+                            behind="1:00",
+                        ),
+                    ],
+                },
+            )(),
         )
 
         services = get_discipline_services(discipline.id)
@@ -165,18 +173,25 @@ def test_biathlon_athlete_results_create_placeholder_country_for_unknown_code(ap
 
         monkeypatch.setattr(
             "src.services.disciplines.biathlon.IbuApiClient.get_results",
-            lambda self, race_id: [
-                IbuResultRow(
-                    rank=30,
-                    first_name="Darya",
-                    last_name="Dolidovich",
-                    athlete_id="IBU-DARYA",
-                    nation_code="BRT",
-                    country_name="Belarus",
-                    time="45:00.0",
-                    behind="5:00.0",
-                ),
-            ],
+            lambda self, race_id: type(
+                "FakeResponse",
+                (),
+                {
+                    "kind": "results",
+                    "rows": [
+                        IbuResultRow(
+                            rank=30,
+                            first_name="Darya",
+                            last_name="Dolidovich",
+                            athlete_id="IBU-DARYA",
+                            nation_code="BRT",
+                            country_name="Belarus",
+                            time="45:00.0",
+                            behind="5:00.0",
+                        ),
+                    ],
+                },
+            )(),
         )
 
         services = get_discipline_services(discipline.id)
@@ -207,3 +222,29 @@ def test_registry_returns_noop_services_for_unsupported_discipline():
     assert results == []
     assert import_error == "Disziplin nicht auswertbar"
     assert result_error == "Disziplin nicht auswertbar"
+
+
+def test_biathlon_results_report_start_list_as_not_ready(app, base_data, monkeypatch):
+    with app.app_context():
+        event = Event(
+            name="Sprint Event",
+            game_id="game-1",
+            event_type=base_data["event_type"],
+            dt=datetime(2026, 3, 12, 14, 15, 0),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_race_id="race-running-1",
+        )
+        discipline = Discipline.get_by_id(base_data["discipline"].id)
+
+        monkeypatch.setattr(
+            "src.services.disciplines.biathlon.IbuApiClient.get_results",
+            lambda self, race_id: type("FakeResponse", (), {"kind": "start_list", "rows": []})(),
+        )
+
+        services = get_discipline_services(discipline.id)
+        results, error = services.result_processor.process_official_results(discipline, event)
+
+        assert results == []
+        assert isinstance(error, OfficialResultsNotReady)
+        assert error.kind == "start_list"
