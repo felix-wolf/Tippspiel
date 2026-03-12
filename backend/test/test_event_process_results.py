@@ -5,7 +5,7 @@ import pytest
 from main import create_app
 from src.database import db_manager
 from src.models.bet import Bet, Prediction
-from src.models.discipline import Biathlon, Discipline
+from src.models.discipline import Discipline
 from src.models.event import Event
 from src.models.event_type import EventType
 from src.models.game import Game
@@ -16,7 +16,7 @@ from src.utils import hash_password
 
 def test_process_results_rolls_back_on_error(app):
     with app.app_context():
-        discipline = Biathlon(
+        discipline = Discipline(
             discipline_id="biathlon",
             name="Biathlon",
             event_types=[],

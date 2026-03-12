@@ -11,7 +11,7 @@ sys.path.insert(0, str(BACKEND_ROOT))
 from main import create_app
 from src.database.migration_runner import migrate_to_latest
 from src.models.country import Country
-from src.models.discipline import Biathlon
+from src.models.discipline import Discipline
 from src.models.athlete import Athlete
 from src.models.event_type import EventType
 from src.models.user import User
@@ -48,7 +48,7 @@ def base_data(app):
         country = Country(code="GER", name="Germany", flag="GER")
         country.save_to_db()
 
-        discipline = Biathlon(
+        discipline = Discipline(
             discipline_id="biathlon",
             name="Biathlon",
             event_types=[],

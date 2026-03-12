@@ -7,6 +7,7 @@ from src.models.event import Event
 from src.models.game import Game
 from src.models.notification_helper import NotificationHelper
 from src.models.result import Result
+from src.services.disciplines import get_discipline_services
 from src.time_utils import berlin_now, ensure_berlin_time
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,8 @@ def load_results(event: Event, url: str = None, results_json: list = None):
         return None, "Die Ergebnisse konnten nicht verarbeitet werden.", 500
 
     if event.source_provider == "ibu" and event.source_race_id:
-        results, error = discipline.process_official_results(event)
+        services = get_discipline_services(discipline.id)
+        results, error = services.result_processor.process_official_results(discipline, event)
         if error:
             return None, error, 500
         return results, None, None

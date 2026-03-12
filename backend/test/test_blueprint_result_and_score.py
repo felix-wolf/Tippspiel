@@ -274,12 +274,12 @@ def test_results_check_ignores_legacy_url_only_event(admin_client, app, base_dat
 
 
 def test_results_check_prefers_official_source_ids(admin_client, app, base_data, monkeypatch):
-    def fake_process_official_results(self, event):
+    def fake_process_official_results(self, discipline, event):
         assert event.source_race_id == "race-123"
         return [Result(event.id, 1, base_data["athlete"].id)], None
 
-    from src.models.discipline import Biathlon
-    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
 
     with app.app_context():
         success, game_id = Game.create(
@@ -317,11 +317,11 @@ def test_results_check_prefers_official_source_ids(admin_client, app, base_data,
 
 
 def test_results_check_processes_all_due_events(admin_client, app, base_data, monkeypatch):
-    def fake_process_official_results(self, event):
+    def fake_process_official_results(self, discipline, event):
         return [Result(event.id, 1, base_data["athlete"].id)], None
 
-    from src.models.discipline import Biathlon
-    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
 
     with app.app_context():
         success, game_id = Game.create(
@@ -372,13 +372,13 @@ def test_results_check_processes_all_due_events(admin_client, app, base_data, mo
 
 
 def test_results_check_continues_after_single_event_failure(admin_client, app, base_data, monkeypatch):
-    def fake_process_official_results(self, event):
+    def fake_process_official_results(self, discipline, event):
         if event.source_race_id == "race-bad":
             return [], "IBU source unavailable"
         return [Result(event.id, 1, base_data["athlete"].id)], None
 
-    from src.models.discipline import Biathlon
-    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
 
     with app.app_context():
         success, game_id = Game.create(
@@ -467,11 +467,11 @@ def test_admin_result_refresh_preview_returns_diff_for_shared_events(admin_clien
     _, second_game_id, first_event_id, second_event_id = _create_shared_events_with_bets(app, base_data)
     second_athlete = _create_second_athlete(app, base_data)
 
-    def fake_process_official_results(self, event):
+    def fake_process_official_results(self, discipline, event):
         return [Result(event.id, 1, second_athlete.id, "Max Muster")], None
 
-    from src.models.discipline import Biathlon
-    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
 
     with app.app_context():
         first_event = Event.get_by_id(first_event_id)
@@ -499,11 +499,11 @@ def test_admin_result_refresh_apply_updates_all_linked_events(admin_client, app,
     first_game_id, second_game_id, first_event_id, second_event_id = _create_shared_events_with_bets(app, base_data)
     second_athlete = _create_second_athlete(app, base_data)
 
-    def fake_process_official_results(self, event):
+    def fake_process_official_results(self, discipline, event):
         return [Result(event.id, 1, second_athlete.id, "Max Muster")], None
 
-    from src.models.discipline import Biathlon
-    monkeypatch.setattr(Biathlon, "process_official_results", fake_process_official_results)
+    from src.services.disciplines.biathlon import BiathlonResultProcessor
+    monkeypatch.setattr(BiathlonResultProcessor, "process_official_results", fake_process_official_results)
 
     response = admin_client.post(f"/api/admin/events/{first_event_id}/results/apply-refresh", json={})
 

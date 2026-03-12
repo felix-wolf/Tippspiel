@@ -9,6 +9,7 @@ from src.models.bet import Bet, Prediction
 from src.models.event import Event
 from src.models.game import Game
 from src.models.result import Result
+from src.services.disciplines import get_discipline_services
 
 
 def _create_event(app, base_data, name="Dedup Game"):
@@ -215,7 +216,7 @@ def test_process_athletes_reuses_existing_athlete_for_name_variant(app, base_dat
         )
         existing_athlete.save_to_db()
 
-        resolved = base_data["discipline"].process_athletes(
+        resolved = get_discipline_services(base_data["discipline"].id).athlete_resolver.resolve_athletes(
             [
                 Athlete(
                     athlete_id=None,
@@ -251,7 +252,7 @@ def test_process_athletes_logs_resolution_and_creation(app, base_data, caplog):
         )
         existing_athlete.save_to_db()
 
-        resolved = base_data["discipline"].process_athletes(
+        resolved = get_discipline_services(base_data["discipline"].id).athlete_resolver.resolve_athletes(
             [
                 Athlete(
                     athlete_id=None,

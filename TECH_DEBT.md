@@ -29,32 +29,9 @@ This document records the main technical debt and areas that need work across th
   - Add persistent operation history and failed-job diagnostics to the admin overview.
   - Add safer merge/delete flows and impact previews before editing shared metadata used by multiple games.
 
-### 2. The `Discipline` model is overloaded
-- Files:
-  - `backend/src/models/discipline.py`
-  - `backend/src/blueprints/game_service.py`
-  - `backend/src/blueprints/result_service.py`
-- What is wrong:
-  - `Discipline` mixes:
-    - persistence
-    - import orchestration
-    - official API mapping
-    - athlete resolution
-    - result transformation
-- Why it matters:
-  - The class is large and difficult to change safely.
-  - Logic for transport, parsing, domain matching, and persistence is tightly coupled.
-- Suggested direction:
-  - Split into dedicated adapters/providers, e.g.:
-    - official feed client
-    - legacy scraper
-    - event importer
-    - result processor
-    - athlete resolver
-
 ## Medium Priority
 
-### 3. Error handling and logging are inconsistent and often low-signal
+### 2. Error handling and logging are inconsistent and often low-signal
 - Files:
   - `backend/src/database/db_manager.py`
   - `backend/src/models/*.py`
@@ -72,7 +49,7 @@ This document records the main technical debt and areas that need work across th
   - Do not swallow DB exceptions in generic helpers.
   - Centralize error-to-response translation at the blueprint/service layer.
 
-### 4. Event import UI still has some complexity, but the modal state is now explicit
+### 3. Event import UI still has some complexity, but the modal state is now explicit
 - Files:
   - `frontend/src/components/domain/EventEditorModal.tsx`
   - `frontend/src/components/domain/OfficialEventImporter.tsx`
@@ -89,7 +66,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Lower Priority / Structural Cleanup
 
-### 6. Seed/bootstrap data and runtime data model are drifting apart
+### 4. Seed/bootstrap data and runtime data model are drifting apart
 - Files:
   - `backend/src/resources/disciplines.csv`
   - `backend/src/resources/athletes.csv`
@@ -105,7 +82,7 @@ This document records the main technical debt and areas that need work across th
   - Bring seed files back in line with current production behavior.
   - Treat runtime backfills as one-off admin tools, not hidden startup behavior.
 
-### 7. Some abstract/base contracts are incomplete
+### 5. Some abstract/base contracts are incomplete
 - Files:
   - `backend/src/models/base_model.py`
   - `backend/src/models/discipline.py`
@@ -117,7 +94,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Either tighten the base contracts or simplify the inheritance model.
 
-### 8. Test coverage is better than before, but still misses some operational paths
+### 6. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -132,7 +109,6 @@ This document records the main technical debt and areas that need work across th
 ## Suggested Work Order
 
 ### Phase 1
-- Split `Discipline` into smaller import/result adapters.
 - Improve backend error handling/logging consistency.
 
 ### Phase 2
@@ -140,7 +116,6 @@ This document records the main technical debt and areas that need work across th
 
 ### Phase 3
 - Clean seed data and bootstrap drift.
-- Refactor or replace the generic table abstraction.
 - Tighten the shared model/base contracts.
 - Add thin workflow tests for import, result processing, and migration-sensitive paths.
 
@@ -159,5 +134,6 @@ This document records the main technical debt and areas that need work across th
 - The stale Selenium dependency was removed from backend packaging metadata on 2026-03-11.
 - Discipline-level URL compatibility fields and the dead `/api/game/events` endpoint were removed on 2026-03-11.
 - `TableList` was tightened to a typed column contract and its dead generic behavior was removed on 2026-03-11.
+- Discipline-specific import/result behavior now lives behind a registry of adapters instead of on the `Discipline` model, as of 2026-03-12.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

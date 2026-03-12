@@ -183,12 +183,12 @@ def test_game_importable_events_returns_official_candidates(client, app, base_da
         season_id="2526",
     )
 
-    def fake_fetch_importable_events(self, game_id, now=None):
+    def fake_fetch_importable_events(self, discipline, game_id, now=None):
         assert game_id == imported_event.game_id
         return [imported_event], None
 
-    from src.models.discipline import Biathlon
-    monkeypatch.setattr(Biathlon, "fetch_importable_events", fake_fetch_importable_events)
+    from src.services.disciplines.biathlon import BiathlonEventImporter
+    monkeypatch.setattr(BiathlonEventImporter, "fetch_importable_events", fake_fetch_importable_events)
 
     response = client.get(
         "/api/game/events/importable",
@@ -224,12 +224,12 @@ def test_admin_can_fetch_importable_events_for_foreign_game(admin_client, app, b
         season_id="2526",
     )
 
-    def fake_fetch_importable_events(self, game_id, now=None):
+    def fake_fetch_importable_events(self, discipline, game_id, now=None):
         assert game_id == imported_event.game_id
         return [imported_event], None
 
-    from src.models.discipline import Biathlon
-    monkeypatch.setattr(Biathlon, "fetch_importable_events", fake_fetch_importable_events)
+    from src.services.disciplines.biathlon import BiathlonEventImporter
+    monkeypatch.setattr(BiathlonEventImporter, "fetch_importable_events", fake_fetch_importable_events)
 
     response = admin_client.get(
         "/api/game/events/importable",

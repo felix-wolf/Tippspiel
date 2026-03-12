@@ -6,6 +6,7 @@ from src.models.country import Country
 from src.models.discipline import Discipline
 from src.models.event import Event
 from src.models.event_type import EventType
+from src.services.disciplines import get_discipline_services
 
 
 def test_discipline_save_and_get(base_data, app):
@@ -49,7 +50,7 @@ def test_biathlon_country_results_dedupe_repeated_relay_rows(app, base_data, mon
         discipline = Discipline.get_by_id(base_data["discipline"].id)
 
         monkeypatch.setattr(
-            "src.models.discipline.IbuApiClient.get_results",
+            "src.services.disciplines.biathlon.IbuApiClient.get_results",
             lambda self, race_id: [
                 IbuResultRow(
                     rank=1,
@@ -94,7 +95,8 @@ def test_biathlon_country_results_dedupe_repeated_relay_rows(app, base_data, mon
             ],
         )
 
-        results, error = discipline.process_official_results(event)
+        services = get_discipline_services(discipline.id)
+        results, error = services.result_processor.process_official_results(discipline, event)
 
         assert error is None
         assert len(results) == 2
@@ -139,7 +141,8 @@ def test_process_athletes_reloads_existing_row_after_ignored_save(app, base_data
 
         monkeypatch.setattr(Athlete, "get_by_ibu_id", staticmethod(flaky_get_by_ibu_id))
 
-        resolved = discipline.process_athletes([imported_athlete])
+        services = get_discipline_services(discipline.id)
+        resolved = services.athlete_resolver.resolve_athletes([imported_athlete])
 
         assert len(resolved) == 1
         assert resolved[0].id == existing_athlete.id
@@ -161,7 +164,7 @@ def test_biathlon_athlete_results_create_placeholder_country_for_unknown_code(ap
         discipline = Discipline.get_by_id(base_data["discipline"].id)
 
         monkeypatch.setattr(
-            "src.models.discipline.IbuApiClient.get_results",
+            "src.services.disciplines.biathlon.IbuApiClient.get_results",
             lambda self, race_id: [
                 IbuResultRow(
                     rank=30,
@@ -176,7 +179,8 @@ def test_biathlon_athlete_results_create_placeholder_country_for_unknown_code(ap
             ],
         )
 
-        results, error = discipline.process_official_results(event)
+        services = get_discipline_services(discipline.id)
+        results, error = services.result_processor.process_official_results(discipline, event)
 
         assert error is None
         assert len(results) == 1
@@ -186,3 +190,20 @@ def test_biathlon_athlete_results_create_placeholder_country_for_unknown_code(ap
         placeholder_country = Country.get_by_id("BRT")
         assert placeholder_country is not None
         assert placeholder_country.flag == "🏴‍☠️"
+
+
+def test_registry_returns_noop_services_for_unsupported_discipline():
+    services = get_discipline_services("unknown-discipline")
+    discipline = Discipline(
+        discipline_id="unknown-discipline",
+        name="Unknown",
+        event_types=[],
+    )
+
+    events, import_error = services.event_importer.fetch_importable_events(discipline, game_id="game-1")
+    results, result_error = services.result_processor.process_official_results(discipline, event=None)
+
+    assert events == []
+    assert results == []
+    assert import_error == "Disziplin nicht auswertbar"
+    assert result_error == "Disziplin nicht auswertbar"
