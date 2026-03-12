@@ -87,21 +87,6 @@ This document records the main technical debt and areas that need work across th
   - Keep the explicit mode machine intact as new editor features are added.
   - Add one or two focused UI tests around the modal flow if richer component-test tooling is introduced later.
 
-### 5. Generic table component is too weak for current UI needs
-- Files:
-  - `frontend/src/components/design/TableList.tsx`
-- What is wrong:
-  - Uses `Record<string, any>`.
-  - Relies on runtime primitive checks.
-  - Still contains commented-out behavior and TODOs.
-  - Accessibility and customization are limited.
-- Why it matters:
-  - The more result and stats columns are added, the more brittle this shared component becomes.
-- Suggested direction:
-  - Tighten typing.
-  - Remove dead/commented code.
-  - Add clearer column configuration and optional accessibility hooks.
-
 ## Lower Priority / Structural Cleanup
 
 ### 6. Seed/bootstrap data and runtime data model are drifting apart
@@ -173,5 +158,6 @@ This document records the main technical debt and areas that need work across th
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
 - The stale Selenium dependency was removed from backend packaging metadata on 2026-03-11.
 - Discipline-level URL compatibility fields and the dead `/api/game/events` endpoint were removed on 2026-03-11.
+- `TableList` was tightened to a typed column contract and its dead generic behavior was removed on 2026-03-11.
 - This list is based on a focused code review, not a full architectural rewrite proposal.
 - It intentionally prioritizes areas that increase production risk, operational fragility, or change cost.

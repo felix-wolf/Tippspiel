@@ -1,6 +1,6 @@
 import { Clock, Medal } from "lucide-react";
 import { Event } from "../../../models/Event";
-import TableList from "../../design/TableList";
+import TableList, { type TableColumn } from "../../design/TableList";
 import { motion } from "motion/react";
 
 type ResultsListProps = {
@@ -8,6 +8,7 @@ type ResultsListProps = {
 };
 
 type ResultListItem = {
+  id: string;
   place: string;
   objectName: string;
   time: string | undefined;
@@ -29,17 +30,25 @@ function formatResultPlace(place: number, status: string | undefined): string {
 export function ResultsList({ event }: ResultsListProps) {
   const hasShooting = event.results.some((result) => result.shooting);
   const hasShootingTime = event.results.some((result) => result.shooting_time);
-  const headers: Record<string, string> = {
-    place: "Platz",
-    objectName: "Name",
-    time: "Zeit",
-    behind: "Rückstand",
-  };
+  const columns: TableColumn<ResultListItem>[] = [
+    { id: "place", header: "Platz", accessor: (item) => item.place },
+    { id: "objectName", header: "Name", accessor: (item) => item.objectName },
+    { id: "time", header: "Zeit", accessor: (item) => item.time ?? "" },
+    { id: "behind", header: "Rückstand", accessor: (item) => item.behind ?? "" },
+  ];
   if (hasShooting) {
-    headers.shooting = "Schießfehler";
+    columns.push({
+      id: "shooting",
+      header: "Schießfehler",
+      accessor: (item) => item.shooting ?? "",
+    });
   }
   if (hasShootingTime) {
-    headers.shootingTime = "Schießzeit";
+    columns.push({
+      id: "shootingTime",
+      header: "Schießzeit",
+      accessor: (item) => item.shootingTime ?? "",
+    });
   }
 
   return (
@@ -61,9 +70,9 @@ export function ResultsList({ event }: ResultsListProps) {
         </div>
       </div>
       <TableList
-        cellHeight={"short"}
         items={event.results.map((r): ResultListItem => {
           return {
+            id: r.id,
             place: formatResultPlace(r.place, r.status),
             objectName: r.object_name,
             time: r.time,
@@ -72,9 +81,8 @@ export function ResultsList({ event }: ResultsListProps) {
             shootingTime: r.shooting_time,
           };
         })}
-        headers={headers}
-        customRenderers={{}}
-        displayNextArrow={false}
+        columns={columns}
+        getRowKey={(item) => item.id}
         maxHeight={360}
       />
     </motion.section>

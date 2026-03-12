@@ -1,7 +1,7 @@
 import { Bet } from "../../../models/Bet";
 import { Event } from "../../../models/Event";
 import { useEffect, useState } from "react";
-import TableList from "../../design/TableList";
+import TableList, { type TableColumn } from "../../design/TableList";
 import { Game } from "../../../models/Game";
 import { motion } from "motion/react";
 import { User } from "../../../models/User";
@@ -16,10 +16,30 @@ type BetItemProp = {
 };
 
 type BetResultItem = {
+  id: string;
   tipp: string;
   result: string;
   score: number | undefined;
 };
+
+const betResultColumns: TableColumn<BetResultItem>[] = [
+  {
+    id: "tipp",
+    header: "Tipp",
+    accessor: (item) => item.tipp,
+  },
+  {
+    id: "result",
+    header: "Ergebnis",
+    accessor: (item) => item.result,
+  },
+  {
+    id: "score",
+    header: "Punkte",
+    align: "right",
+    accessor: (item) => item.score ?? "",
+  },
+];
 
 function formatPredictionResult(actualPlace: number | null | undefined, actualStatus: string | undefined): string {
   if (actualStatus) {
@@ -41,6 +61,7 @@ function BetItem({ player, bet, canAddMissingBet, onAddMissingBet }: BetItemProp
     setResultItems(
       bet?.predictions.map((pred) => {
         return {
+          id: pred.id ?? `${pred.predicted_place}-${pred.object_id}`,
           tipp: `${pred.predicted_place ?? -1}: ${pred.object_name ?? "unknown"
             }`,
           result: formatPredictionResult(pred.actual_place, pred.actual_status),
@@ -90,15 +111,17 @@ function BetItem({ player, bet, canAddMissingBet, onAddMissingBet }: BetItemProp
 
       {resultItems.length > 0 && (
         <TableList
-          cellHeight={"short"}
           items={resultItems}
-          headers={{
-            tipp: "Tipp",
-            result: bet?.hasResults() ? "Ergebnis" : "",
-            score: bet?.hasResults() ? "Punkte" : "",
-          }}
-          customRenderers={{}}
-          displayNextArrow={false}
+          columns={betResultColumns.map((column) => {
+            if (column.id === "result") {
+              return { ...column, header: bet?.hasResults() ? "Ergebnis" : "" };
+            }
+            if (column.id === "score") {
+              return { ...column, header: bet?.hasResults() ? "Punkte" : "" };
+            }
+            return column;
+          })}
+          getRowKey={(item) => item.id}
         />
       )}
     </motion.div>
