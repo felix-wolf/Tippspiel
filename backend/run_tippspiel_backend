@@ -1,3 +1,3 @@
 # Export TIPPSPIEL_TASK_API_TOKEN in the cron environment before installing these jobs.
-*/5 * * * * felix curl --silent --header "X-Task-Token: $TIPPSPIEL_TASK_API_TOKEN" https://tippspiel.me/api/notification/check 2>&1
-*/5 * * * * felix curl --silent --header "X-Task-Token: $TIPPSPIEL_TASK_API_TOKEN" https://tippspiel.me/api/results/check 2>&1
+*/5 * * * * felix . /etc/tippspiel/backend.env && curl --silent --show-error --fail --header "X-Task-Token: ${TIPPSPIEL_TASK_API_TOKEN}" https://tippspiel.me/api/notification/check
+*/5 * * * * felix . /etc/tippspiel/backend.env && curl --silent --show-error --fail --header "X-Task-Token: ${TIPPSPIEL_TASK_API_TOKEN}" https://tippspiel.me/api/results/check
