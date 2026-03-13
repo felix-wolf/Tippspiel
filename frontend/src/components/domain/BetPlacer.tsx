@@ -7,6 +7,7 @@ import { EventType } from "../../models/EventType";
 import { Country } from "../../models/Country";
 import { Athlete } from "../../models/Athlete";
 import { User } from "../../models/User";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 type BetPlacerProps = {
   onSave: (selectedItems: Prediction[]) => void;
@@ -32,6 +33,7 @@ export function BetPlacer({
   const [startList, setStartList] = useState<string[] | undefined>(undefined);
   const [invalidPredictions, setInvalidPredictions] = useState<number[]>([]);
   const [userBet, setUserBet] = useState<Bet | undefined>(undefined);
+  const [startListCollapsed, setStartListCollapsed] = useState(true);
   let selectionsNeeded = 10;
   if (tryLoadExistingBet || event) {
     if (event.allowPartialPoints && enteringResults) {
@@ -40,17 +42,28 @@ export function BetPlacer({
       selectionsNeeded = event.numBets;
     }
   }
+  // we enrich the start list with the item name for better display in the start list overview
+  const enrichedStartList = useMemo(() => {
+    if (!startList || startList.length === 0) return [];
+    return startList.map((item) => items.find((i) => i.id === item) ?? { id: item, name: item });
+  }, [startList, items]);
 
+  // if a start list is available, we filter the items to those in the start list, otherwise we show all items
   const filteredItems = useMemo(() => {
     if (!startList || startList.length === 0) return items;
     return items.filter((item) => startList.includes(item.id ?? ""));
   }, [items, startList]);
+  const startListEntityLabel = event.type.betting_on === "countries" ? "Länder" : "Athleten";
 
   useEffect(() => {
     Event.fetchStartList(event.id)
       .then((list) => setStartList(list))
       .catch(() => setStartList(undefined));
   }, [event.id]);
+
+  useEffect(() => {
+    setStartListCollapsed(true);
+  }, [event.id, event.type.betting_on]);
 
   useEffect(() => {
     loadData(event.type)
@@ -130,7 +143,7 @@ export function BetPlacer({
       .map((bet, index) => bet.id == userBet?.predictions[index].object_id)
       .every((eq) => eq);
 
-    const invalid = [];
+    const invalid: number[] = [];
     if (startList && startList.length > 0) {
       bets.forEach((bet, index) => {
         if (bet.id && !startList.includes(bet.id)) {
@@ -185,9 +198,38 @@ export function BetPlacer({
           Wähle deine Top-{placedPredictions.length} für dieses Rennen. Je genauer dein Tipp, desto mehr Punkte bekommst du.
         </p>
         {startList && startList.length > 0 && (
-          <p className="text-xs text-sky-700 font-medium">
-            ✓ Startliste geladen ({startList.length} Teilnehmer)
-          </p>
+          <div className="mt-2 rounded-lg border border-sky-200 bg-sky-50/50 p-2">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 text-left text-xs font-medium text-sky-700"
+              onClick={() => setStartListCollapsed(!startListCollapsed)}
+            >
+              {startListCollapsed ? (
+                <ChevronRight size={14} className="text-sky-500" />
+              ) : (
+                <ChevronDown size={14} className="text-sky-500" />
+              )}
+              <span>
+                ✓ Startliste geladen ({filteredItems.length} {startListEntityLabel})
+                {startListCollapsed && "- zum Ausklappen klicken"}
+              </span>
+            </button>
+            {!startListCollapsed && (
+              <div className="mt-2 max-h-40 overflow-y-auto rounded bg-white/60 p-2 text-xs text-slate-600">
+                <p className="mb-2 font-medium text-slate-700">Alle startenden {startListEntityLabel}</p>
+                <div className="columns-2 gap-1">
+                  {enrichedStartList.map((item, index) => (
+                    <span
+                      key={item.id}
+                      className="mb-1 block break-inside-avoid rounded bg-sky-100 px-1.5 py-0.5 text-slate-700"
+                    >
+                      {index + 1}. {item.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         )}
         {invalidPredictions.length > 0 && (
           <p className="text-xs text-red-600 font-semibold">
