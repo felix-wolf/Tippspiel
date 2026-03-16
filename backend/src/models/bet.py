@@ -1,6 +1,9 @@
+import logging
 import src.utils as utils
 from src.database import db_manager
 from src.models.base_model import BaseModel
+
+logger = logging.getLogger(__name__)
 
 class Prediction(BaseModel):
 
@@ -91,8 +94,8 @@ class Prediction(BaseModel):
                     score=score,
                     actual_status=actual_status,
                 )
-            except KeyError as e:
-                print("Could not instantiate bet with given values:", p_dict)
+            except KeyError as exc:
+                logger.warning("Could not instantiate prediction with given values: %s", p_dict, exc_info=exc)
                 return None
         else:
             return None
@@ -188,9 +191,10 @@ class Bet(BaseModel):
                 raise Exception("Bet could not be saved")
             db_manager.commit_transaction(conn)
             return True
-        except Exception as e:
+        except Exception:
             if conn:
                 db_manager.rollback_transaction(conn)
+            logger.exception("Failed to update bet predictions for bet %s.", self.id)
             return False
         finally:
             if conn:
@@ -232,8 +236,8 @@ class Bet(BaseModel):
                     score=bet_dict["score"]
                 )
                 return bet
-            except KeyError as e:
-                print("Could not instantiate bet with given values:", bet_dict)
+            except KeyError as exc:
+                logger.warning("Could not instantiate bet with given values: %s", bet_dict, exc_info=exc)
                 return None
         else:
             return None

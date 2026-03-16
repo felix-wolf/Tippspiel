@@ -1,8 +1,12 @@
+import logging
 import src.utils as utils
 from src.database import db_manager
 from src.models.base_model import BaseModel
 from datetime import datetime
 from firebase_admin import messaging
+
+logger = logging.getLogger(__name__)
+
 
 class NotificationHelper(BaseModel):
 
@@ -106,6 +110,6 @@ class NotificationHelper(BaseModel):
         try:
             # Send the message
             response = messaging.send(message)
-            print('Successfully sent message:', response)
-        except Exception as e:
-            print('Error sending message:', e)
+            logger.info("Successfully sent push notification: %s", response)
+        except Exception:
+            logger.exception("Error sending push notification.")

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 
 import requests
 
@@ -7,6 +8,8 @@ from src.database import db_manager
 from src.ibu_api import IbuApiClient, IbuApiError
 from src.models.base_model import BaseModel
 import src.utils as utils
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(eq=False)
@@ -72,8 +75,8 @@ class Athlete(BaseModel):
                     country_code=a_dict['country_code'], gender=a_dict['gender'],
                     discipline=a_dict['discipline'], flag=flag, ibu_id=ibu_id
                 )
-            except KeyError as e:
-                print("Could not instantiate athlete with given values:", a_dict, e)
+            except KeyError as exc:
+                logger.warning("Could not instantiate athlete with given values: %s", a_dict, exc_info=exc)
                 return None
         else:
             return None

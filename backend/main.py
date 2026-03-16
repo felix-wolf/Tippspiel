@@ -22,6 +22,7 @@ import firebase_admin
 from firebase_admin import credentials
 
 login_manager = LoginManager()
+logger = logging.getLogger(__name__)
 
 
 @login_manager.user_loader
@@ -34,18 +35,18 @@ def hash_password(pw, salt):
 
 
 def create_app(env, check_migrations=True):
-    print("Starting app in", env, "environment")
+    logger.info("Starting app in %s environment", env)
     app = Flask(__name__)
     try:
         app.config.update(load_config(env))
     except RuntimeError as err:
-        print(err)
+        logger.error("Failed to load app config: %s", err)
         sys.exit()
     if check_migrations:
         try:
             assert_database_current(app.config["DB_PATH"])
         except MigrationError as err:
-            print(err)
+            logger.error("Database migration check failed: %s", err)
             raise
     app.secret_key = app.config["SECRET_KEY"]
     app.logger.setLevel(logging.INFO)
@@ -71,7 +72,7 @@ def create_app(env, check_migrations=True):
                 User.sync_admins(User.configured_admin_usernames())
             except Exception:
                 # Tests can construct the app before the temp schema exists.
-                pass
+                app.logger.debug("Admin sync skipped during app startup.", exc_info=True)
     app.register_blueprint(athlete_blueprint)
     app.register_blueprint(admin_blueprint)
     app.register_blueprint(country_blueprint)

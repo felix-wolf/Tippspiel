@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 
+from src.blueprints.service_result import service_error, service_ok
 from src.database import db_manager
 from src.models.discipline import Discipline
 from src.models.event import Event
@@ -17,28 +18,28 @@ logger = logging.getLogger(__name__)
 def load_results(event: Event, url: str = None, results_json: list = None):
     discipline = Discipline.get_by_id(event.event_type.discipline_id)
     if not discipline:
-        return None, "Die Ergebnisse konnten nicht verarbeitet werden.", 500
+        return service_error("Die Ergebnisse konnten nicht verarbeitet werden.", 500)
 
     if event.source_provider == "ibu" and event.source_race_id:
         services = get_discipline_services(discipline.id)
         results, error = services.result_processor.process_official_results(discipline, event)
         if error:
             if isinstance(error, OfficialResultsNotReady):
-                return None, error.message, 409
-            return None, error, 500
-        return results, None, None
+                return service_error(error.message, 409)
+            return service_error(error, 500)
+        return service_ok(results)
 
     if url:
-        return None, "Ergebnis-URLs werden nicht mehr unterstützt.", 410
+        return service_error("Ergebnis-URLs werden nicht mehr unterstützt.", 410)
 
     if not results_json:
-        return None, "Es wurden keine Ergebnisse übermittelt.", 400
+        return service_error("Es wurden keine Ergebnisse übermittelt.", 400)
 
     try:
         results = [Result(event.id, entry["place"], entry["id"]) for entry in results_json]
     except (KeyError, TypeError):
-        return None, "Die Ergebnisse konnten nicht verarbeitet werden.", 400
-    return results, None, None
+        return service_error("Die Ergebnisse konnten nicht verarbeitet werden.", 400)
+    return service_ok(results)
 
 
 def notify_result_users(game: Game, event: Event):
@@ -135,19 +136,22 @@ def _build_result_diff(current_results: list[Result], refreshed_results: list[Re
 def preview_official_result_refresh(event: Event):
     refresh_error = _ensure_official_refreshable(event)
     if refresh_error:
-        return None, refresh_error, 400
+        return service_error(refresh_error, 400)
 
     target_events = _get_target_events(event, get_full_objects=True)
     if not target_events:
-        return None, "Das Event wurde nicht gefunden.", 404
+        return service_error("Das Event wurde nicht gefunden.", 404)
 
     representative_event = target_events[0]
-    refreshed_results, error_message, status_code = load_results(event=representative_event)
-    if error_message or refreshed_results is None:
-        return None, error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500
+    refreshed_results_result = load_results(event=representative_event)
+    if refreshed_results_result.is_error or refreshed_results_result.payload is None:
+        return refreshed_results_result if refreshed_results_result.is_error else service_error(
+            "Die Ergebnisse konnten nicht verarbeitet werden.",
+            500,
+        )
 
     current_results = Event.get_by_id(event.id, get_full_object=True).results
-    changes = _build_result_diff(current_results, refreshed_results)
+    changes = _build_result_diff(current_results, refreshed_results_result.payload)
     payload = {
         **_serialize_target_scope(event, target_events),
         "source_provider": representative_event.source_provider,
@@ -155,31 +159,34 @@ def preview_official_result_refresh(event: Event):
         "has_changes": len(changes) > 0,
         "changes": changes,
         "current_results": [result.to_dict() for result in current_results],
-        "fetched_results": [result.to_dict() for result in refreshed_results],
+        "fetched_results": [result.to_dict() for result in refreshed_results_result.payload],
     }
-    return payload, None, None
+    return service_ok(payload)
 
 
 def apply_official_result_refresh(event: Event, resend_notifications: bool = False):
     refresh_error = _ensure_official_refreshable(event)
     if refresh_error:
-        return None, refresh_error, 400
+        return service_error(refresh_error, 400)
 
     target_events = _get_target_events(event, get_full_objects=True)
     if not target_events:
-        return None, "Das Event wurde nicht gefunden.", 404
+        return service_error("Das Event wurde nicht gefunden.", 404)
 
     representative_event = target_events[0]
-    shared_results, error_message, status_code = load_results(event=representative_event)
-    if error_message or shared_results is None:
-        return None, error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500
+    shared_results_result = load_results(event=representative_event)
+    if shared_results_result.is_error or shared_results_result.payload is None:
+        return shared_results_result if shared_results_result.is_error else service_error(
+            "Die Ergebnisse konnten nicht verarbeitet werden.",
+            500,
+        )
 
     processed_events = []
     for target_event in target_events:
-        event_results = clone_results_for_event(target_event, shared_results)
+        event_results = clone_results_for_event(target_event, shared_results_result.payload)
         success, error = target_event.process_results(event_results)
         if not success:
-            return None, error, 500
+            return service_error(error, 500)
         if resend_notifications:
             game = Game.get_by_id(target_event.game_id)
             if game:
@@ -199,7 +206,7 @@ def apply_official_result_refresh(event: Event, resend_notifications: bool = Fal
         "processed_events": processed_events,
         "resend_notifications": resend_notifications,
     }
-    return payload, None, None
+    return service_ok(payload)
 
 
 def _clear_results_for_event(event: Event):
@@ -235,13 +242,13 @@ def _clear_results_for_event(event: Event):
 def clear_event_results(event: Event):
     target_events = _get_target_events(event, get_full_objects=True)
     if not target_events:
-        return None, "Das Event wurde nicht gefunden.", 404
+        return service_error("Das Event wurde nicht gefunden.", 404)
 
     cleared_events = []
     for target_event in target_events:
         success, error = _clear_results_for_event(target_event)
         if not success:
-            return None, error, 500
+            return service_error(error, 500)
         cleared_events.append(
             {
                 "event_id": target_event.id,
@@ -256,23 +263,23 @@ def clear_event_results(event: Event):
         "cleared_count": len(cleared_events),
         "cleared_events": cleared_events,
     }
-    return payload, None, None
+    return service_ok(payload)
 
 
 def force_rescore_event(event: Event):
     target_events = _get_target_events(event, get_full_objects=True)
     if not target_events:
-        return None, "Das Event wurde nicht gefunden.", 404
+        return service_error("Das Event wurde nicht gefunden.", 404)
 
     rescored_events = []
     for target_event in target_events:
         if not target_event.results:
-            return None, "Es sind keine Ergebnisse vorhanden, die neu bewertet werden können.", 400
+            return service_error("Es sind keine Ergebnisse vorhanden, die neu bewertet werden können.", 400)
         success, error = target_event.process_results(
             clone_results_for_event(target_event, target_event.results)
         )
         if not success:
-            return None, error, 500
+            return service_error(error, 500)
         rescored_events.append(
             {
                 "event_id": target_event.id,
@@ -287,27 +294,29 @@ def force_rescore_event(event: Event):
         "rescored_count": len(rescored_events),
         "rescored_events": rescored_events,
     }
-    return payload, None, None
+    return service_ok(payload)
 
 
 def process_event_results(event: Event, game: Game, url: str = None, results_json: list = None):
-    results, error_message, status_code = load_results(
+    results_result = load_results(
         event=event,
         url=url,
         results_json=results_json,
     )
-    if error_message or not results:
-        return None, error_message or "Die Ergebnisse konnten nicht verarbeitet werden.", status_code or 500
+    if results_result.is_error:
+        return results_result
+    if not results_result.payload:
+        return service_error("Die Ergebnisse konnten nicht verarbeitet werden.", 500)
 
-    success, error = event.process_results(results)
+    success, error = event.process_results(results_result.payload)
     if not success:
-        return None, error, 500
+        return service_error(error, 500)
 
     notify_result_users(game, event)
     updated_event = Event.get_by_id(event.id)
     if not updated_event:
-        return None, "Das Event wurde nicht gefunden.", 404
-    return updated_event.to_dict(), None, None
+        return service_error("Das Event wurde nicht gefunden.", 404)
+    return service_ok(updated_event.to_dict())
 
 
 def check_recent_results(now=None):
@@ -335,12 +344,12 @@ def check_recent_results(now=None):
     for shared_event_id, events in due_events_by_shared_id.items():
         representative_event = events[0]
         due_event_ids = {event.id for event in events}
-        shared_results, error_message, status_code = load_results(
+        shared_results_result = load_results(
             event=representative_event,
             url=representative_event.url,
         )
-        if error_message or not shared_results:
-            if status_code == 409:
+        if shared_results_result.is_error or not shared_results_result.payload:
+            if shared_results_result.status_code == 409:
                 for event in events:
                     deferred_events.append(
                         {
@@ -348,7 +357,8 @@ def check_recent_results(now=None):
                             "event_name": event.name,
                             "game_id": event.game_id,
                             "status_code": 409,
-                            "reason": error_message or "Die offiziellen Ergebnisse sind noch nicht verfuegbar.",
+                            "reason": shared_results_result.error_message
+                            or "Die offiziellen Ergebnisse sind noch nicht verfuegbar.",
                         }
                     )
                 continue
@@ -357,15 +367,15 @@ def check_recent_results(now=None):
                     "Automatic result import failed for event %s (%s): %s",
                     event.id,
                     event.name,
-                    error_message or "Die Ergebnisse konnten nicht verarbeitet werden.",
+                    shared_results_result.error_message or "Die Ergebnisse konnten nicht verarbeitet werden.",
                 )
                 failed_events.append(
                     {
                         "event_id": event.id,
                         "event_name": event.name,
                         "game_id": event.game_id,
-                        "status_code": status_code or 500,
-                        "error": error_message or "Die Ergebnisse konnten nicht verarbeitet werden.",
+                        "status_code": shared_results_result.status_code or 500,
+                        "error": shared_results_result.error_message or "Die Ergebnisse konnten nicht verarbeitet werden.",
                     }
                 )
             continue
@@ -376,7 +386,7 @@ def check_recent_results(now=None):
             game = games_by_id.get(event.game_id)
             if game is None:
                 continue
-            event_results = clone_results_for_event(event, shared_results)
+            event_results = clone_results_for_event(event, shared_results_result.payload)
             success, error = event.process_results(event_results)
             if not success:
                 logger.warning(
@@ -405,7 +415,7 @@ def check_recent_results(now=None):
                 }
             )
 
-    return {
+    return service_ok({
         "status": "checked",
         "processed_count": len(processed_events),
         "deferred_count": len(deferred_events),
@@ -413,4 +423,4 @@ def check_recent_results(now=None):
         "processed_events": processed_events,
         "deferred_events": deferred_events,
         "failed_events": failed_events,
-    }, None, None
+    })

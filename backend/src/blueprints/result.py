@@ -1,6 +1,5 @@
 from flask import Blueprint, request
 from flask_login import *
-from src.blueprints.api_response import error_response
 from src.blueprints.route_helpers import (
     get_event_or_error,
     get_game_or_error,
@@ -9,6 +8,7 @@ from src.blueprints.route_helpers import (
     require_admin_user_or_task_token,
     require_game_owner,
 )
+from src.blueprints.service_result import ensure_service_result
 from src.blueprints.result_service import (
     apply_official_result_refresh,
     check_recent_results,
@@ -25,10 +25,7 @@ def check_results():
     error = require_admin_user_or_task_token()
     if error:
         return error
-    payload, error_message, status_code = check_recent_results()
-    if error_message:
-        return error_response(error_message, status_code or 500)
-    return payload, 200
+    return ensure_service_result(check_recent_results()).to_response()
 
 @result_blueprint.route("/api/results", methods=["POST"])
 @login_required
@@ -57,15 +54,12 @@ def process_results():
         url = payload.get("url", None)
         results_json = payload.get("results", None)
 
-        response_payload, error_message, status_code = process_event_results(
+        return ensure_service_result(process_event_results(
             event=event,
             game=game,
             url=url,
             results_json=results_json,
-        )
-        if error_message:
-            return error_response(error_message, status_code or 500)
-        return response_payload
+        )).to_response()
 
 
 @result_blueprint.route("/api/admin/events/<event_id>/results/preview-refresh", methods=["POST"])
@@ -77,10 +71,7 @@ def preview_admin_result_refresh(event_id):
     event, error = get_event_or_error(event_id)
     if error:
         return error
-    payload, error_message, status_code = preview_official_result_refresh(event)
-    if error_message:
-        return error_response(error_message, status_code or 500)
-    return payload, 200
+    return ensure_service_result(preview_official_result_refresh(event)).to_response()
 
 
 @result_blueprint.route("/api/admin/events/<event_id>/results/apply-refresh", methods=["POST"])
@@ -96,13 +87,10 @@ def apply_admin_result_refresh(event_id):
     if parse_error:
         return parse_error
     resend_notifications = bool(payload.get("resend_notifications"))
-    response_payload, error_message, status_code = apply_official_result_refresh(
+    return ensure_service_result(apply_official_result_refresh(
         event=event,
         resend_notifications=resend_notifications,
-    )
-    if error_message:
-        return error_response(error_message, status_code or 500)
-    return response_payload, 200
+    )).to_response()
 
 
 @result_blueprint.route("/api/admin/events/<event_id>/results", methods=["DELETE"])
@@ -114,10 +102,7 @@ def delete_admin_results(event_id):
     event, error = get_event_or_error(event_id)
     if error:
         return error
-    payload, error_message, status_code = clear_event_results(event)
-    if error_message:
-        return error_response(error_message, status_code or 500)
-    return payload, 200
+    return ensure_service_result(clear_event_results(event)).to_response()
 
 
 @result_blueprint.route("/api/admin/events/<event_id>/results/rescore", methods=["POST"])
@@ -129,7 +114,4 @@ def rescore_admin_results(event_id):
     event, error = get_event_or_error(event_id)
     if error:
         return error
-    payload, error_message, status_code = force_rescore_event(event)
-    if error_message:
-        return error_response(error_message, status_code or 500)
-    return payload, 200
+    return ensure_service_result(force_rescore_event(event)).to_response()

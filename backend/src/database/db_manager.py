@@ -1,7 +1,8 @@
 import csv
+import logging
 import sqlite3
 import src.utils as utils
-from flask import current_app
+from flask import current_app, has_app_context
 
 TABLE_ATHLETES = "Athletes"
 TABLE_GAMES = "Games"
@@ -89,6 +90,23 @@ CREATE VIEW VIEW_GamePredictionStats AS
     LEFT JOIN VIEW_{TABLE_PREDICTIONS} vp ON vp.id = p.id
 """
 
+logger = logging.getLogger(__name__)
+
+
+def _logger():
+    if has_app_context():
+        return current_app.logger
+    return logger
+
+
+def _log_database_error(message, exc, sql=None, params=None):
+    extra = {}
+    if sql is not None:
+        extra["sql"] = sql
+    if params is not None:
+        extra["params"] = params
+    _logger().exception("%s: %s", message, exc, extra=extra or None)
+
 
 def open_connection():
     conn = sqlite3.connect(current_app.config['DB_PATH'])
@@ -113,16 +131,21 @@ def commit_transaction(conn):
     """Commits the transaction."""
     try:
         conn.commit()
-    except Exception as e:
-        print(e)
-        conn.rollback()
+    except Exception as exc:
+        _log_database_error("Database transaction commit failed.", exc)
+        try:
+            conn.rollback()
+        except Exception as rollback_exc:
+            _log_database_error("Database transaction rollback after failed commit also failed.", rollback_exc)
+        raise
 
 def rollback_transaction(conn):
     """Rolls back the transaction."""
     try:
         conn.rollback()
-    except Exception as e:
-        print(e)
+    except Exception as exc:
+        _log_database_error("Database transaction rollback failed.", exc)
+        raise
 
 
 def query(sql, params=None):
@@ -137,8 +160,9 @@ def query(sql, params=None):
             cur.execute(sql, params)
         columns = [descript[0] for descript in cur.description]
         return [dict(zip(columns, result)) for result in cur.fetchall()]
-    except Exception as e:
-        print(e)
+    except Exception as exc:
+        _log_database_error("Database query failed.", exc, sql=sql, params=params)
+        raise
     finally:
         if conn is not None:
             conn.close()
@@ -160,8 +184,9 @@ def query_one(sql, params=None):
             return dict(zip(columns, res))
         else:
             return None
-    except Exception as e:
-        print(e)
+    except Exception as exc:
+        _log_database_error("Database query failed.", exc, sql=sql, params=params)
+        raise
     finally:
         if conn is not None:
             conn.close()
@@ -198,11 +223,12 @@ def execute(sql, params=None, commit=True):
             cursor.execute(sql, params)
         if commit:
             conn.commit()
-        conn.close()
         return True
-    except Exception as e:
-        print(e, sql, params)
-        raise e
+    except Exception as exc:
+        if conn is not None:
+            conn.rollback()
+        _log_database_error("Database statement execution failed.", exc, sql=sql, params=params)
+        raise
     finally:
         if conn is not None:
             conn.close()
@@ -221,9 +247,11 @@ def execute_many(sql, params=None, commit=True):
         if commit:
             conn.commit()
         return True
-    except Exception as e:
-        print(e, sql, params)
-        raise e
+    except Exception as exc:
+        if conn is not None:
+            conn.rollback()
+        _log_database_error("Database batch statement execution failed.", exc, sql=sql, params=params)
+        raise
     finally:
         if conn is not None:
             conn.close()

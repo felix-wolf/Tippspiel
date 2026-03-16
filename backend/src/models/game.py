@@ -1,3 +1,4 @@
+import logging
 import src.utils as utils
 
 from src.database import db_manager
@@ -5,6 +6,8 @@ from src.models.discipline import Discipline
 from src.models.user import User
 from src.models.base_model import BaseModel
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 class Game(BaseModel):
 
@@ -101,8 +104,8 @@ class Game(BaseModel):
                     game_id=g_dict['id'], name=g_dict['name'], discipline=discipline,
                     pw_hash=g_dict['pw_hash'], creator=creator, players=players
                 )
-            except KeyError as e:
-                print("Could not instantiate game with given values:", g_dict)
+            except KeyError as exc:
+                logger.warning("Could not instantiate game with given values: %s", g_dict, exc_info=exc)
                 return None
         else:
             return None

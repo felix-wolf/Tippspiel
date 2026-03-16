@@ -1,6 +1,6 @@
 # Technical Debt Register
 
-Last updated: 2026-03-11
+Last updated: 2026-03-16
 
 This document records the main technical debt and areas that need work across the current code base. It is intentionally opinionated and prioritized so it can guide follow-up work.
 
@@ -31,25 +31,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Medium Priority
 
-### 2. Error handling and logging are inconsistent and often low-signal
-- Files:
-  - `backend/src/database/db_manager.py`
-  - `backend/src/models/*.py`
-  - `backend/src/models/notification_helper.py`
-- What is wrong:
-  - Many code paths use `print(...)`.
-  - Some DB helpers swallow exceptions and return `None`.
-  - Other DB helpers re-raise raw exceptions.
-- Why it matters:
-  - Production diagnostics are weak.
-  - Failure behavior is inconsistent.
-  - Bugs can be masked as missing data.
-- Suggested direction:
-  - Standardize on structured logging.
-  - Do not swallow DB exceptions in generic helpers.
-  - Centralize error-to-response translation at the blueprint/service layer.
-
-### 3. Event import UI still has some complexity, but the modal state is now explicit
+### 2. Event import UI still has some complexity, but the modal state is now explicit
 - Files:
   - `frontend/src/components/domain/EventEditorModal.tsx`
   - `frontend/src/components/domain/OfficialEventImporter.tsx`
@@ -66,7 +48,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Lower Priority / Structural Cleanup
 
-### 4. Seed/bootstrap data and runtime data model are drifting apart
+### 3. Seed/bootstrap data and runtime data model are drifting apart
 - Files:
   - `backend/src/resources/disciplines.csv`
   - `backend/src/resources/athletes.csv`
@@ -82,7 +64,7 @@ This document records the main technical debt and areas that need work across th
   - Bring seed files back in line with current production behavior.
   - Treat runtime backfills as one-off admin tools, not hidden startup behavior.
 
-### 5. Some abstract/base contracts are incomplete
+### 4. Some abstract/base contracts are incomplete
 - Files:
   - `backend/src/models/base_model.py`
   - `backend/src/models/discipline.py`
@@ -94,7 +76,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Either tighten the base contracts or simplify the inheritance model.
 
-### 6. Test coverage is better than before, but still misses some operational paths
+### 5. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -109,12 +91,9 @@ This document records the main technical debt and areas that need work across th
 ## Suggested Work Order
 
 ### Phase 1
-- Improve backend error handling/logging consistency.
-
-### Phase 2
 - Simplify event import modal state handling.
 
-### Phase 3
+### Phase 2
 - Clean seed data and bootstrap drift.
 - Tighten the shared model/base contracts.
 - Add thin workflow tests for import, result processing, and migration-sensitive paths.
@@ -128,6 +107,9 @@ This document records the main technical debt and areas that need work across th
 - A first admin role plus admin-only event management workflow exists as of 2026-03-11.
 - Admins can preview, refresh, clear, and rescore event results, and background task endpoints can now be protected by `TIPPSPIEL_TASK_API_TOKEN`, as of 2026-03-11.
 - A dedicated admin overview for shared-event source repair and missing-country cleanup exists as of 2026-03-11.
+- Generic DB helpers now log and re-raise query/statement/transaction failures instead of silently returning `None`, as of 2026-03-16.
+- Backend model/bootstrap deserialization and notification paths now use structured logging instead of `print(...)`, as of 2026-03-16.
+- Blueprint/service error handling now uses a shared `ServiceResult` contract instead of ad-hoc `(payload, error, status)` tuples, as of 2026-03-16.
 - API-facing frontend model serialization now uses plain payload objects, and `Discipline` / `EventType` were moved out of `models/user`, as of 2026-03-11.
 - `UserContext` now lives under `frontend/src/contexts/`, `User` now lives under `frontend/src/models/`, and the old `frontend/src/models/user/` structure is gone, as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.

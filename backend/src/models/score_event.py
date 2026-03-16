@@ -1,7 +1,10 @@
 from datetime import datetime
+import logging
 from src.database import db_manager
 from src.models.bet import Bet
 from src.models.base_model import BaseModel
+
+logger = logging.getLogger(__name__)
 
 class ScoreEvent(BaseModel):
 
@@ -30,8 +33,8 @@ class ScoreEvent(BaseModel):
                 name=e_dict["name"],
                 dt=datetime.strptime(e_dict['datetime'], "%Y-%m-%d %H:%M:%S"),
             )
-        except KeyError as e:
-            print("Could not instantiate ScoreEvent with given values:", e_dict, e)
+        except KeyError as exc:
+            logger.warning("Could not instantiate ScoreEvent with given values: %s", e_dict, exc_info=exc)
             return None
 
     @staticmethod

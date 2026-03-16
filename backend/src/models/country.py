@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+import logging
 
 from src.database import db_manager
 from src.models.base_model import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -27,8 +30,8 @@ class Country(BaseModel):
         if c_dict:
             try:
                 return Country(c_dict['code'], c_dict['name'], c_dict['flag'])
-            except KeyError as e:
-                print("Could not instantiate country with given values:", c_dict)
+            except KeyError as exc:
+                logger.warning("Could not instantiate country with given values: %s", c_dict, exc_info=exc)
                 return None
         else:
             return None

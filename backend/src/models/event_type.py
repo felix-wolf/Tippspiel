@@ -1,8 +1,11 @@
 from dataclasses import dataclass
+import logging
 
 import src.utils as utils
 from src.models.base_model import BaseModel
 from src.database import db_manager
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -45,8 +48,8 @@ class EventType(BaseModel):
                     id=event_type_id, name=d['name'], display_name=d['display_name'],
                     discipline_id=d['discipline_id'], betting_on=d['betting_on']
                 )
-            except KeyError as e:
-                print("Could not instantiate event_type with given values:", d, e)
+            except KeyError as exc:
+                logger.warning("Could not instantiate event type with given values: %s", d, exc_info=exc)
                 return None
         else:
             return None

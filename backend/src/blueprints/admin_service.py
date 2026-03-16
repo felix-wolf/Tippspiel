@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from src.database import db_manager
+from src.blueprints.service_result import service_error, service_ok
 from src.models.country import Country
 from src.models.event import Event
 
@@ -119,15 +120,15 @@ def list_shared_event_diagnostics():
                 "has_results": has_results,
             }
         )
-    return [_serialize_shared_event_item(item) for item in diagnostics_by_shared_id.values()]
+    return service_ok([_serialize_shared_event_item(item) for item in diagnostics_by_shared_id.values()])
 
 
 def get_shared_event_detail(shared_event_id: str):
     diagnostics = list_shared_event_diagnostics()
-    for item in diagnostics:
+    for item in diagnostics.payload:
         if item["shared_event_id"] == shared_event_id:
-            return item, None, None
-    return None, "Das Shared Event wurde nicht gefunden.", 404
+            return service_ok(item)
+    return service_error("Das Shared Event wurde nicht gefunden.", 404)
 
 
 def _load_shared_event_row(shared_event_id: str):
@@ -144,7 +145,7 @@ def _build_shared_event_update_payload(current_row: dict, payload: dict):
     season_id = _normalize_optional_text(payload.get("season_id"))
 
     if not source_provider or not source_race_id:
-        return None, "Source Provider und Source Race ID sind erforderlich.", 400
+        return None, service_error("Source Provider und Source Race ID sind erforderlich.", 400)
 
     next_shared_event_id = Event.build_shared_event_id(
         event_id=current_row["id"],
@@ -161,17 +162,17 @@ def _build_shared_event_update_payload(current_row: dict, payload: dict):
             "season_id": season_id,
         }
     )
-    return next_row, None, None
+    return next_row, None
 
 
 def update_shared_event_source(shared_event_id: str, payload: dict):
     current_row = _load_shared_event_row(shared_event_id)
     if not current_row:
-        return None, "Das Shared Event wurde nicht gefunden.", 404
+        return service_error("Das Shared Event wurde nicht gefunden.", 404)
 
-    next_row, error_message, status_code = _build_shared_event_update_payload(current_row, payload)
-    if error_message:
-        return None, error_message, status_code
+    next_row, error_result = _build_shared_event_update_payload(current_row, payload)
+    if error_result:
+        return error_result
 
     next_shared_event_id = next_row["id"]
     linked_event_rows = db_manager.query(
@@ -179,7 +180,7 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
         [shared_event_id],
     ) or []
     if not linked_event_rows:
-        return None, "Das Shared Event wurde nicht gefunden.", 404
+        return service_error("Das Shared Event wurde nicht gefunden.", 404)
 
     if next_shared_event_id != shared_event_id:
         collision = db_manager.query_one(
@@ -187,7 +188,7 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
             [next_shared_event_id],
         )
         if collision:
-            return None, "Die Source-Zuordnung würde mit einem bestehenden Shared Event kollidieren.", 409
+            return service_error("Die Source-Zuordnung würde mit einem bestehenden Shared Event kollidieren.", 409)
 
         conflicting_games = db_manager.query(
             f"""
@@ -199,7 +200,10 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
             [next_shared_event_id, *[row["game_id"] for row in linked_event_rows]],
         )
         if conflicting_games:
-            return None, "Mindestens ein verknüpftes Spiel hat bereits ein Event mit dieser Source-Zuordnung.", 409
+            return service_error(
+                "Mindestens ein verknüpftes Spiel hat bereits ein Event mit dieser Source-Zuordnung.",
+                409,
+            )
 
     conn = None
     try:
@@ -279,13 +283,12 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
     except Exception as exc:
         if conn:
             db_manager.rollback_transaction(conn)
-        return None, str(exc), 500
+        return service_error(str(exc), 500)
     finally:
         if conn:
             conn.close()
 
-    updated_detail, _, _ = get_shared_event_detail(next_shared_event_id)
-    return updated_detail, None, None
+    return get_shared_event_detail(next_shared_event_id)
 
 
 def list_country_diagnostics():
@@ -357,7 +360,7 @@ def list_country_diagnostics():
                 "athlete_examples": examples,
             }
         )
-    return diagnostics
+    return service_ok(diagnostics)
 
 
 def update_country_metadata(code: str, payload: dict):
@@ -365,10 +368,10 @@ def update_country_metadata(code: str, payload: dict):
     normalized_name = _normalize_optional_text(payload.get("name"))
     normalized_flag = _normalize_optional_text(payload.get("flag"))
     if not normalized_code or not normalized_name or not normalized_flag:
-        return None, "Code, Name und Flag sind erforderlich.", 400
+        return service_error("Code, Name und Flag sind erforderlich.", 400)
 
     country = Country(code=normalized_code, name=normalized_name, flag=normalized_flag)
     success, _ = country.save_or_update()
     if not success:
-        return None, "Das Land konnte nicht gespeichert werden.", 500
-    return country.to_dict(), None, None
+        return service_error("Das Land konnte nicht gespeichert werden.", 500)
+    return service_ok(country.to_dict())

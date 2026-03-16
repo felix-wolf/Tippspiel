@@ -1,6 +1,9 @@
+import logging
 from src.database import db_manager
 from src.models.base_model import BaseModel
 from src.models.event_type import EventType
+
+logger = logging.getLogger(__name__)
 
 
 class Discipline(BaseModel):
@@ -49,8 +52,8 @@ class Discipline(BaseModel):
                     event_import_mode=event_import_mode,
                     result_mode=result_mode,
                 )
-            except KeyError:
-                print("Could not instantiate discipline with given values:", a_dict)
+            except KeyError as exc:
+                logger.warning("Could not instantiate discipline with given values: %s", a_dict, exc_info=exc)
                 return None
         return None
 

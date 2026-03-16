@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 from src.database import db_manager
 from src.models.bet import Bet
@@ -7,6 +8,8 @@ from src.models.result import Result
 import src.utils as utils
 from zoneinfo import ZoneInfo
 from src.models.base_model import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class Event(BaseModel):
@@ -216,8 +219,8 @@ class Event(BaseModel):
                     season_id=e_dict.get("season_id"),
                     shared_event_id=e_dict.get("shared_event_id"),
                 )
-            except KeyError as e:
-                print("Could not instantiate event with given values:", e_dict, e)
+            except KeyError as exc:
+                logger.warning("Could not instantiate event with given values: %s", e_dict, exc_info=exc)
                 return None
         else:
             return None
@@ -349,6 +352,7 @@ class Event(BaseModel):
         except Exception:
             if conn:
                 db_manager.rollback_transaction(conn)
+            logger.exception("Failed to save %s events in one transaction.", len(events_to_save))
             raise
         finally:
             if conn:
@@ -477,10 +481,11 @@ class Event(BaseModel):
                     raise Exception("Ergebnisse konnten nicht gespeichert werden")
             db_manager.commit_transaction(conn)
             return True, None
-        except Exception as e:
+        except Exception as exc:
             if conn:
                 db_manager.rollback_transaction(conn)
-            return False, str(e)
+            logger.exception("Failed to process results for event %s.", self.id)
+            return False, str(exc)
         finally:
             if conn:
                 conn.close()
@@ -598,6 +603,7 @@ class Event(BaseModel):
         except Exception:
             if conn:
                 db_manager.rollback_transaction(conn)
+            logger.exception("Failed to delete event %s.", self.id)
             raise
         finally:
             if conn:

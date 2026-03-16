@@ -12,6 +12,7 @@ from src.blueprints.route_helpers import (
     require_game_owner_or_admin,
     require_game_owner,
 )
+from src.blueprints.service_result import ensure_service_result
 from src.blueprints.game_service import import_official_events
 
 from flask_login import *
@@ -60,10 +61,7 @@ def handle_importable_events():
     error = require_game_owner_or_admin(game)
     if error:
         return error
-    events, error_message, status_code = import_official_events(game=game)
-    if error_message:
-        return error_response(error_message, status_code or 500)
-    return [event.to_dict() for event in events]
+    return ensure_service_result(import_official_events(game=game)).to_response()
 
 @game_blueprint.route("/api/game/join", methods=["POST"])
 @login_required

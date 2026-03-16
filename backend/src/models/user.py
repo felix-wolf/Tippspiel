@@ -1,3 +1,4 @@
+import logging
 from src.database import db_manager
 import sys
 import src.utils as utils
@@ -5,6 +6,7 @@ from src.models.base_model import BaseModel
 from flask import current_app, has_app_context
 
 sys.path.append("..")
+logger = logging.getLogger(__name__)
 
 class User(BaseModel):
 
@@ -80,6 +82,7 @@ class User(BaseModel):
         except Exception:
             if conn:
                 db_manager.rollback_transaction(conn)
+            logger.exception("Failed to sync configured admin users.")
             raise
         finally:
             if conn:
@@ -99,8 +102,8 @@ class User(BaseModel):
                 if user.name in User.configured_admin_usernames():
                     user.is_admin = True
                 return user
-            except KeyError as err:
-                print("Could not instantiate user with given values:", user_dict)
+            except KeyError as exc:
+                logger.warning("Could not instantiate user with given values: %s", user_dict, exc_info=exc)
                 return None
         else:
             return None
