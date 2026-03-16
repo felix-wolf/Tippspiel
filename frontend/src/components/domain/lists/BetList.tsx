@@ -140,11 +140,11 @@ type BetItem = {
 type BetListProps = {
   game: Game;
   event: Event;
-  isCreator: boolean;
+  canManageMissingBet: boolean;
   onEventUpdated: () => void;
 };
 
-export function BetList({ game, event, isCreator, onEventUpdated }: BetListProps) {
+export function BetList({ game, event, canManageMissingBet, onEventUpdated }: BetListProps) {
   const [items, setItems] = useState<BetItem[]>();
   const [selectedPlayer, setSelectedPlayer] = useState<User>();
 
@@ -195,7 +195,7 @@ export function BetList({ game, event, isCreator, onEventUpdated }: BetListProps
             key={bet.player.id}
             player={bet.player}
             bet={bet.bet}
-            canAddMissingBet={canCreatorAddMissingBet(isCreator, event, bet.bet)}
+            canAddMissingBet={canCreatorAddMissingBet(canManageMissingBet, event, bet.bet)}
             onAddMissingBet={() => setSelectedPlayer(bet.player)}
           />
         )) ?? []

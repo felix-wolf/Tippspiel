@@ -37,7 +37,7 @@ function buildEvent({
 }
 
 describe("missingBetUtils", () => {
-  it("only enables creator missing-bet entry when the event has started and no bet exists", () => {
+  it("only enables missing-bet entry for managers when the event has started and no bet exists", () => {
     const startedEvent = buildEvent({});
     const savedBet = new Bet("bet-1", "user-1", [], undefined);
     const result = new Result("result-1", "event-1", 1, "athlete-1", "Athlete", undefined, undefined);

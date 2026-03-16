@@ -11,6 +11,7 @@ from src.blueprints.route_helpers import (
     require_admin_user,
     require_game_member,
     require_game_owner,
+    require_game_owner_or_admin,
 )
 from src.services.disciplines import get_discipline_services
 
@@ -193,8 +194,8 @@ def save_bets():
         target_user_id = current_user.get_id()
         requested_user_id = payload.get("user_id")
         if requested_user_id and requested_user_id != current_user.get_id():
-            owner_error = require_game_owner(game)
-            if owner_error is None:
+            owner_or_admin_error = require_game_owner_or_admin(game)
+            if owner_or_admin_error is None:
                 if requested_user_id not in [player.id for player in game.players]:
                     return error_response("Der Nutzer gehoert nicht zu diesem Tippspiel.", 400)
                 if not event.creator_can_add_missing_bet(requested_user_id):

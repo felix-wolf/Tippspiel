@@ -2,11 +2,11 @@ import { Bet, Prediction } from "../../models/Bet";
 import { Event } from "../../models/Event";
 
 export function canCreatorAddMissingBet(
-  isCreator: boolean,
+  canManageMissingBet: boolean,
   event: Event,
   bet: Bet | undefined,
 ): boolean {
-  return isCreator && bet == undefined && event.datetime <= new Date();
+  return canManageMissingBet && bet == undefined && event.datetime <= new Date();
 }
 
 export function buildMissingBetConfirmationItems(

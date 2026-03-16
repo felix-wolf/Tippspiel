@@ -159,6 +159,82 @@ def test_save_bets_ignores_spoofed_user_id(app, base_data, other_user):
     assert payload["has_bets_for_users"] == [base_data["second_user"].id]
 
 
+def test_admin_can_add_missing_bet_for_other_player(app, base_data, admin_user):
+    game_id = _create_game(app, base_data["user"].id, base_data["discipline"].id)
+    with app.app_context():
+        game = Game.get_by_id(game_id)
+        assert game is not None
+        second_user = User.get_by_id(base_data["second_user"].id)
+        assert second_user is not None
+        admin = User.get_by_id(admin_user.id)
+        assert admin is not None
+        assert game.add_player(second_user)
+        assert game.add_player(admin)
+        event = Event(
+            name="Started Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() - timedelta(hours=1),
+            allow_partial_points=True,
+            num_bets=1,
+            points_correct_bet=5,
+        )
+        event.save_to_db()
+        event_id = event.id
+
+    admin_client = _client_for(app, admin_user.id)
+    resp = admin_client.post(
+        "/api/event/save_bets",
+        json={
+            "event_id": event_id,
+            "user_id": base_data["second_user"].id,
+            "predictions": [{"object_id": "a1", "predicted_place": 1, "object_name": "A"}],
+        },
+    )
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert base_data["second_user"].id in payload["has_bets_for_users"]
+
+
+def test_non_owner_non_admin_cannot_add_missing_bet_for_other_player(app, base_data, other_user):
+    game_id = _create_game(app, base_data["user"].id, base_data["discipline"].id)
+    with app.app_context():
+        game = Game.get_by_id(game_id)
+        assert game is not None
+        second_user = User.get_by_id(base_data["second_user"].id)
+        assert second_user is not None
+        other = User.get_by_id(other_user)
+        assert other is not None
+        assert game.add_player(second_user)
+        assert game.add_player(other)
+        event = Event(
+            name="Started Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() - timedelta(hours=1),
+            allow_partial_points=True,
+            num_bets=1,
+            points_correct_bet=5,
+        )
+        event.save_to_db()
+        event_id = event.id
+
+    other_client = _client_for(app, other_user)
+    resp = other_client.post(
+        "/api/event/save_bets",
+        json={
+            "event_id": event_id,
+            "user_id": base_data["second_user"].id,
+            "predictions": [{"object_id": "a1", "predicted_place": 1, "object_name": "A"}],
+        },
+    )
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["has_bets_for_users"] == [other_user]
+
+
 def test_user_color_update_ignores_spoofed_user_id(app, base_data, other_user):
     other_client = _client_for(app, other_user)
 

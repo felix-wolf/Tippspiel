@@ -90,7 +90,7 @@ export function ViewBetsPage() {
             <BetList
               game={game}
               event={event}
-              isCreator={isCreator}
+              canManageMissingBet={canManageResults}
               onEventUpdated={onEventUpdated}
             />
           )}
