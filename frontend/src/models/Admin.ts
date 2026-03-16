@@ -47,6 +47,30 @@ export type AdminCountryDiagnostic = {
   athleteExamples: string[];
 };
 
+export type AdminOperationStatus = "succeeded" | "failed" | "warning";
+
+export type AdminOperationEntry = {
+  id: string;
+  actorType: string;
+  actorUserId?: string;
+  actorName: string;
+  actionType: string;
+  targetType?: string;
+  targetId?: string;
+  status: AdminOperationStatus;
+  summary: string;
+  details?: any;
+  createdAt: string;
+};
+
+export type AdminOperationOverview = {
+  entries: AdminOperationEntry[];
+  totalCount: number;
+  failureCount: number;
+  successCount: number;
+  warningCount: number;
+};
+
 export class Admin {
   public static fetchSharedEvents(): Promise<AdminSharedEventDiagnostic[]> {
     return NetworkHelper.fetchAll("/api/admin/shared-events", (res: any) =>
@@ -94,6 +118,10 @@ export class Admin {
     );
   }
 
+  public static fetchOperations(): Promise<AdminOperationOverview> {
+    return NetworkHelper.fetchOne("/api/admin/operations", Admin.operationOverviewFromJson);
+  }
+
   private static sharedEventFromJson(json: any): AdminSharedEventDiagnostic {
     return {
       sharedEventId: json["shared_event_id"],
@@ -138,6 +166,32 @@ export class Admin {
       isMissingRow: Boolean(json["is_missing_row"]),
       isPlaceholderFlag: Boolean(json["is_placeholder_flag"]),
       athleteExamples: json["athlete_examples"] ?? [],
+    };
+  }
+
+  private static operationEntryFromJson(json: any): AdminOperationEntry {
+    return {
+      id: json["id"],
+      actorType: json["actor_type"],
+      actorUserId: json["actor_user_id"] ?? undefined,
+      actorName: json["actor_name"],
+      actionType: json["action_type"],
+      targetType: json["target_type"] ?? undefined,
+      targetId: json["target_id"] ?? undefined,
+      status: json["status"],
+      summary: json["summary"],
+      details: json["details"] ?? undefined,
+      createdAt: json["created_at"],
+    };
+  }
+
+  private static operationOverviewFromJson(json: any): AdminOperationOverview {
+    return {
+      entries: (json["entries"] ?? []).map((entry: any) => Admin.operationEntryFromJson(entry)),
+      totalCount: json["total_count"] ?? 0,
+      failureCount: json["failure_count"] ?? 0,
+      successCount: json["success_count"] ?? 0,
+      warningCount: json["warning_count"] ?? 0,
     };
   }
 }

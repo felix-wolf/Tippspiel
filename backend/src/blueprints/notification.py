@@ -3,13 +3,27 @@ from flask_login import *
 from src.models.notification_helper import NotificationHelper
 from src.blueprints.api_response import error_response
 from src.blueprints.route_helpers import (
+    current_operation_actor,
     parse_json_body,
     require_admin_user_or_task_token,
     require_query_arg,
 )
 from src.blueprints.notification_service import send_due_bet_reminders
+from src.models.admin_operation import AdminOperation
 
 notification_blueprint = Blueprint('notification', __name__)
+
+
+def _record_operation(*, action_type: str, status: str, summary: str, details=None):
+    AdminOperation.record(
+        actor=current_operation_actor(),
+        action_type=action_type,
+        status=status,
+        summary=summary,
+        target_type="background_job",
+        target_id=action_type,
+        details=details,
+    )
 
 @notification_blueprint.route("/api/notification/register_device", methods=['GET', 'POST'])
 @login_required
@@ -57,7 +71,19 @@ def send_notification():
         return error
     payload, error_message, status_code = send_due_bet_reminders()
     if error_message:
+        _record_operation(
+            action_type="notification_check",
+            status="failed",
+            summary="Bet reminder check failed.",
+            details={"error": error_message, "status_code": status_code or 500},
+        )
         return error_response(error_message, status_code or 500)
+    _record_operation(
+        action_type="notification_check",
+        status="succeeded",
+        summary="Bet reminder check completed.",
+        details=payload,
+    )
     return payload, 200
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from src.database import db_manager
 from src.blueprints.service_result import service_error, service_ok
+from src.models.admin_operation import AdminOperation
 from src.models.country import Country
 from src.models.event import Event
 
@@ -375,3 +376,7 @@ def update_country_metadata(code: str, payload: dict):
     if not success:
         return service_error("Das Land konnte nicht gespeichert werden.", 500)
     return service_ok(country.to_dict())
+
+
+def list_admin_operations(limit: int = 50):
+    return service_ok(AdminOperation.summarize_recent(limit))

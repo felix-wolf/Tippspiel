@@ -163,3 +163,44 @@ describe("Admin country diagnostics", () => {
     );
   });
 });
+
+describe("Admin operation diagnostics", () => {
+  it("maps operation history from the admin API", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          entries: [
+            {
+              id: "op-1",
+              actor_type: "admin_user",
+              actor_user_id: "user-1",
+              actor_name: "admin_user",
+              action_type: "results_check",
+              target_type: "background_job",
+              target_id: "results_check",
+              status: "failed",
+              summary: "Result check processed 1 events, deferred 0, failed 1.",
+              details: {
+                failed_count: 1,
+              },
+              created_at: "2026-03-16 10:00:00",
+            },
+          ],
+          total_count: 1,
+          failure_count: 1,
+          success_count: 0,
+          warning_count: 0,
+        }),
+      status: 200,
+      statusText: "OK",
+    } as Response);
+
+    const overview = await Admin.fetchOperations();
+
+    expect(overview.totalCount).toBe(1);
+    expect(overview.failureCount).toBe(1);
+    expect(overview.entries[0].actorName).toBe("admin_user");
+    expect(overview.entries[0].details.failed_count).toBe(1);
+  });
+});

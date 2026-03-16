@@ -6,6 +6,7 @@ from flask_login import current_user
 from src.blueprints.api_response import error_response
 from src.models.event import Event
 from src.models.game import Game
+from src.models.admin_operation import AdminOperationActor
 
 
 def _is_missing(value) -> bool:
@@ -105,3 +106,17 @@ def require_admin_user_or_task_token(
         return None
 
     return error_response(forbidden_message, 403)
+
+
+def current_operation_actor(
+    token_header: str = "X-Task-Token",
+):
+    if getattr(current_user, "is_authenticated", False):
+        return AdminOperationActor(
+            actor_type="admin_user" if getattr(current_user, "is_admin", False) else "user",
+            actor_user_id=current_user.get_id(),
+            actor_name=getattr(current_user, "name", current_user.get_id()),
+        )
+    if request.headers.get(token_header):
+        return AdminOperationActor(actor_type="task_token", actor_name="task_token")
+    return AdminOperationActor(actor_type="anonymous", actor_name="anonymous")

@@ -2,12 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { NavPage } from "./NavPage";
 import { useCurrentUser } from "../contexts/UserContext";
 import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
-import { Admin, type AdminCountryDiagnostic, type AdminSharedEventDiagnostic } from "../models/Admin";
+import {
+  Admin,
+  type AdminCountryDiagnostic,
+  type AdminOperationEntry,
+  type AdminOperationOverview,
+  type AdminSharedEventDiagnostic,
+} from "../models/Admin";
 import { Button } from "../components/design/Button";
 import { Event } from "../models/Event";
 import { AdminResultTools } from "../components/domain/AdminResultTools";
 
-type AdminTab = "shared_events" | "countries";
+type AdminTab = "operations" | "shared_events" | "countries";
 type SharedFilter = "all" | "missing_results" | "multi_game" | "missing_source";
 
 export function AdminPage() {
@@ -15,9 +21,16 @@ export function AdminPage() {
   const navigate = useNavigateParams();
   const isAdmin = user?.isAdmin === true;
 
-  const [activeTab, setActiveTab] = useState<AdminTab>("shared_events");
+  const [activeTab, setActiveTab] = useState<AdminTab>("operations");
   const [sharedEvents, setSharedEvents] = useState<AdminSharedEventDiagnostic[]>([]);
   const [countries, setCountries] = useState<AdminCountryDiagnostic[]>([]);
+  const [operations, setOperations] = useState<AdminOperationOverview>({
+    entries: [],
+    totalCount: 0,
+    failureCount: 0,
+    successCount: 0,
+    warningCount: 0,
+  });
   const [selectedSharedEventId, setSelectedSharedEventId] = useState<string | null>(null);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
   const [selectedSharedEvent, setSelectedSharedEvent] = useState<AdminSharedEventDiagnostic | null>(null);
@@ -52,12 +65,14 @@ export function AdminPage() {
     setLoading(true);
     setError(null);
     try {
-      const [sharedEventData, countryData] = await Promise.all([
+      const [sharedEventData, countryData, operationData] = await Promise.all([
         Admin.fetchSharedEvents(),
         Admin.fetchCountryDiagnostics(),
+        Admin.fetchOperations(),
       ]);
       setSharedEvents(sharedEventData);
       setCountries(countryData);
+      setOperations(operationData);
       setSelectedSharedEventId((current) => current ?? sharedEventData[0]?.sharedEventId ?? null);
       setSelectedCountryCode((current) => current ?? countryData[0]?.code ?? null);
     } catch (err: any) {
@@ -222,17 +237,18 @@ export function AdminPage() {
   return (
     <NavPage title="Admin Ops">
       <section className="w-full max-w-6xl rounded-3xl border border-white/40 bg-white/55 p-4 sm:p-6 shadow-lg backdrop-blur-md">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Button
+            title="Operations"
+            onClick={() => setActiveTab("operations")}
+            type={activeTab === "operations" ? "positive" : "neutral"}
+          />
           <Button
             title="Shared Events"
             onClick={() => setActiveTab("shared_events")}
             type={activeTab === "shared_events" ? "positive" : "neutral"}
           />
-          <Button
-            title="Countries"
-            onClick={() => setActiveTab("countries")}
-            type={activeTab === "countries" ? "positive" : "neutral"}
-          />
+          <Button title="Countries" onClick={() => setActiveTab("countries")} type={activeTab === "countries" ? "positive" : "neutral"} />
         </div>
 
         {status && (
@@ -244,6 +260,36 @@ export function AdminPage() {
 
         {loading ? (
           <div className="mt-6 text-sm text-slate-600">Lade Admin-Daten...</div>
+        ) : activeTab === "operations" ? (
+          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+            <section className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <p className="text-lg font-semibold text-slate-900">Betriebsübersicht</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <MetricCard label="Erfolge" value={operations.successCount} tone="ok" />
+                <MetricCard label="Warnungen" value={operations.warningCount} tone="warn" />
+                <MetricCard label="Fehler" value={operations.failureCount} tone="bad" />
+              </div>
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                {operations.totalCount} gespeicherte Operationen in der aktuellen Übersicht. Hier laufen
+                Admin-Reparaturen, Ergebnis-Checks und Reminder-Jobs zusammen.
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-lg font-semibold text-slate-900">Letzte Operationen</p>
+                <Button title="Neu laden" onClick={() => loadOverview()} type="neutral" />
+              </div>
+              <div className="mt-4 space-y-3">
+                {operations.entries.length === 0 && (
+                  <p className="text-sm text-slate-600">Noch keine Operationen protokolliert.</p>
+                )}
+                {operations.entries.map((entry) => (
+                  <OperationRow key={entry.id} entry={entry} />
+                ))}
+              </div>
+            </section>
+          </div>
         ) : activeTab === "shared_events" ? (
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
             <section className="rounded-2xl border border-slate-200 bg-white/70 p-4">
@@ -473,6 +519,49 @@ function FlagChip({ label, type }: { label: string; type: "ok" | "warn" | "neutr
       ? "bg-emerald-100 text-emerald-800"
       : type === "warn"
         ? "bg-amber-100 text-amber-900"
-        : "bg-slate-200 text-slate-700";
+      : "bg-slate-200 text-slate-700";
   return <span className={`rounded-full px-2 py-1 ${className}`}>{label}</span>;
+}
+
+function MetricCard({ label, value, tone }: { label: string; value: number; tone: "ok" | "warn" | "bad" }) {
+  const className =
+    tone === "ok"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+      : tone === "warn"
+        ? "border-amber-200 bg-amber-50 text-amber-900"
+        : "border-rose-200 bg-rose-50 text-rose-900";
+  return (
+    <div className={`rounded-2xl border p-4 ${className}`}>
+      <p className="text-sm font-medium">{label}</p>
+      <p className="mt-2 text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function OperationRow({ entry }: { entry: AdminOperationEntry }) {
+  const chipClassName =
+    entry.status === "succeeded"
+      ? "bg-emerald-100 text-emerald-800"
+      : entry.status === "warning"
+        ? "bg-amber-100 text-amber-900"
+        : "bg-rose-100 text-rose-800";
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="font-semibold text-slate-900">{entry.summary}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {entry.createdAt} · {entry.actorName} · {entry.actionType}
+            {entry.targetId ? ` · ${entry.targetId}` : ""}
+          </p>
+        </div>
+        <span className={`rounded-full px-2 py-1 text-xs ${chipClassName}`}>{entry.status}</span>
+      </div>
+      {entry.details && (
+        <pre className="mt-3 overflow-x-auto rounded-xl bg-slate-900 px-3 py-2 text-xs text-slate-100">
+          {JSON.stringify(entry.details, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
 }

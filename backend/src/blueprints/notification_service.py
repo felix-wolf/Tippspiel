@@ -8,6 +8,8 @@ from src.time_utils import berlin_now, ensure_berlin_time
 
 def send_due_bet_reminders(now=None):
     current_time = ensure_berlin_time(now) if now else berlin_now()
+    notified_events = []
+    notified_tokens = 0
 
     for game in Game.get_all():
         events = Event.get_all_by_game_id(game.id, get_full_objects=False)
@@ -36,6 +38,21 @@ def send_due_bet_reminders(now=None):
                     event.name,
                     f"Rennen startet in einer Stunde um {event_time.strftime('%H:%M')}!",
                 )
+                notified_tokens += 1
+            notified_events.append(
+                {
+                    "event_id": event.id,
+                    "event_name": event.name,
+                    "game_id": game.id,
+                    "players_without_bets_count": len(players_without_bets),
+                    "notified_device_count": len(tokens),
+                }
+            )
             break
 
-    return {"status": "success"}, None, None
+    return {
+        "status": "success",
+        "notified_event_count": len(notified_events),
+        "notified_device_count": notified_tokens,
+        "notified_events": notified_events,
+    }, None, None

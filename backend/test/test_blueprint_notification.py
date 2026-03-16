@@ -107,10 +107,18 @@ def test_notification_check_sends_due_reminder(admin_client, app, base_data, mon
     response = admin_client.get("/api/notification/check")
     assert response.status_code == 200
     assert response.get_json()["status"] == "success"
+    assert response.get_json()["notified_event_count"] == 1
     assert len(sent_notifications) == 1
     assert sent_notifications[0][0] == "tok123"
     assert sent_notifications[0][1] == "Reminder Event"
     assert "Rennen startet in einer Stunde" in sent_notifications[0][2]
+
+    operations_response = admin_client.get("/api/admin/operations")
+    payload = operations_response.get_json()
+    matching_entries = [entry for entry in payload["entries"] if entry["action_type"] == "notification_check"]
+    assert matching_entries
+    assert matching_entries[0]["status"] == "succeeded"
+    assert matching_entries[0]["details"]["notified_event_count"] == 1
 
 
 def test_notification_check_requires_admin_or_task_token(app):

@@ -468,6 +468,36 @@ def test_results_check_accepts_task_token(app, monkeypatch):
     assert response.get_json()["status"] == "checked"
 
 
+def test_results_check_creates_operation_history_for_failures(admin_client, app, monkeypatch):
+    monkeypatch.setattr(
+        "src.blueprints.result.check_recent_results",
+        lambda: (
+            {
+                "status": "checked",
+                "processed_count": 1,
+                "deferred_count": 0,
+                "failed_count": 1,
+                "processed_events": [{"event_id": "ok-event"}],
+                "deferred_events": [],
+                "failed_events": [{"event_id": "bad-event", "error": "IBU source unavailable"}],
+            },
+            None,
+            None,
+        ),
+    )
+
+    response = admin_client.get("/api/results/check")
+
+    assert response.status_code == 200
+
+    operations_response = admin_client.get("/api/admin/operations")
+    payload = operations_response.get_json()
+    matching_entries = [entry for entry in payload["entries"] if entry["action_type"] == "results_check"]
+    assert matching_entries
+    assert matching_entries[0]["status"] == "failed"
+    assert matching_entries[0]["details"]["failed_count"] == 1
+
+
 def test_admin_result_refresh_preview_returns_409_for_start_list(admin_client, app, base_data, monkeypatch):
     with app.app_context():
         success, game_id = Game.create(

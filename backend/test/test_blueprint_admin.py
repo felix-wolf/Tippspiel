@@ -207,6 +207,38 @@ def test_admin_country_update_persists_name_and_flag(admin_client, app):
         assert updated.flag == "🇧🇾"
 
 
+def test_admin_operations_endpoint_lists_recent_repairs(admin_client, app, base_data):
+    _, _, _, _, shared_event_id = _create_shared_events(app, base_data)
+
+    source_response = admin_client.put(
+        f"/api/admin/shared-events/{shared_event_id}/source",
+        json={
+            "source_provider": "ibu",
+            "source_event_id": "event-updated",
+            "source_race_id": "race-updated",
+            "season_id": "2627",
+        },
+    )
+    assert source_response.status_code == 200
+
+    country_response = admin_client.put(
+        "/api/admin/countries/BRT",
+        json={"name": "Belarus", "flag": "🇧🇾"},
+    )
+    assert country_response.status_code == 200
+
+    response = admin_client.get("/api/admin/operations")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["total_count"] >= 2
+    assert payload["success_count"] >= 2
+    assert payload["failure_count"] == 0
+    assert any(entry["action_type"] == "shared_event_source_update" for entry in payload["entries"])
+    assert any(entry["action_type"] == "country_update" for entry in payload["entries"])
+    assert payload["entries"][0]["actor_name"] == "admin_user"
+
+
 def test_admin_endpoints_require_admin(client, app, base_data):
     _, _, _, _, shared_event_id = _create_shared_events(app, base_data)
 
@@ -222,9 +254,11 @@ def test_admin_endpoints_require_admin(client, app, base_data):
     )
     country_list = client.get("/api/admin/countries")
     country_update = client.put("/api/admin/countries/BRT", json={"name": "Belarus", "flag": "🇧🇾"})
+    operation_list = client.get("/api/admin/operations")
 
     assert shared_list.status_code == 403
     assert shared_detail.status_code == 403
     assert shared_update.status_code == 403
     assert country_list.status_code == 403
     assert country_update.status_code == 403
+    assert operation_list.status_code == 403

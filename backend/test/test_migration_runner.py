@@ -20,7 +20,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009"]
     assert status.pending_versions == []
 
     conn = sqlite3.connect(db_path)
@@ -38,6 +38,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
     assert "Events" in tables
     assert "SharedEvents" in tables
     assert "Results" in tables
+    assert "AdminOperations" in tables
 
     conn = sqlite3.connect(db_path)
     try:
@@ -298,7 +299,7 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009"]
 
     conn = sqlite3.connect(db_path)
     try:

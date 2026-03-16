@@ -6,7 +6,7 @@ This document records the main technical debt and areas that need work across th
 
 ## High Priority
 
-### 1. Event administration exists now, but the admin surface is still minimal
+### 1. Event administration now has diagnostics/history, but broader repair workflows are still missing
 - Files:
   - `backend/src/database/migrations/0004_shared_events.sql`
   - `backend/src/blueprints/event.py`
@@ -18,16 +18,16 @@ This document records the main technical debt and areas that need work across th
   - Game owners can no longer create, edit, or delete event information.
   - Admins can now preview, re-apply, clear, and rescore results from the regular event UI.
   - A dedicated admin overview now exists for shared-event diagnostics and missing-country cleanup.
-  - There is still no dedicated admin overview for:
-    - reviewing recent failed background jobs or corrected imports in one place
-    - persistent audit/history for admin actions
-    - broader support workflows like user moderation or game repair
+  - A dedicated admin overview now also persists recent admin repairs plus result/reminder job runs in one place.
+  - There is still no broader support workflow for:
+    - safer merge/delete flows with impact previews before changing shared metadata used by multiple games
+    - user moderation or game repair beyond event/result metadata
 - Why it matters:
-  - The product model is cleaner and a first global repair surface exists, but operational administration is still narrow.
+  - The product model is cleaner and the admin surface now has real operational memory, but support tooling is still narrow once issues go beyond source/result cleanup.
   - As the number of games grows, editing event data game-by-game will become inefficient and error-prone.
 - Suggested direction:
-  - Add persistent operation history and failed-job diagnostics to the admin overview.
   - Add safer merge/delete flows and impact previews before editing shared metadata used by multiple games.
+  - Add broader support workflows for moderation, repair, and cross-game recovery tasks.
 
 ## Medium Priority
 
@@ -107,6 +107,7 @@ This document records the main technical debt and areas that need work across th
 - A first admin role plus admin-only event management workflow exists as of 2026-03-11.
 - Admins can preview, refresh, clear, and rescore event results, and background task endpoints can now be protected by `TIPPSPIEL_TASK_API_TOKEN`, as of 2026-03-11.
 - A dedicated admin overview for shared-event source repair and missing-country cleanup exists as of 2026-03-11.
+- Admin operations now persist recent repairs plus result/reminder job diagnostics in the admin overview, as of 2026-03-16.
 - Generic DB helpers now log and re-raise query/statement/transaction failures instead of silently returning `None`, as of 2026-03-16.
 - Backend model/bootstrap deserialization and notification paths now use structured logging instead of `print(...)`, as of 2026-03-16.
 - Blueprint/service error handling now uses a shared `ServiceResult` contract instead of ad-hoc `(payload, error, status)` tuples, as of 2026-03-16.
