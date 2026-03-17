@@ -263,6 +263,44 @@ describe("Event.saveBetsForUser", () => {
   });
 });
 
+describe("Event.fetchStartList", () => {
+  it("maps the start list ids and relay entries", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          start_list: ["ITA", "FRA"],
+          entries: [
+            {
+              id: "ITA",
+              name: "Italy",
+              members: [
+                { leg: 1, name: "Patrick BRAUNHOFER" },
+                { leg: 2, name: "Christoph PIRCHER" },
+              ],
+            },
+          ],
+        }),
+      status: 200,
+      statusText: "OK",
+    } as Response);
+
+    await expect(Event.fetchStartList("event-1")).resolves.toEqual({
+      startList: ["ITA", "FRA"],
+      entries: [
+        {
+          id: "ITA",
+          name: "Italy",
+          members: [
+            { leg: 1, name: "Patrick BRAUNHOFER" },
+            { leg: 2, name: "Christoph PIRCHER" },
+          ],
+        },
+      ],
+    });
+  });
+});
+
 describe("Event.saveImportedEvents", () => {
   it("keeps the backend import wire format while building payloads from plain objects", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({

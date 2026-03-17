@@ -215,7 +215,7 @@ def save_bets():
 
         # Validate against start list if available
         services = get_discipline_services(event.event_type.discipline_id)
-        start_list, _ = services.result_processor.get_start_list(event.event_type.discipline_id, event)
+        start_list, _, _ = services.result_processor.get_start_list(event.event_type.discipline_id, event)
         if start_list:
             start_list_set = set(start_list)
             for pred in predictions:
@@ -244,8 +244,8 @@ def get_start_list():
         return error
 
     services = get_discipline_services(event.event_type.discipline_id)
-    start_list, error_msg = services.result_processor.get_start_list(event.event_type.discipline_id, event)
+    start_list, entries, error_msg = services.result_processor.get_start_list(event.event_type.discipline_id, event)
     if error_msg:
-        return {"start_list": [], "message": error_msg}
+        return {"start_list": [], "entries": [], "message": error_msg}
 
-    return {"start_list": start_list}
+    return {"start_list": start_list, "entries": entries or []}

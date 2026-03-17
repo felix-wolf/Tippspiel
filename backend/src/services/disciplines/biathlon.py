@@ -230,28 +230,67 @@ class BiathlonResultProcessor:
         try:
             response = IbuApiClient().get_results(event.source_race_id)
         except (IbuApiError, requests.RequestException):
-            return None, "Die Startliste konnte nicht von der offiziellen IBU-Quelle geladen werden."
+            return None, None, "Die Startliste konnte nicht von der offiziellen IBU-Quelle geladen werden."
 
         rows = response.rows if hasattr(response, "rows") else response
         if not rows:
-            return None, "Die offizielle IBU-Quelle enthält keine Startliste."
+            return None, None, "Die offizielle IBU-Quelle enthält keine Startliste."
 
         if event.event_type.betting_on == "countries":
-            return sorted(list(set(row.nation_code for row in rows if row.nation_code))), None
+            start_list = sorted(list(set(row.nation_code for row in rows if row.nation_code)))
+            return start_list, self._build_country_start_list_entries(rows), None
 
         if event.event_type.betting_on == "athletes":
             ibu_ids = [row.athlete_id for row in rows if row.athlete_id]
             if not ibu_ids:
-                return [], None
+                return [], [], None
 
             athlete_ids = []
             for ibu_id in ibu_ids:
                 athlete = Athlete.get_by_ibu_id(ibu_id)
                 if athlete:
                     athlete_ids.append(athlete.id)
-            return athlete_ids, None
+            return athlete_ids, [], None
 
-        return None, "Wettobjekt nicht bekannt"
+        return None, None, "Wettobjekt nicht bekannt"
+
+    def _build_country_start_list_entries(self, rows):
+        team_rows = [row for row in rows if row.nation_code and row.is_team]
+        if not team_rows:
+            return []
+
+        athlete_rows_by_country = {}
+        for row in rows:
+            if row.is_team or not row.nation_code:
+                continue
+            athlete_rows_by_country.setdefault(row.nation_code, []).append(row)
+
+        entries = []
+        for team_row in team_rows:
+            country = Country.get_by_id(team_row.nation_code)
+            athletes = athlete_rows_by_country.get(team_row.nation_code, [])
+            athletes.sort(key=lambda athlete_row: athlete_row.leg or 0)
+            entries.append(
+                {
+                    "id": team_row.nation_code,
+                    "name": country.name if country else (team_row.country_name or team_row.display_name or team_row.nation_code),
+                    "members": [
+                        {
+                            "leg": athlete_row.leg,
+                            "name": self._format_athlete_name(athlete_row),
+                        }
+                        for athlete_row in athletes
+                    ],
+                }
+            )
+        return entries
+
+    @staticmethod
+    def _format_athlete_name(row):
+        parts = [part for part in [row.first_name, row.last_name] if part]
+        if parts:
+            return " ".join(parts)
+        return row.display_name or row.nation_code or ""
 
     def _ensure_country(self, nation_code: str, country_name: str | None):
         country = Country.get_by_id(nation_code)

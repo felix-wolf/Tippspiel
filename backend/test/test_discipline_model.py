@@ -114,6 +114,124 @@ def test_biathlon_country_results_dedupe_repeated_relay_rows(app, base_data, mon
         ]
 
 
+def test_biathlon_country_start_list_includes_relay_members_in_leg_order(app, base_data, monkeypatch):
+    with app.app_context():
+        relay_type = EventType(
+            name="relay",
+            display_name="Relay",
+            discipline_id=base_data["discipline"].id,
+            betting_on="countries",
+        )
+        relay_type.save_to_db()
+
+        italy = Country(code="ITA", name="Italy", flag="ITA")
+        italy.save_to_db()
+
+        event = Event(
+            name="Relay Start List",
+            game_id="game-1",
+            event_type=relay_type,
+            dt=datetime(2026, 3, 15, 13, 40, 0),
+            allow_partial_points=True,
+            source_provider="ibu",
+            source_race_id="race-relay-start-list-1",
+        )
+
+        discipline = Discipline.get_by_id(base_data["discipline"].id)
+
+        monkeypatch.setattr(
+            "src.services.disciplines.biathlon.IbuApiClient.get_results",
+            lambda self, race_id: type(
+                "FakeResponse",
+                (),
+                {
+                    "kind": "start_list",
+                    "rows": [
+                        IbuResultRow(
+                            rank=10000,
+                            first_name=None,
+                            last_name="ITALY",
+                            athlete_id="BTITA9",
+                            nation_code="ITA",
+                            country_name=None,
+                            time=None,
+                            behind=None,
+                            leg=0,
+                            is_team=True,
+                            display_name="ITALY",
+                        ),
+                        IbuResultRow(
+                            rank=10000,
+                            first_name="Patrick",
+                            last_name="BRAUNHOFER",
+                            athlete_id="BTITA11904199801",
+                            nation_code="ITA",
+                            country_name=None,
+                            time=None,
+                            behind=None,
+                            leg=1,
+                            display_name="BRAUNHOFER Patrick",
+                        ),
+                        IbuResultRow(
+                            rank=10000,
+                            first_name="Christoph",
+                            last_name="PIRCHER",
+                            athlete_id="BTITA10307200301",
+                            nation_code="ITA",
+                            country_name=None,
+                            time=None,
+                            behind=None,
+                            leg=2,
+                            display_name="PIRCHER Christoph",
+                        ),
+                        IbuResultRow(
+                            rank=10000,
+                            first_name="Michela",
+                            last_name="CARRARA",
+                            athlete_id="BTITA21005199701",
+                            nation_code="ITA",
+                            country_name=None,
+                            time=None,
+                            behind=None,
+                            leg=3,
+                            display_name="CARRARA Michela",
+                        ),
+                        IbuResultRow(
+                            rank=10000,
+                            first_name="Hannah",
+                            last_name="AUCHENTALLER",
+                            athlete_id="BTITA22803200101",
+                            nation_code="ITA",
+                            country_name=None,
+                            time=None,
+                            behind=None,
+                            leg=4,
+                            display_name="AUCHENTALLER Hannah",
+                        ),
+                    ],
+                },
+            )(),
+        )
+
+        services = get_discipline_services(discipline.id)
+        start_list, entries, error = services.result_processor.get_start_list(discipline, event)
+
+        assert error is None
+        assert start_list == ["ITA"]
+        assert entries == [
+            {
+                "id": "ITA",
+                "name": "Italy",
+                "members": [
+                    {"leg": 1, "name": "Patrick BRAUNHOFER"},
+                    {"leg": 2, "name": "Christoph PIRCHER"},
+                    {"leg": 3, "name": "Michela CARRARA"},
+                    {"leg": 4, "name": "Hannah AUCHENTALLER"},
+                ],
+            }
+        ]
+
+
 def test_process_athletes_reloads_existing_row_after_ignored_save(app, base_data, monkeypatch):
     with app.app_context():
         existing_athlete = Athlete(

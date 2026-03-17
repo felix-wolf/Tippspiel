@@ -45,7 +45,7 @@ class UnsupportedResultProcessor:
         return [], "Disziplin nicht auswertbar"
 
     def get_start_list(self, discipline, event):
-        return None, "Disziplin nicht auswertbar"
+        return None, None, "Disziplin nicht auswertbar"
 
 
 class PassthroughAthleteResolver:

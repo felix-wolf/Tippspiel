@@ -51,6 +51,22 @@ export type AdminResultOperationResponse = {
   resendNotifications?: boolean;
 };
 
+export type StartListEntryMember = {
+  leg?: number;
+  name: string;
+};
+
+export type StartListEntry = {
+  id: string;
+  name: string;
+  members: StartListEntryMember[];
+};
+
+export type StartListResponse = {
+  startList: string[];
+  entries: StartListEntry[];
+};
+
 export class Event {
   private readonly _id: string;
   private readonly _name: string;
@@ -358,10 +374,13 @@ export class Event {
     );
   }
 
-  public static fetchStartList(eventId: string): Promise<string[]> {
+  public static fetchStartList(eventId: string): Promise<StartListResponse> {
     return NetworkHelper.fetchOne(
       `/api/event/start_list?event_id=${eventId}`,
-      (json: any) => json["start_list"] as string[],
+      (json: any) => ({
+        startList: (json["start_list"] ?? []) as string[],
+        entries: (json["entries"] ?? []) as StartListEntry[],
+      }),
     );
   }
 

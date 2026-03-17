@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bet, Prediction } from "../../models/Bet";
 import { BetInput, BetInputItem } from "../design/BetInput";
 import { Button } from "../design/Button";
-import { Event } from "../../models/Event";
+import { Event, StartListEntry } from "../../models/Event";
 import { EventType } from "../../models/EventType";
 import { Country } from "../../models/Country";
 import { Athlete } from "../../models/Athlete";
@@ -31,6 +31,7 @@ export function BetPlacer({
   const [completed, setCompleted] = useState(false);
   const [items, setItems] = useState<BetInputItem[]>([]);
   const [startList, setStartList] = useState<string[] | undefined>(undefined);
+  const [startListEntries, setStartListEntries] = useState<StartListEntry[]>([]);
   const [invalidPredictions, setInvalidPredictions] = useState<number[]>([]);
   const [userBet, setUserBet] = useState<Bet | undefined>(undefined);
   const [startListCollapsed, setStartListCollapsed] = useState(true);
@@ -47,6 +48,16 @@ export function BetPlacer({
     if (!startList || startList.length === 0) return [];
     return startList.map((item) => items.find((i) => i.id === item) ?? { id: item, name: item });
   }, [startList, items]);
+  const displayStartListEntries = useMemo(() => {
+    if (startListEntries.length > 0) {
+      return startListEntries;
+    }
+    return enrichedStartList.map((item) => ({
+      id: item.id ?? item.name,
+      name: item.name,
+      members: [],
+    }));
+  }, [enrichedStartList, startListEntries]);
 
   // if a start list is available, we filter the items to those in the start list, otherwise we show all items
   const filteredItems = useMemo(() => {
@@ -57,8 +68,14 @@ export function BetPlacer({
 
   useEffect(() => {
     Event.fetchStartList(event.id)
-      .then((list) => setStartList(list))
-      .catch(() => setStartList(undefined));
+      .then((response) => {
+        setStartList(response.startList);
+        setStartListEntries(response.entries);
+      })
+      .catch(() => {
+        setStartList(undefined);
+        setStartListEntries([]);
+      });
   }, [event.id]);
 
   useEffect(() => {
@@ -218,13 +235,24 @@ export function BetPlacer({
               <div className="mt-2 max-h-40 overflow-y-auto rounded bg-white/60 p-2 text-xs text-slate-600">
                 <p className="mb-2 font-medium text-slate-700">Alle startenden {startListEntityLabel}</p>
                 <div className="columns-2 gap-1">
-                  {enrichedStartList.map((item, index) => (
-                    <span
+                  {displayStartListEntries.map((item, index) => (
+                    <div
                       key={item.id}
-                      className="mb-1 block break-inside-avoid rounded bg-sky-100 px-1.5 py-0.5 text-slate-700"
+                      className="mb-1 block break-inside-avoid rounded bg-sky-100 px-1.5 py-1 text-slate-700"
                     >
-                      {index + 1}. {item.name}
-                    </span>
+                      <span className="block font-medium">
+                        {index + 1}. {item.name}
+                      </span>
+                      {item.members.length > 0 && (
+                        <span className="mt-0.5 block text-[11px] text-slate-600">
+                          {item.members
+                            .map((member) =>
+                              member.leg ? `${member.leg}. ${member.name}` : member.name,
+                            )
+                            .join(" | ")}
+                        </span>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>

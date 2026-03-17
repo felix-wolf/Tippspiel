@@ -37,6 +37,9 @@ class IbuResultRow:
     shooting: str | None = None
     shooting_time: str | None = None
     status: str | None = None
+    leg: int | None = None
+    is_team: bool = False
+    display_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -231,6 +234,9 @@ class IbuApiClient:
                 "totalshootingtime",
             ),
             status=status,
+            leg=self._to_int(self._get_text(record, "Leg")),
+            is_team=bool(record.get("IsTeam")) if isinstance(record, dict) else False,
+            display_name=self._get_text(record, "Name", "ShortName"),
         )
 
     def _build_athlete_row(self, record):
