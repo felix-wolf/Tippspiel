@@ -213,10 +213,13 @@ class Athlete(BaseModel):
         return list(athletes_by_key.values())
 
     @staticmethod
-    def get_base_data():
+    def get_csv_base_data():
         csv_athletes = [Athlete.from_dict(a) for a in db_manager.load_csv("athletes.csv", generate_id=False)]
-        csv_athletes = [athlete for athlete in csv_athletes if athlete is not None]
+        return [athlete for athlete in csv_athletes if athlete is not None]
 
+    @staticmethod
+    def get_base_data():
+        csv_athletes = Athlete.get_csv_base_data()
         official_biathlon_athletes = Athlete.get_biathlon_base_data()
         if official_biathlon_athletes:
             non_biathlon_athletes = [

@@ -116,6 +116,7 @@ def test_get_base_data_prefers_official_biathlon_seed(monkeypatch):
         "load_csv",
         lambda file_name, generate_id=False: [
             {
+                "ibu_id": "",
                 "last_name": "Legacy",
                 "first_name": "Biathlete",
                 "country_code": "GER",
@@ -123,6 +124,7 @@ def test_get_base_data_prefers_official_biathlon_seed(monkeypatch):
                 "discipline": "biathlon",
             },
             {
+                "ibu_id": "",
                 "last_name": "Granerud",
                 "first_name": "Halvor Egner",
                 "country_code": "NOR",
@@ -163,6 +165,7 @@ def test_get_base_data_falls_back_to_csv_when_official_seed_is_unavailable(monke
         "load_csv",
         lambda file_name, generate_id=False: [
             {
+                "ibu_id": "IBU-LEGACY",
                 "last_name": "Legacy",
                 "first_name": "Biathlete",
                 "country_code": "GER",
@@ -181,4 +184,33 @@ def test_get_base_data_falls_back_to_csv_when_official_seed_is_unavailable(monke
 
     assert [(athlete.first_name, athlete.last_name, athlete.discipline) for athlete in athletes] == [
         ("Biathlete", "Legacy", "biathlon")
+    ]
+    assert athletes[0].ibu_id == "IBU-LEGACY"
+
+
+def test_get_csv_base_data_never_fetches_official_biathlon_seed(monkeypatch):
+    monkeypatch.setattr(
+        db_manager,
+        "load_csv",
+        lambda file_name, generate_id=False: [
+            {
+                "ibu_id": "IBU-123",
+                "last_name": "Legacy",
+                "first_name": "Biathlete",
+                "country_code": "GER",
+                "gender": "m",
+                "discipline": "biathlon",
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        Athlete,
+        "get_biathlon_base_data",
+        staticmethod(lambda client=None, now=None: (_ for _ in ()).throw(AssertionError("should not fetch"))),
+    )
+
+    athletes = Athlete.get_csv_base_data()
+
+    assert [(athlete.first_name, athlete.last_name, athlete.ibu_id) for athlete in athletes] == [
+        ("Biathlete", "Legacy", "IBU-123")
     ]

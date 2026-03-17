@@ -65,7 +65,7 @@ def populate_db(db_path):
             """
         execute(sql, [
             athlete.id, athlete.ibu_id, athlete.first_name, athlete.last_name, athlete.country_code, athlete.gender, athlete.discipline
-        ])
+        ], db_path=db_path)
 
     print("db initialized")
 

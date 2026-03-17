@@ -1,6 +1,6 @@
 # Technical Debt Register
 
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 This document records the main technical debt and areas that need work across the current code base. It is intentionally opinionated and prioritized so it can guide follow-up work.
 
@@ -48,23 +48,7 @@ This document records the main technical debt and areas that need work across th
 
 ## Lower Priority / Structural Cleanup
 
-### 3. Seed/bootstrap data and runtime data model are drifting apart
-- Files:
-  - `backend/src/resources/disciplines.csv`
-  - `backend/src/resources/athletes.csv`
-  - `backend/src/models/athlete.py`
-  - `backend/populate_db.py`
-- What is wrong:
-  - Fresh installs now bootstrap biathlon athletes from the IBU API and use `athletes.csv` mainly for non-biathlon and fallback data.
-  - Runtime startup code still patches part of the seed/runtime drift on the fly.
-- Why it matters:
-  - Fresh environment setup is still less trustworthy than it should be.
-  - The real source of truth remains ambiguous.
-- Suggested direction:
-  - Bring seed files back in line with current production behavior.
-  - Treat runtime backfills as one-off admin tools, not hidden startup behavior.
-
-### 4. Some abstract/base contracts are incomplete
+### 3. Some abstract/base contracts are incomplete
 - Files:
   - `backend/src/models/base_model.py`
   - `backend/src/models/discipline.py`
@@ -76,7 +60,7 @@ This document records the main technical debt and areas that need work across th
 - Suggested direction:
   - Either tighten the base contracts or simplify the inheritance model.
 
-### 5. Test coverage is better than before, but still misses some operational paths
+### 4. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -94,7 +78,6 @@ This document records the main technical debt and areas that need work across th
 - Simplify event import modal state handling.
 
 ### Phase 2
-- Clean seed data and bootstrap drift.
 - Tighten the shared model/base contracts.
 - Add thin workflow tests for import, result processing, and migration-sensitive paths.
 
@@ -111,6 +94,7 @@ This document records the main technical debt and areas that need work across th
 - Generic DB helpers now log and re-raise query/statement/transaction failures instead of silently returning `None`, as of 2026-03-16.
 - Backend model/bootstrap deserialization and notification paths now use structured logging instead of `print(...)`, as of 2026-03-16.
 - Blueprint/service error handling now uses a shared `ServiceResult` contract instead of ad-hoc `(payload, error, status)` tuples, as of 2026-03-16.
+- Biathlon athlete bootstrap remains IBU-first, but fallback CSV data now matches that model better: `populate_db.py` writes to the configured DB path, `athletes.csv` can persist `ibu_id`, and `backend/refresh_athlete_seed_data.py` explicitly refreshes the fallback seed cache as of 2026-03-17.
 - API-facing frontend model serialization now uses plain payload objects, and `Discipline` / `EventType` were moved out of `models/user`, as of 2026-03-11.
 - `UserContext` now lives under `frontend/src/contexts/`, `User` now lives under `frontend/src/models/`, and the old `frontend/src/models/user/` structure is gone, as of 2026-03-11.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
