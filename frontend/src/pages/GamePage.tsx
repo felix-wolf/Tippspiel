@@ -51,7 +51,7 @@ export function GamePage() {
     loading: gameLoading,
   } = gameFetchValues;
 
-  const { data: scores } = scoreFetchValues;
+  const { data: scores, loading: scoresLoading } = scoreFetchValues;
 
   useEffect(() => {
     if (!user) {
@@ -116,7 +116,7 @@ export function GamePage() {
         />
       )}
       <AnimatePresence mode="wait">
-        {(!gameLoading && user && game && scores) ? (
+        {(!gameLoading && user && game) ? (
           <motion.div
             key="content"
             initial={{ opacity: 0 }}
@@ -125,22 +125,27 @@ export function GamePage() {
             transition={{ duration: 0.4 }}
             className="w-full max-w-6xl"
           >
-            {scores.map((score) => score.scores.size > 0).filter((item) => item).length > 0 && (
-            <Toggler
-              items={[
-                {
-                  nameComponent: <><Trophy size={18} /> Graph </>,
-                  component:
-                    <ScoreLine game={game} eventScores={scores} />,
-                  isEnabled: true,
-                },
-                {
-                  nameComponent: <><TableIcon size={18} /> Tabelle</>,
-                  component: <ScoreList game={game} scores={scores} />,
-                  isEnabled: true,
-                },
-              ]}
-            />
+            {scoresLoading ? (
+              <ScoreboardSkeleton />
+            ) : (
+              scores &&
+              scores.some((score) => score.scores.size > 0) && (
+                <Toggler
+                  items={[
+                    {
+                      nameComponent: <><Trophy size={18} /> Graph </>,
+                      component:
+                        <ScoreLine game={game} eventScores={scores} />,
+                      isEnabled: true,
+                    },
+                    {
+                      nameComponent: <><TableIcon size={18} /> Tabelle</>,
+                      component: <ScoreList game={game} scores={scores} />,
+                      isEnabled: true,
+                    },
+                  ]}
+                />
+              )
             )}
             <motion.section
               initial={{ opacity: 0, y: 10 }}

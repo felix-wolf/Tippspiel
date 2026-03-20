@@ -214,6 +214,65 @@ def test_scores_requires_game_id(client):
     assert resp.get_json()["error"] == "Die Spiel-ID fehlt."
 
 
+def test_scores_endpoint_aggregates_multiple_events_without_duplicates(client, app, base_data):
+    with app.app_context():
+        success, game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Score Aggregation Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+
+        event_one = Event(
+            name="Scored Event One",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() + timedelta(hours=1),
+            allow_partial_points=False,
+            num_bets=1,
+            points_correct_bet=5,
+        )
+        event_two = Event(
+            name="Scored Event Two",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() + timedelta(hours=2),
+            allow_partial_points=False,
+            num_bets=1,
+            points_correct_bet=5,
+        )
+        event_three = Event(
+            name="Unscored Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=berlin_local_now_naive() + timedelta(hours=3),
+            allow_partial_points=False,
+            num_bets=1,
+            points_correct_bet=5,
+        )
+        for event in (event_one, event_two, event_three):
+            event.save_to_db()
+
+        for index, event in enumerate((event_one, event_two, event_three), start=1):
+            bet = Bet(
+                user_id=base_data["user"].id,
+                event_id=event.id,
+                predictions=[],
+                score=5 if event != event_three else None,
+                bet_id=f"bet-{index}",
+            )
+            bet.save_to_db()
+
+    resp = client.get("/api/scores", query_string={"game_id": game_id})
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert [score["name"] for score in payload] == ["Scored Event One", "Scored Event Two"]
+    assert payload[0]["scores"] == {base_data["user"].id: 5}
+    assert payload[1]["scores"] == {base_data["user"].id: 5}
+
+
 def test_process_results_rejects_result_url_upload(client, app, base_data):
     with app.app_context():
         success, game_id = Game.create(

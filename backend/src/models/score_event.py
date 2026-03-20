@@ -1,7 +1,6 @@
 from datetime import datetime
 import logging
 from src.database import db_manager
-from src.models.bet import Bet
 from src.models.base_model import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -44,18 +43,40 @@ class ScoreEvent(BaseModel):
     @staticmethod
     def get_all_by_game_id(game_id: str):
         sql = f"""
-            SELECT e.id, e.name, e.game_id, e.datetime FROM VIEW_{db_manager.TABLE_EVENTS} e
+            SELECT
+                e.id,
+                e.name,
+                e.game_id,
+                e.datetime,
+                b.user_id,
+                b.score
+            FROM VIEW_{db_manager.TABLE_EVENTS} e
+            LEFT JOIN {db_manager.TABLE_BETS} b ON b.event_id = e.id
             WHERE e.game_id = ?
+            ORDER BY e.datetime ASC, e.id ASC
             """
         res = db_manager.query(sql, [game_id])
         if not res:
             return []
-        events = [ScoreEvent.from_dict(e) for e in res]
-        for event in events:
-            bets = Bet.get_by_event_id(event.id)
-            scores = {bet.user_id: bet.score for bet in bets}
-            event.scores = scores
-        return [e for e in events if len(e.scores) > 0 and len([v for k, v in e.scores.items() if v is not None]) > 0]
+        events_by_id = {}
+        ordered_events = []
+        for row in res:
+            event_id = row["id"]
+            event = events_by_id.get(event_id)
+            if event is None:
+                event = ScoreEvent.from_dict(row)
+                if event is None:
+                    continue
+                event.scores = {}
+                events_by_id[event_id] = event
+                ordered_events.append(event)
+            if row["user_id"] is not None:
+                event.scores[row["user_id"]] = row["score"]
+        return [
+            event
+            for event in ordered_events
+            if event.scores and any(score is not None for score in event.scores.values())
+        ]
     
     @staticmethod
     def get_all():

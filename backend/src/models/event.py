@@ -177,11 +177,10 @@ class Event(BaseModel):
         # get event_type
         event_type = EventType.get_by_id(event_data["event_type_id"])
         event = Event.from_dict(event_data, event_type)
+        if not get_full_object:
+            return event.load_bet_user_ids()
         event = event.get_bets()
         event = event.getResults()
-        if not get_full_object:
-            event.bets = []
-            return event
         # check for unprocessed events
         unprocessed_bets = [bet for bet in event.bets if not bet.score]
         if len(unprocessed_bets) > 0 and event.results is not None and event.results != []:
@@ -237,7 +236,37 @@ class Event(BaseModel):
             sql += f"LIMIT {(page - 1) * 5}, {5}"
         res = db_manager.query(sql, [game_id])
         if res:
-            return [Event.get_by_id(e["id"], get_full_objects) for e in res]
+            if get_full_objects:
+                return [Event.get_by_id(e["id"], True) for e in res]
+            event_types = {}
+            events = []
+            for row in res:
+                event_type_id = row["event_type_id"]
+                event_type = event_types.get(event_type_id)
+                if event_type is None:
+                    event_type = EventType.get_by_id(event_type_id)
+                    event_types[event_type_id] = event_type
+                event = Event.from_dict(row, event_type)
+                if event is not None:
+                    events.append(event)
+            if not events:
+                return []
+            placeholders = ",".join("?" for _ in events)
+            bet_rows = db_manager.query(
+                f"""
+                SELECT event_id, user_id
+                FROM {db_manager.TABLE_BETS}
+                WHERE event_id IN ({placeholders})
+                ORDER BY event_id ASC, user_id ASC
+                """,
+                [event.id for event in events],
+            )
+            bet_users_by_event_id = {}
+            for row in bet_rows or []:
+                bet_users_by_event_id.setdefault(row["event_id"], []).append(row["user_id"])
+            for event in events:
+                event.has_bets_for_users = bet_users_by_event_id.get(event.id, [])
+            return events
         return []
 
     @staticmethod
@@ -452,6 +481,14 @@ class Event(BaseModel):
         if bets_data:
             self.bets = [Bet.get_by_event_id_user_id(event_id=b["event_id"], user_id=b["user_id"]) for b in bets_data]
             self.has_bets_for_users = [bet.user_id for bet in self.bets]
+        return self
+
+    def load_bet_user_ids(self):
+        bet_rows = db_manager.query(
+            f"SELECT user_id FROM {db_manager.TABLE_BETS} WHERE event_id = ? ORDER BY user_id ASC",
+            [self.id],
+        )
+        self.has_bets_for_users = [row["user_id"] for row in bet_rows or []]
         return self
 
     def process_results(self, results: list[Result]):

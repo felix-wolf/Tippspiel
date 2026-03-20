@@ -64,6 +64,33 @@ def test_event_get_by_game(client, app, base_data):
     assert payload[0]["name"] == "Test Event"
 
 
+def test_event_get_by_game_includes_users_with_bets(client, app, base_data):
+    game_id = _create_game(app, base_data)
+    with app.app_context():
+        event = Event(
+            name="Event With Bets",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=Event.current_time() + timedelta(hours=2),
+            allow_partial_points=True,
+            num_bets=1,
+            points_correct_bet=5,
+        )
+        event.save_to_db()
+        success, _ = event.save_bet(
+            base_data["user"].id,
+            [{"object_id": base_data["athlete"].id, "predicted_place": 1, "object_name": "Franz Fischer"}],
+        )
+        assert success
+
+    resp = client.get(f"/api/event?game_id={game_id}")
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert len(payload) == 1
+    assert payload[0]["has_bets_for_users"] == [base_data["user"].id]
+
+
 def test_event_create_and_update_are_admin_only(client, base_data):
     game_id = client.post(
         "/api/game",
