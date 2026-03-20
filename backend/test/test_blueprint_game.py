@@ -25,6 +25,44 @@ def test_game_get_all(app, base_data):
     assert isinstance(payload, list)
 
 
+def test_game_get_all_includes_players_creator_and_discipline(app, base_data):
+    client = _login_client(app, base_data["user"].name)
+
+    with app.app_context():
+        success, first_game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="First Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+        success, second_game_id = Game.create(
+            user_id=base_data["user"].id,
+            name="Second Game",
+            pw_hash=None,
+            discipline_name=base_data["discipline"].id,
+        )
+        assert success
+        second_game = Game.get_by_id(second_game_id)
+        assert second_game is not None
+        second_user = User.get_by_id(base_data["second_user"].id)
+        assert second_user is not None
+        assert second_game.add_player(second_user)
+
+    response = client.get("/api/game")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert [game["name"] for game in payload] == ["First Game", "Second Game"]
+    assert payload[0]["creator"]["id"] == base_data["user"].id
+    assert payload[0]["discipline"]["id"] == base_data["discipline"].id
+    assert payload[0]["discipline"]["event_types"][0]["id"] == base_data["event_type"].id
+    assert [player["id"] for player in payload[1]["players"]] == [
+        base_data["second_user"].id,
+        base_data["user"].id,
+    ]
+
+
 def test_game_create_and_join(app, base_data):
     with app.app_context():
         success, game_id = Game.create(

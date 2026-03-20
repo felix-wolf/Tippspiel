@@ -3,6 +3,7 @@ import src.utils as utils
 
 from src.database import db_manager
 from src.models.discipline import Discipline
+from src.models.event_type import EventType
 from src.models.user import User
 from src.models.base_model import BaseModel
 from datetime import datetime
@@ -115,8 +116,77 @@ class Game(BaseModel):
         sql = f"SELECT g.id FROM {db_manager.TABLE_GAMES} g WHERE g.visible = 1"
         game_ids = db_manager.query(sql)
         if not game_ids:
-            game_ids = []
-        return [Game.get_by_id(g['id']) for g in game_ids]
+            return []
+
+        ids = [g["id"] for g in game_ids]
+        placeholders = ",".join("?" for _ in ids)
+        games = db_manager.query(
+            f"""
+            SELECT g.*
+            FROM {db_manager.TABLE_GAMES} g
+            WHERE g.id IN ({placeholders}) AND g.visible = 1
+            ORDER BY g.name ASC, g.id ASC
+            """,
+            ids,
+        ) or []
+        if not games:
+            return []
+
+        owner_ids = sorted({game["owner_id"] for game in games})
+        discipline_ids = sorted({game["discipline"] for game in games})
+
+        user_rows = db_manager.query(
+            f"SELECT * FROM {db_manager.TABLE_USERS} WHERE id IN ({','.join('?' for _ in owner_ids)})",
+            owner_ids,
+        ) or []
+        users_by_id = {
+            row["id"]: User.from_dict(row)
+            for row in user_rows
+        }
+
+        player_rows = db_manager.query(
+            f"""
+            SELECT gp.game_id, u.*
+            FROM {db_manager.TABLE_GAME_PLAYERS} gp
+            INNER JOIN {db_manager.TABLE_USERS} u ON u.id = gp.player_id
+            WHERE gp.game_id IN ({placeholders})
+            ORDER BY gp.game_id ASC, u.name ASC, u.id ASC
+            """,
+            ids,
+        ) or []
+        players_by_game_id = {}
+        for row in player_rows:
+            player = users_by_id.get(row["id"])
+            if player is None:
+                player = User.from_dict(row)
+                users_by_id[row["id"]] = player
+            players_by_game_id.setdefault(row["game_id"], []).append(player)
+
+        discipline_rows = db_manager.query(
+            f"SELECT * FROM {db_manager.TABLE_DISCIPLINES} WHERE id IN ({','.join('?' for _ in discipline_ids)})",
+            discipline_ids,
+        ) or []
+        event_type_rows = db_manager.query(
+            f"SELECT * FROM {db_manager.TABLE_EVENT_TYPES} WHERE discipline_id IN ({','.join('?' for _ in discipline_ids)})",
+            discipline_ids,
+        ) or []
+        event_types_by_discipline_id = {}
+        for row in event_type_rows:
+            event_types_by_discipline_id.setdefault(row["discipline_id"], []).append(EventType.from_dict(row))
+        disciplines_by_id = {
+            row["id"]: Discipline.from_dict(row, event_types_by_discipline_id.get(row["id"]))
+            for row in discipline_rows
+        }
+
+        return [
+            Game.from_dict(
+                g_dict=game,
+                discipline=disciplines_by_id.get(game["discipline"]),
+                creator=users_by_id.get(game["owner_id"]),
+                players=players_by_game_id.get(game["id"], []),
+            )
+            for game in games
+        ]
 
     @staticmethod
     def get_by_id(game_id):

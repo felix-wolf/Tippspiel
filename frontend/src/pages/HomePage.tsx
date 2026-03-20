@@ -1,7 +1,7 @@
 import { BettingGameList } from "../components/domain/lists/BettingGameList";
 import { useCurrentUser, useLogout } from "../contexts/UserContext";
 import { Button } from "../components/design/Button";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
 import { GamesContext } from "../contexts/GameContext";
 import { Game } from "../models/Game";
@@ -22,11 +22,14 @@ export function HomePage() {
     key: "games",
   });
 
-  if (data) {
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
     data.forEach((game: Game) =>
       setCache(Game.buildCacheKey(game.id), game, 2 * 60),
     );
-  }
+  }, [data, setCache]);
 
   const logoutClick = useCallback(() => {
     logout().then();
