@@ -169,7 +169,12 @@ class Event(BaseModel):
         return datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
 
     @staticmethod
-    def get_by_id(event_id, get_full_object: bool = True):
+    def get_by_id(
+            event_id,
+            get_full_object: bool = True,
+            user_id: str | None = None,
+            process_unscored: bool = True,
+    ):
         sql = f"SELECT e.* FROM VIEW_{db_manager.TABLE_EVENTS} e WHERE e.id = ?"
         event_data = db_manager.query_one(sql, [event_id])
         if not event_data:
@@ -177,13 +182,15 @@ class Event(BaseModel):
         # get event_type
         event_type = EventType.get_by_id(event_data["event_type_id"])
         event = Event.from_dict(event_data, event_type)
+        if user_id is not None and not get_full_object:
+            return event.load_user_bet(user_id)
         if not get_full_object:
             return event.load_bet_user_ids()
         event = event.get_bets()
         event = event.getResults()
         # check for unprocessed events
-        unprocessed_bets = [bet for bet in event.bets if not bet.score]
-        if len(unprocessed_bets) > 0 and event.results is not None and event.results != []:
+        unprocessed_bets = [bet for bet in event.bets if bet.score is None]
+        if process_unscored and len(unprocessed_bets) > 0 and event.results is not None and event.results != []:
             success, error = event.process_results(event.results)
             if not success:
                 return None
@@ -489,6 +496,12 @@ class Event(BaseModel):
             [self.id],
         )
         self.has_bets_for_users = [row["user_id"] for row in bet_rows or []]
+        return self
+
+    def load_user_bet(self, user_id: str):
+        bet = Bet.get_by_event_id_user_id(event_id=self.id, user_id=user_id)
+        self.bets = [bet] if bet else []
+        self.has_bets_for_users = [user_id] if bet else []
         return self
 
     def process_results(self, results: list[Result]):

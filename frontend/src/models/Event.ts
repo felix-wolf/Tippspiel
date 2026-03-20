@@ -275,8 +275,8 @@ export class Event {
     );
   }
 
-  public static buildCacheKey(eventId: string) {
-    return `event${eventId}`;
+  public static buildCacheKey(eventId: string, mode: "full" | "betting" = "full") {
+    return `event${mode}${eventId}`;
   }
 
   public static buildListCacheKey(
@@ -370,6 +370,13 @@ export class Event {
   public static fetchOne(event_id: string): Promise<Event> {
     return NetworkHelper.fetchOne(
       `/api/event?event_id=${event_id}&full_object=true`,
+      Event.fromJson,
+    );
+  }
+
+  public static fetchForBetting(event_id: string): Promise<Event> {
+    return NetworkHelper.fetchOne(
+      `/api/event?event_id=${event_id}&full_object=false&user_bet=true`,
       Event.fromJson,
     );
   }

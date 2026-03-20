@@ -26,7 +26,7 @@ export function ViewBetsPage() {
   });
 
   const eventFetchValues = useFetch<Event>({
-    key: Event.buildCacheKey(event_id),
+    key: Event.buildCacheKey(event_id, "full"),
     func: Event.fetchOne,
     args: [event_id],
   });
@@ -38,12 +38,8 @@ export function ViewBetsPage() {
     refetch: refetchEvent,
     loading: eventLoading,
   } = eventFetchValues;
-  let isCreator = false;
   const isAdmin = user?.isAdmin === true;
-
-  if (game) {
-    isCreator = game.creator?.id == user?.id;
-  }
+  const isCreator = game?.creator?.id == user?.id;
   const canManageResults = isCreator || isAdmin;
 
   useEffect(() => {

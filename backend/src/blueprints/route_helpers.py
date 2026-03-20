@@ -49,8 +49,16 @@ def get_game_or_error(
 def get_event_or_error(
     event_id,
     not_found_message: str = "Das Event wurde nicht gefunden.",
+    get_full_object: bool = True,
+    user_id: str | None = None,
+    process_unscored: bool = True,
 ):
-    event = Event.get_by_id(event_id)
+    event = Event.get_by_id(
+        event_id,
+        get_full_object=get_full_object,
+        user_id=user_id,
+        process_unscored=process_unscored,
+    )
     if not event:
         return None, error_response(not_found_message, 404)
     return event, None

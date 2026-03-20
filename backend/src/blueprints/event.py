@@ -42,13 +42,19 @@ def handle_event_request():
         page_num = request.args.get("page", type=int)
         past = request.args.get("past") == "true"
         full_object = request.args.get("full_object") == "true"
+        user_bet = request.args.get("user_bet") == "true"
         if game_id:
             return [event.to_dict() for event in Event.get_all_by_game_id(game_id, full_object, page_num, past)]
         if event_id:
-            event, error = get_event_or_error(event_id)
+            event, error = get_event_or_error(
+                event_id,
+                get_full_object=full_object,
+                user_id=current_user.get_id() if user_bet and not full_object else None,
+                process_unscored=full_object,
+            )
             if error:
                 return error
-            return Event.get_by_id(event.id, full_object).to_dict()
+            return event.to_dict()
         else:
             return error_response("Die Spiel-ID fehlt.", 400)
     elif request.method == "POST":

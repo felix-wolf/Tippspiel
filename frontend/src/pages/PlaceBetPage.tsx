@@ -15,9 +15,9 @@ export function PlaceBetPage() {
   const navigate = useNavigate();
   const { deleteCache } = useCache();
   const { data, loading } = useFetch<Event>({
-    key: Event.buildCacheKey(event_id),
+    key: Event.buildCacheKey(event_id, "betting"),
     cache: { enabled: true, ttl: 2 * 60 },
-    func: Event.fetchOne,
+    func: Event.fetchForBetting,
     args: [event_id],
   });
 
@@ -30,7 +30,8 @@ export function PlaceBetPage() {
       Event.saveBets(event_id, predictions as Predictions)
         .then((_) => {
           deleteCache(Event.buildListCacheKey(game_id, page_num, "upcoming"));
-          deleteCache(Event.buildCacheKey(event_id));
+          deleteCache(Event.buildCacheKey(event_id, "betting"));
+          deleteCache(Event.buildCacheKey(event_id, "full"));
           navigate(-1);
         })
         .catch((error) => console.log("error saving bets", error));

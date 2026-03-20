@@ -91,6 +91,49 @@ def test_event_get_by_game_includes_users_with_bets(client, app, base_data):
     assert payload[0]["has_bets_for_users"] == [base_data["user"].id]
 
 
+def test_event_get_by_id_for_betting_returns_only_current_user_bet(app, client, base_data):
+    game_id = _create_game(app, base_data)
+    second_client = app.test_client()
+    with second_client.session_transaction() as sess:
+        sess.clear()
+        sess["_user_id"] = base_data["second_user"].id
+
+    with app.app_context():
+        game = Game.get_by_id(game_id)
+        assert game is not None
+        second_user = User.get_by_id(base_data["second_user"].id)
+        assert second_user is not None
+        assert game.add_player(second_user)
+
+        event = Event(
+            name="Betting Event",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=Event.current_time() + timedelta(hours=2),
+            allow_partial_points=True,
+            num_bets=1,
+            points_correct_bet=5,
+        )
+        event.save_to_db()
+        assert event.save_bet(
+            base_data["user"].id,
+            [{"object_id": base_data["athlete"].id, "predicted_place": 1, "object_name": "Franz Fischer"}],
+        )[0]
+        assert event.save_bet(
+            base_data["second_user"].id,
+            [{"object_id": base_data["athlete"].id, "predicted_place": 1, "object_name": "Franz Fischer"}],
+        )[0]
+
+    resp = second_client.get(f"/api/event?event_id={event.id}&full_object=false&user_bet=true")
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["results"] == []
+    assert payload["has_bets_for_users"] == [base_data["second_user"].id]
+    assert len(payload["bets"]) == 1
+    assert payload["bets"][0]["user_id"] == base_data["second_user"].id
+
+
 def test_event_create_and_update_are_admin_only(client, base_data):
     game_id = client.post(
         "/api/game",
