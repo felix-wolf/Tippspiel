@@ -36,13 +36,10 @@ CREATE VIEW VIEW_{TABLE_EVENTS} AS
         COALESCE(se.source_race_id, e.source_race_id) AS source_race_id,
         COALESCE(se.season_id, e.season_id) AS season_id,
         e.shared_event_id,
-        g.discipline,
-        COUNT(b.id) > 0 AS has_bets
+        g.discipline
     FROM {TABLE_EVENTS} e
     LEFT JOIN {TABLE_SHARED_EVENTS} se ON se.id = e.shared_event_id
     INNER JOIN {TABLE_GAMES} g on e.game_id = g.id
-    LEFT JOIN {TABLE_BETS} b ON e.id = b.event_id
-    GROUP BY e.id
     ORDER BY COALESCE(se.datetime, e.datetime)
 """
 VIEW_GAME_PREDICTION_STATS_SQL = f"""
