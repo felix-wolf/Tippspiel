@@ -7,12 +7,11 @@ from src.models.event_type import EventType
 from src.models.result import Result
 import src.utils as utils
 from zoneinfo import ZoneInfo
-from src.models.base_model import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
-class Event(BaseModel):
+class Event:
     LOCATION_SEPARATOR = " - "
     RACE_FORMAT_PATTERNS = [
         ("single mixed relay", "single mixed relay"),
@@ -649,7 +648,3 @@ class Event(BaseModel):
         if result is not None:
             return [Event.get_by_id(e['id']) for e in result]
         return result
-
-    @staticmethod
-    def get_base_data():
-        raise NotImplementedError("Event.get_base_data is not implemented")

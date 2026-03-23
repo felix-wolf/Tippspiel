@@ -5,12 +5,11 @@ from src.database import db_manager
 from src.models.discipline import Discipline
 from src.models.event_type import EventType
 from src.models.user import User
-from src.models.base_model import BaseModel
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-class Game(BaseModel):
+class Game:
 
     def __init__(self, name, pw_hash, creator: User, discipline: Discipline, game_id: str = None, players: [User] = None):
         if players is None:
@@ -206,7 +205,3 @@ class Game(BaseModel):
         discipline = Discipline.get_by_id(discipline_name)
         game = Game(name=name, pw_hash=pw_hash, discipline=discipline, creator=creator, players=[creator])
         return game.save_to_db()
-
-    @staticmethod
-    def get_base_data():
-        raise NotImplementedError()

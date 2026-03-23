@@ -1,11 +1,10 @@
 import logging
 import src.utils as utils
 from src.database import db_manager
-from src.models.base_model import BaseModel
 
 logger = logging.getLogger(__name__)
 
-class Prediction(BaseModel):
+class Prediction:
 
     def __init__(
             self, bet_id: str, object_id: str, object_name: str, predicted_place: int,
@@ -116,16 +115,8 @@ class Prediction(BaseModel):
             return True
         return db_manager.execute(sql, params, commit=commit)
 
-    @staticmethod
-    def get_all():
-        raise NotImplementedError("Prediction.get_all is not implemented")
 
-    @staticmethod
-    def get_base_data():
-        raise NotImplementedError("Prediction.get_base_data is not implemented")
-
-
-class Bet(BaseModel):
+class Bet:
 
     def __init__(
             self, user_id: str, event_id: str, predictions: list[Prediction] = None,
@@ -266,15 +257,3 @@ class Bet(BaseModel):
     def delete(self):
         sql = f"DELETE FROM {db_manager.TABLE_BETS} WHERE event_id = ? "
         return db_manager.execute(sql, [self.event_id])
-
-    @staticmethod
-    def get_all():
-        raise NotImplementedError("Bet.get_all is not implemented")
-
-    @staticmethod
-    def get_base_data():
-        raise NotImplementedError("Bet.get_base_data is not implemented")
-
-    @staticmethod
-    def get_by_id():
-        raise NotImplementedError("Bet.get_by_id is not implemented")

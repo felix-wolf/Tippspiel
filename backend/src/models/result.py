@@ -1,8 +1,7 @@
 from src.database import db_manager
 import src.utils as utils
-from src.models.base_model import BaseModel
 
-class Result(BaseModel):
+class Result:
 
     def __init__(
             self,
@@ -112,11 +111,3 @@ class Result(BaseModel):
             sql=f"SELECT * FROM {db_manager.TABLE_RESULTS}"
         )
         return [Result.from_dict(r) for r in result]
-    
-    @staticmethod
-    def get_base_data():
-        raise NotImplementedError("Result.get_base_data is not implemented")
-    
-    @staticmethod
-    def get_by_id():
-        raise NotImplementedError("Result.get_by_id is not implemented")

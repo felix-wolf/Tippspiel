@@ -2,14 +2,13 @@ from dataclasses import dataclass
 import logging
 
 import src.utils as utils
-from src.models.base_model import BaseModel
 from src.database import db_manager
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class EventType(BaseModel):
+class EventType:
 
     name: str
     display_name: str
@@ -62,10 +61,6 @@ class EventType(BaseModel):
             "discipline_id": self.discipline_id,
             "betting_on": self.betting_on,
         }
-
-    @staticmethod
-    def get_all():
-        raise NotImplementedError("EventType.get_all is not implemented")
 
     @staticmethod
     def get_by_id(event_type_id):

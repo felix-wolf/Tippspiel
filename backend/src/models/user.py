@@ -2,13 +2,12 @@ import logging
 from src.database import db_manager
 import sys
 import src.utils as utils
-from src.models.base_model import BaseModel
 from flask import current_app, has_app_context
 
 sys.path.append("..")
 logger = logging.getLogger(__name__)
 
-class User(BaseModel):
+class User:
 
     def __init__(self, user_id: str, name: str, pw_hash: str, color: str = None, is_admin: bool = False):
         self.id = user_id
@@ -171,15 +170,3 @@ class User(BaseModel):
     @staticmethod
     def does_exist(name, pw_hash):
         return User.get_by_credentials(name, pw_hash) is not None
-
-
-    @staticmethod
-    def get_all():
-        raise NotImplementedError("User.get_all is not implemented")
-
-    @staticmethod
-    def get_base_data():
-        raise NotImplementedError("User.get_base_data is not implemented")
-
-    def save_to_db(self):
-        raise NotImplementedError("Use User.create to persist new users")

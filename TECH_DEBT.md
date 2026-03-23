@@ -1,6 +1,6 @@
 # Technical Debt Register
 
-Last updated: 2026-03-17
+Last updated: 2026-03-23
 
 This document records the main technical debt and areas that need work across the current code base. It is intentionally opinionated and prioritized so it can guide follow-up work.
 
@@ -46,21 +46,72 @@ This document records the main technical debt and areas that need work across th
   - Keep the explicit mode machine intact as new editor features are added.
   - Add one or two focused UI tests around the modal flow if richer component-test tooling is introduced later.
 
+### 3. Backend endpoints still mix HTTP parsing, authorization, and domain orchestration in large handlers
+- Files:
+  - `backend/src/blueprints/event.py`
+  - `backend/src/blueprints/game.py`
+  - `backend/src/blueprints/result.py`
+  - `backend/src/blueprints/login.py`
+- What is wrong:
+  - Several endpoints still branch on `request.method` and perform request parsing, authorization checks, payload decoding, and model orchestration inline.
+  - `event.py` in particular handles list import, single-event CRUD, bet saving, and start-list validation in one module with repeated `payload/error` and `entity/error` flows.
+  - Newer backend code introduced `ServiceResult`, but the blueprint layer still mixes direct dict returns, `error_response(...)`, and `ensure_service_result(...)`.
+- Why it matters:
+  - The code paths are harder to scan and change because the HTTP layer still owns too much business logic.
+  - Authorization and validation rules are easy to duplicate or drift when each route reassembles the same control flow slightly differently.
+- Suggested direction:
+  - Split multi-method handlers into single-purpose route functions or thin controller helpers.
+  - Standardize the blueprint layer on one response contract and push orchestration into service functions that return `ServiceResult`.
+
 ## Lower Priority / Structural Cleanup
 
-### 3. Some abstract/base contracts are incomplete
+### 4. DB transaction handling is still too low-level and repetitive
 - Files:
-  - `backend/src/models/base_model.py`
-  - `backend/src/models/discipline.py`
-  - `backend/src/models/*`
+  - `backend/src/database/db_manager.py`
+  - `backend/src/models/event.py`
+  - `backend/src/models/user.py`
+  - `backend/src/models/bet.py`
+  - `backend/src/blueprints/admin_service.py`
+  - `backend/src/blueprints/result_service.py`
 - What is wrong:
-  - Several methods use `pass` or raise broad `NotImplementedError` in a way that reflects an incomplete shared model layer.
+  - `db_manager.py` still exposes raw `start_transaction` / `commit_transaction` / `rollback_transaction` primitives, so callers have to repeat the same `conn = None` / `try` / `except` / `finally` transaction pattern.
+  - Read helpers also duplicate connection and cursor setup, and row-to-dict conversion is reimplemented per query instead of using a `row_factory`.
 - Why it matters:
-  - The inheritance structure suggests a stronger abstraction than the code actually provides.
+  - Boilerplate transaction code obscures the intent of model/service methods and makes error handling inconsistent.
+  - Small persistence changes cost more than they should because each call site has to manage connection lifecycle manually.
 - Suggested direction:
-  - Either tighten the base contracts or simplify the inheritance model.
+  - Introduce a transaction/context-manager helper in `db_manager` and migrate multi-step writes onto it.
+  - Set a SQLite row factory once per connection so `query` and `query_one` can be simplified.
 
-### 4. Test coverage is better than before, but still misses some operational paths
+### 5. Model/service boundaries are still inconsistent in a few utility classes
+- Files:
+  - `backend/src/models/notification_helper.py`
+  - `backend/src/models/score_event.py`
+  - `backend/src/models/game_stats.py`
+- What is wrong:
+  - The old shared `BaseModel` contract was removed on 2026-03-23 because it forced fake CRUD methods onto classes that were really DTOs or helpers.
+  - A few classes still sit in `models/` even though they behave more like read-models or service helpers than persistence-backed domain entities.
+- Why it matters:
+  - The most misleading inheritance noise is gone, but the package structure still makes some utility/read-model classes look more uniform than they really are.
+- Suggested direction:
+  - Keep trimming fake model semantics from helper/read-only classes and consider moving non-entity helpers out of `models/` when convenient.
+
+### 6. Backend bootstrap/auth code still carries legacy scaffolding that no longer pulls its weight
+- Files:
+  - `backend/main.py`
+  - `backend/src/models/user.py`
+  - `backend/src/blueprints/*.py`
+- What is wrong:
+  - There is still dead or legacy-looking glue such as the unused `hash_password(...)` helper in `main.py`, `sys.path.append("..")` in `user.py`, and broad `from flask_login import *` imports across blueprints.
+  - The custom `User` object still implements older Flask-Login style methods directly, which makes the class noisier than necessary if the project is willing to align with `UserMixin`.
+- Why it matters:
+  - None of these issues is severe on its own, but together they make the backend look more custom and fragile than it needs to be.
+  - The extra scaffolding raises the cost of understanding startup and auth behavior because it is harder to tell what is intentional versus leftover.
+- Suggested direction:
+  - Remove dead helpers and implicit path hacks.
+  - Replace wildcard imports with explicit imports and consider moving `User` onto `UserMixin` to shed boilerplate auth methods.
+
+### 7. Test coverage is better than before, but still misses some operational paths
 - Files:
   - `backend/test/`
   - `frontend/test/`
@@ -75,10 +126,14 @@ This document records the main technical debt and areas that need work across th
 ## Suggested Work Order
 
 ### Phase 1
-- Simplify event import modal state handling.
+- Simplify backend blueprint/service boundaries for event, game, and result flows.
 
 ### Phase 2
+- Introduce DB transaction/context helpers and reduce persistence boilerplate.
 - Tighten the shared model/base contracts.
+
+### Phase 3
+- Simplify event import modal state handling.
 - Add thin workflow tests for import, result processing, and migration-sensitive paths.
 
 ## Notes
@@ -94,9 +149,11 @@ This document records the main technical debt and areas that need work across th
 - Generic DB helpers now log and re-raise query/statement/transaction failures instead of silently returning `None`, as of 2026-03-16.
 - Backend model/bootstrap deserialization and notification paths now use structured logging instead of `print(...)`, as of 2026-03-16.
 - Blueprint/service error handling now uses a shared `ServiceResult` contract instead of ad-hoc `(payload, error, status)` tuples, as of 2026-03-16.
+- A focused backend simplification review on 2026-03-17 found remaining debt in large blueprint handlers, low-level transaction plumbing, and legacy bootstrap/auth scaffolding.
 - Biathlon athlete bootstrap remains IBU-first, but fallback CSV data now matches that model better: `populate_db.py` writes to the configured DB path, `athletes.csv` can persist `ibu_id`, and `backend/refresh_athlete_seed_data.py` explicitly refreshes the fallback seed cache as of 2026-03-17.
 - API-facing frontend model serialization now uses plain payload objects, and `Discipline` / `EventType` were moved out of `models/user`, as of 2026-03-11.
 - `UserContext` now lives under `frontend/src/contexts/`, `User` now lives under `frontend/src/models/`, and the old `frontend/src/models/user/` structure is gone, as of 2026-03-11.
+- The old backend `BaseModel` abstraction was removed on 2026-03-23 after it was reduced to fake CRUD contracts across unrelated model classes.
 - The `realbiathlon` / Selenium scraping path was removed on 2026-03-11.
 - The stale Selenium dependency was removed from backend packaging metadata on 2026-03-11.
 - Discipline-level URL compatibility fields and the dead `/api/game/events` endpoint were removed on 2026-03-11.

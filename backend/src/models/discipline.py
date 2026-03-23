@@ -1,12 +1,11 @@
 import logging
 from src.database import db_manager
-from src.models.base_model import BaseModel
 from src.models.event_type import EventType
 
 logger = logging.getLogger(__name__)
 
 
-class Discipline(BaseModel):
+class Discipline:
     EVENT_IMPORT_MODE_MANUAL = "manual"
     EVENT_IMPORT_MODE_OFFICIAL_API = "official_api"
     RESULT_MODE_MANUAL = "manual"

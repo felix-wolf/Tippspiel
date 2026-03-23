@@ -6,14 +6,13 @@ import requests
 
 from src.database import db_manager
 from src.ibu_api import IbuApiClient, IbuApiError
-from src.models.base_model import BaseModel
 import src.utils as utils
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(eq=False)
-class Athlete(BaseModel):
+class Athlete:
 
     id: str
     ibu_id: str | None

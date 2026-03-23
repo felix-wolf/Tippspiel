@@ -1,11 +1,10 @@
 from datetime import datetime
 import logging
 from src.database import db_manager
-from src.models.base_model import BaseModel
 
 logger = logging.getLogger(__name__)
 
-class ScoreEvent(BaseModel):
+class ScoreEvent:
 
     def __init__(self, id: str, game_id: str, name: str, dt: datetime, scores=[]):
         self.id = id
@@ -77,18 +76,3 @@ class ScoreEvent(BaseModel):
             for event in ordered_events
             if event.scores and any(score is not None for score in event.scores.values())
         ]
-    
-    @staticmethod
-    def get_all():
-        raise NotImplementedError("ScoreEvent.get_all is not implemented")
-    
-    @staticmethod
-    def get_base_data():
-        raise NotImplementedError("ScoreEvent.get_base_data is not implemented")
-    
-    @staticmethod
-    def get_by_id():
-        raise NotImplementedError("ScoreEvent.get_by_id is not implemented")
-    
-    def save_to_db(self):
-        raise NotImplementedError("ScoreEvent.save_to_db is not implemented")

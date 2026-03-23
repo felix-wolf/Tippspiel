@@ -2,13 +2,12 @@ from dataclasses import dataclass
 import logging
 
 from src.database import db_manager
-from src.models.base_model import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class Country(BaseModel):
+class Country:
 
     code: str
     name: str
