@@ -195,7 +195,6 @@ def test_event_import_is_idempotent_for_existing_official_event(client, app, bas
             source_event_id="event-123",
             source_race_id="race-123",
             season_id="2526",
-            url="https://www.biathlonworld.com/results/race-123",
         )
         payload = imported_event.to_dict()
 
@@ -239,7 +238,6 @@ def test_official_event_import_is_shared_across_games(client, app, base_data):
                 source_event_id="event-123",
                 source_race_id="race-123",
                 season_id="2526",
-                url="https://www.biathlonworld.com/results/race-123",
             )
             payloads.append(json.dumps(imported_event.to_dict()))
 
@@ -328,7 +326,6 @@ def test_admin_can_import_official_event_into_foreign_game(client, app, base_dat
             source_event_id="event-foreign",
             source_race_id="race-foreign",
             season_id="2526",
-            url="https://www.biathlonworld.com/results/race-foreign",
         )
         payload = json.dumps(imported_event.to_dict())
 
@@ -366,7 +363,6 @@ def test_admin_update_of_shared_event_affects_all_linked_game_events(client, app
                 source_event_id="event-shared",
                 source_race_id="race-shared",
                 season_id="2526",
-                url="https://www.biathlonworld.com/results/race-shared",
             )
             imported_event.save_to_db()
             event_ids.append(imported_event.id)

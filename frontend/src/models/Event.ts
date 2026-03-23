@@ -79,7 +79,6 @@ export class Event {
   private readonly _datetime: Date;
   private readonly _hasBetsForUsers: string[];
   private readonly _results: Result[];
-  private readonly _eventUrl?: string;
   private readonly _location?: string;
   private readonly _raceFormat?: string;
   private readonly _sourceProvider?: string;
@@ -99,7 +98,6 @@ export class Event {
     results: Result[],
     hasBetsForUsers: string[],
     date?: Date,
-    eventUrl?: string,
     location?: string,
     raceFormat?: string,
     sourceProvider?: string,
@@ -117,7 +115,6 @@ export class Event {
     this._allowPartialPoints = allowPartialPoints;
     this._results = results;
     this._hasBetsForUsers = hasBetsForUsers;
-    this._eventUrl = eventUrl;
     this._location = location;
     this._raceFormat = raceFormat;
     this._sourceProvider = sourceProvider;
@@ -171,10 +168,6 @@ export class Event {
     return this._results;
   }
 
-  get eventUrl(): string | undefined {
-    return this._eventUrl;
-  }
-
   get location(): string | undefined {
     return this._location;
   }
@@ -222,7 +215,6 @@ export class Event {
       results: this._results.map((result) => result.toPayload()),
       bets: this._bets.map((bet) => bet.toPayload()),
       event_type: this._eventType.toPayload(),
-      url: this._eventUrl ?? null,
       location: this._location ?? null,
       race_format: this._raceFormat ?? null,
       source_provider: this._sourceProvider ?? null,
@@ -301,7 +293,6 @@ export class Event {
       json["results"].map((result: any) => Result.fromJson(result)),
       json["has_bets_for_users"],
       undefined,
-      json["url"],
       json["location"],
       json["race_format"],
       json["source_provider"],

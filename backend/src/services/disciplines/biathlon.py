@@ -124,7 +124,6 @@ class BiathlonEventImporter:
                     allow_partial_points=True,
                     location=race.location,
                     race_format=race.race_format or race.title,
-                    url=f"{self.RESULT_PAGE_PREFIX}{race.race_id}",
                     source_provider="ibu",
                     source_event_id=race.event_id,
                     source_race_id=race.race_id,

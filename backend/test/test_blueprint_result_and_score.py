@@ -289,7 +289,6 @@ def test_process_results_rejects_result_url_upload(client, app, base_data):
             event_type=base_data["event_type"],
             dt=datetime.now() + timedelta(hours=1),
             allow_partial_points=True,
-            url="https://example.com/results/world-cup",
         )
         event.save_to_db()
 
@@ -317,7 +316,6 @@ def test_results_check_ignores_legacy_url_only_event(admin_client, app, base_dat
             event_type=base_data["event_type"],
             dt=berlin_local_now_naive() - timedelta(hours=2),
             allow_partial_points=True,
-            url="https://example.com/results/world-cup",
         )
         event.save_to_db()
 

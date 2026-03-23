@@ -346,7 +346,6 @@ def check_recent_results(now=None):
         due_event_ids = {event.id for event in events}
         shared_results_result = load_results(
             event=representative_event,
-            url=representative_event.url,
         )
         if shared_results_result.is_error or not shared_results_result.payload:
             if shared_results_result.status_code == 409:

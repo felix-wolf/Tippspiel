@@ -46,7 +46,6 @@ def _serialize_shared_event_item(item: dict):
         "source_event_id": item["source_event_id"],
         "source_race_id": item["source_race_id"],
         "season_id": item["season_id"],
-        "url": item["url"],
         "linked_event_count": item["linked_event_count"],
         "with_results_count": item["with_results_count"],
         "without_results_count": item["without_results_count"],
@@ -70,7 +69,6 @@ def list_shared_event_diagnostics():
             e.source_event_id,
             e.source_race_id,
             e.season_id,
-            e.url,
             e.game_id,
             g.name AS game_name,
             EXISTS(
@@ -99,7 +97,6 @@ def list_shared_event_diagnostics():
                 "source_event_id": row["source_event_id"],
                 "source_race_id": row["source_race_id"],
                 "season_id": row["season_id"],
-                "url": row["url"],
                 "linked_event_count": 0,
                 "with_results_count": 0,
                 "without_results_count": 0,
@@ -228,8 +225,8 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
             conn.execute(
                 f"""
                 INSERT INTO {db_manager.TABLE_SHARED_EVENTS}
-                (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, url)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
                 """,
                 [
                     next_row["id"],
@@ -242,7 +239,6 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
                     next_row["source_event_id"],
                     next_row["source_race_id"],
                     next_row["season_id"],
-                    next_row["url"],
                 ],
             )
             conn.execute(

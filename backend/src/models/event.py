@@ -85,7 +85,7 @@ class Event(BaseModel):
             self, name: str, game_id: str, event_type: EventType, dt: datetime,
             allow_partial_points: bool, num_bets: int = None, points_correct_bet: int = None,
             event_id: str = None, bets: list[Bet] = None, results: list[Result] = None,
-            location: str = None, race_format: str = None, url: str = None,
+            location: str = None, race_format: str = None,
             source_provider: str = None, source_event_id: str = None, source_race_id: str = None,
             season_id: str = None, shared_event_id: str = None,
             ):
@@ -113,7 +113,6 @@ class Event(BaseModel):
         self.results = results
         self.location = Event.resolve_location(name, event_type, location)
         self.race_format = Event.resolve_race_format(name, event_type, race_format)
-        self.url = url
         self.source_provider = source_provider
         self.source_event_id = source_event_id
         self.source_race_id = source_race_id
@@ -151,7 +150,6 @@ class Event(BaseModel):
             "bets": bets,
             "results": results,
             "has_bets_for_users": self.has_bets_for_users,
-            "url": self.url,
             "source_provider": self.source_provider,
             "source_event_id": self.source_event_id,
             "source_race_id": self.source_race_id,
@@ -218,7 +216,6 @@ class Event(BaseModel):
                     dt=datetime.strptime(e_dict['datetime'], "%Y-%m-%d %H:%M:%S"),
                     location=e_dict.get("location"),
                     race_format=e_dict.get("race_format"),
-                    url=e_dict.get("url"),
                     source_provider=e_dict.get("source_provider"),
                     source_event_id=e_dict.get("source_event_id"),
                     source_race_id=e_dict.get("source_race_id"),
@@ -287,7 +284,7 @@ class Event(BaseModel):
         return [Event.get_by_id(row["id"], get_full_objects) for row in res]
 
     @staticmethod
-    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, race_format: str = None, url: str = None, source_provider: str = None, source_event_id: str = None, source_race_id: str = None, season_id: str = None):
+    def create(name: str, game_id: str, event_type_id: str, dt: datetime, num_bets: int, points_correct_bet: int, allow_partial_points: bool, location: str = None, race_format: str = None, source_provider: str = None, source_event_id: str = None, source_race_id: str = None, season_id: str = None):
         # insert event
         event_type = EventType.get_by_id(event_type_id)
         if not event_type:
@@ -295,7 +292,7 @@ class Event(BaseModel):
         event = Event(
             name=name, game_id=game_id, event_type=event_type, dt=dt, allow_partial_points=allow_partial_points,
             num_bets=num_bets, points_correct_bet=points_correct_bet,
-            location=location, race_format=race_format, url=url,
+            location=location, race_format=race_format,
             source_provider=source_provider, source_event_id=source_event_id, source_race_id=source_race_id,
             season_id=season_id,
             )
@@ -356,8 +353,8 @@ class Event(BaseModel):
                     raise ValueError("shared event could not be saved")
             sql = f"""
                 INSERT INTO {db_manager.TABLE_EVENTS}
-                (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, season_id, url, shared_event_id)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, season_id, shared_event_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """
             conn.executemany(
                 sql,
@@ -377,7 +374,6 @@ class Event(BaseModel):
                         event.source_event_id,
                         event.source_race_id,
                         event.season_id,
-                        event.url,
                         event.shared_event_id,
                     )
                     for event in events_to_save
@@ -397,8 +393,8 @@ class Event(BaseModel):
     def _save_shared_event(self, conn=None):
         sql = f"""
             INSERT INTO {db_manager.TABLE_SHARED_EVENTS}
-            (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, url)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 location = excluded.location,
@@ -408,8 +404,7 @@ class Event(BaseModel):
                 source_provider = excluded.source_provider,
                 source_event_id = excluded.source_event_id,
                 source_race_id = excluded.source_race_id,
-                season_id = excluded.season_id,
-                url = excluded.url
+                season_id = excluded.season_id
         """
         params = [
             self.shared_event_id,
@@ -422,7 +417,6 @@ class Event(BaseModel):
             self.source_event_id,
             self.source_race_id,
             self.season_id,
-            self.url,
         ]
         if conn:
             conn.execute(sql, params)
@@ -439,8 +433,8 @@ class Event(BaseModel):
             return False, self.id
         sql = f"""
         INSERT INTO {db_manager.TABLE_EVENTS}
-            (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, season_id, url, shared_event_id)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            (id, name, location, race_format, game_id, event_type_id, datetime, num_bets, points_correct_bet, allow_partial_points, source_provider, source_event_id, source_race_id, season_id, shared_event_id)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """
         success = db_manager.execute(
             sql, [
@@ -449,7 +443,6 @@ class Event(BaseModel):
                 self.num_bets, self.points_correct_bet, self.allow_partial_points,
                 self.source_provider, self.source_event_id, self.source_race_id,
                 self.season_id,
-                self.url,
                 self.shared_event_id,
             ],
             commit=commit)
@@ -618,18 +611,6 @@ class Event(BaseModel):
                 ]
             )
         return success, self
-    
-    def set_url(self, url: str):
-        self.url = url
-        sql = f"""UPDATE {db_manager.TABLE_EVENTS} SET
-                url = ?
-                WHERE id = ?
-            """
-        success = db_manager.execute(
-            sql,
-            [self.url, self.id]
-        )
-        return success
 
     def delete(self):
         conn = None
