@@ -62,6 +62,8 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=5,
+            source_provider="ibu",
+            source_race_id="race-stats-1",
         )
         event_two = Event(
             name="Antholz - Men Pursuit",
@@ -71,6 +73,8 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=5,
+            source_provider="ibu",
+            source_race_id="race-stats-2",
         )
         event_three = Event(
             name="Ruhpolding - Men Individual",
@@ -80,6 +84,8 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=7,
+            source_provider="ibu",
+            source_race_id="race-stats-3",
         )
         relay_event = Event(
             name="Oberhof - Mixed Relay",
@@ -89,8 +95,19 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
             allow_partial_points=False,
             num_bets=1,
             points_correct_bet=9,
+            source_provider="ibu",
+            source_race_id="race-stats-4",
         )
-        for event in [event_one, event_two, event_three, relay_event]:
+        custom_event = Event(
+            name="Community Cup - Men Sprint",
+            game_id=game_id,
+            event_type=base_data["event_type"],
+            dt=datetime.now() + timedelta(hours=5),
+            allow_partial_points=False,
+            num_bets=1,
+            points_correct_bet=11,
+        )
+        for event in [event_one, event_two, event_three, relay_event, custom_event]:
             event.save_to_db()
 
         assert event_one.save_bet(
@@ -127,15 +144,25 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
             base_data["second_user"].id,
             [{"object_id": base_data["country"].code, "predicted_place": 1, "object_name": base_data["country"].name}],
         )[0]
+        assert custom_event.save_bet(
+            base_data["user"].id,
+            [{"object_id": base_data["athlete"].id, "predicted_place": 1, "object_name": "Franz Fischer"}],
+        )[0]
+        assert custom_event.save_bet(
+            base_data["second_user"].id,
+            [{"object_id": athlete_two.id, "predicted_place": 1, "object_name": "Simon Eder"}],
+        )[0]
 
         refreshed_event_one = Event.get_by_id(event_one.id)
         refreshed_event_two = Event.get_by_id(event_two.id)
         refreshed_event_three = Event.get_by_id(event_three.id)
         refreshed_relay_event = Event.get_by_id(relay_event.id)
+        refreshed_custom_event = Event.get_by_id(custom_event.id)
         assert refreshed_event_one is not None
         assert refreshed_event_two is not None
         assert refreshed_event_three is not None
         assert refreshed_relay_event is not None
+        assert refreshed_custom_event is not None
 
         assert refreshed_event_one.process_results(
             [
@@ -159,6 +186,12 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
             [
                 Result(refreshed_relay_event.id, 1, france.code),
                 Result(refreshed_relay_event.id, 2, base_data["country"].code),
+            ]
+        )[0]
+        assert refreshed_custom_event.process_results(
+            [
+                Result(refreshed_custom_event.id, 1, base_data["athlete"].id),
+                Result(refreshed_custom_event.id, 2, athlete_two.id),
             ]
         )[0]
 
@@ -198,6 +231,7 @@ def test_game_stats_endpoint_returns_user_stats(client, app, base_data):
 
     assert payload["events"]["best_event"]["name"] == "Oberhof - Mixed Relay"
     assert payload["events"]["worst_event"]["name"] == "Antholz - Men Pursuit"
+    assert payload["events"]["best_event"]["name"] != "Community Cup - Men Sprint"
 
     second_response = client.get(
         "/api/game/stats",

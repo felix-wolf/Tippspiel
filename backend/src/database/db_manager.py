@@ -89,6 +89,7 @@ CREATE VIEW VIEW_GamePredictionStats AS
     INNER JOIN {TABLE_USERS} u ON u.id = b.user_id
     INNER JOIN {TABLE_EVENT_TYPES} et ON et.id = COALESCE(se.event_type_id, e.event_type_id)
     LEFT JOIN VIEW_{TABLE_PREDICTIONS} vp ON vp.id = p.id
+    WHERE COALESCE(se.source_race_id, e.source_race_id) IS NOT NULL
 """
 
 logger = logging.getLogger(__name__)
