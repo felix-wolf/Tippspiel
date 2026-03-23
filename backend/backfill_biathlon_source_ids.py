@@ -11,8 +11,15 @@ from src.ibu_api import IbuApiClient
 from src.models.event import Event
 
 
-def get_future_biathlon_events_missing_source_ids(now=None):
-    comparison_time = Event.datetime_to_string(now or Event.current_time())
+def get_biathlon_events_missing_source_ids(include_past: bool = False, now=None):
+    where_clauses = [
+        "g.discipline = 'biathlon'",
+        "COALESCE(TRIM(e.source_race_id), '') = ''",
+    ]
+    params = []
+    if not include_past:
+        where_clauses.append("e.datetime >= ?")
+        params.append(Event.datetime_to_string(now or Event.current_time()))
     sql = f"""
         SELECT
             e.id,
@@ -24,12 +31,19 @@ def get_future_biathlon_events_missing_source_ids(now=None):
         FROM {db_manager.TABLE_EVENTS} e
         INNER JOIN {db_manager.TABLE_GAMES} g ON g.id = e.game_id
         INNER JOIN {db_manager.TABLE_EVENT_TYPES} et ON et.id = e.event_type_id
-        WHERE g.discipline = 'biathlon'
-          AND e.datetime >= ?
-          AND COALESCE(TRIM(e.source_race_id), '') = ''
+        WHERE {" AND ".join(where_clauses)}
         ORDER BY e.datetime ASC
     """
-    return db_manager.query(sql, [comparison_time]) or []
+    return db_manager.query(sql, params) or []
+
+
+def season_ids_for_event_rows(event_rows):
+    season_ids_by_start_year = {}
+    for event_row in event_rows:
+        event_datetime = Event.string_to_datetime(event_row["datetime"])
+        start_year = event_datetime.year if event_datetime.month >= 5 else event_datetime.year - 1
+        season_ids_by_start_year[start_year] = IbuApiClient.format_season_id(start_year)
+    return [season_ids_by_start_year[start_year] for start_year in sorted(season_ids_by_start_year)]
 
 
 def _event_bucket(event_row):
@@ -119,6 +133,7 @@ def build_source_id_updates(event_rows, races):
                     "event_id": event_row["id"],
                     "event_name": event_row["name"],
                     "source_provider": "ibu",
+                    "season_id": match.season_id,
                     "source_event_id": match.event_id,
                     "source_race_id": match.race_id,
                 }
@@ -148,7 +163,7 @@ def apply_source_id_updates(updates):
     db_manager.execute_many(
         f"""
         UPDATE {db_manager.TABLE_EVENTS}
-        SET source_provider = ?, source_event_id = ?, source_race_id = ?
+        SET source_provider = ?, source_event_id = ?, source_race_id = ?, season_id = ?
         WHERE id = ?
         """,
         [
@@ -156,6 +171,7 @@ def apply_source_id_updates(updates):
                 update["source_provider"],
                 update["source_event_id"],
                 update["source_race_id"],
+                update["season_id"],
                 update["event_id"],
             )
             for update in updates
@@ -179,6 +195,11 @@ def parse_args():
         action="store_true",
         help="Show the updates that would be applied without writing to the database.",
     )
+    parser.add_argument(
+        "--include-past",
+        action="store_true",
+        help="Also process past biathlon events instead of limiting the script to future events.",
+    )
     return parser.parse_args()
 
 
@@ -187,11 +208,19 @@ def main():
     app = create_app(args.env)
 
     with app.app_context():
-        event_rows = get_future_biathlon_events_missing_source_ids()
-        races = IbuApiClient().get_importable_races()
+        event_rows = get_biathlon_events_missing_source_ids(include_past=args.include_past)
+        season_ids = season_ids_for_event_rows(event_rows)
+        races = []
+        if season_ids:
+            client = IbuApiClient()
+            for season_id in season_ids:
+                races.extend(client.get_races_for_season(season_id))
         updates, ambiguous, unresolved = build_source_id_updates(event_rows, races)
 
-        print(f"Found {len(event_rows)} future biathlon events without official source ids.")
+        event_scope = "biathlon events" if args.include_past else "future biathlon events"
+        print(f"Found {len(event_rows)} {event_scope} without official source ids.")
+        if season_ids:
+            print(f"Checked IBU seasons: {', '.join(season_ids)}.")
         print(f"Matched {len(updates)} events.")
         print(f"Ambiguous matches: {len(ambiguous)}.")
         print(f"Unresolved matches: {len(unresolved)}.")
@@ -199,7 +228,8 @@ def main():
         for update in updates:
             print(
                 f"{update['event_id']}: {update['source_provider']} "
-                f"{update['source_event_id']} / {update['source_race_id']} <- {update['event_name']}"
+                f"{update['source_event_id']} / {update['source_race_id']} / {update['season_id']} "
+                f"<- {update['event_name']}"
             )
 
         if ambiguous:

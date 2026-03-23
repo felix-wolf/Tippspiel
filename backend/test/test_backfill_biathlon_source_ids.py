@@ -1,6 +1,10 @@
 from datetime import datetime
 
-from backfill_biathlon_source_ids import build_source_id_updates, find_matching_races
+from backfill_biathlon_source_ids import (
+    build_source_id_updates,
+    find_matching_races,
+    season_ids_for_event_rows,
+)
 from src.ibu_api import IbuRace
 
 
@@ -135,6 +139,7 @@ def test_build_source_id_updates_separates_matches_ambiguous_and_unresolved():
             "event_id": "event-1",
             "event_name": "Oberhof - Women Mass Start",
             "source_provider": "ibu",
+            "season_id": "2526",
             "source_event_id": "source-event-1",
             "source_race_id": "race-1",
         }
@@ -152,3 +157,16 @@ def test_build_source_id_updates_separates_matches_ambiguous_and_unresolved():
             "event_name": "Unknown Event",
         }
     ]
+
+
+def test_season_ids_for_event_rows_includes_past_and_future_seasons_in_order():
+    season_ids = season_ids_for_event_rows(
+        [
+            {"datetime": "2025-03-23 15:00:00"},
+            {"datetime": "2026-01-10 14:15:00"},
+            {"datetime": "2026-11-30 12:00:00"},
+            {"datetime": "2026-01-11 15:45:00"},
+        ]
+    )
+
+    assert season_ids == ["2425", "2526", "2627"]
