@@ -15,6 +15,7 @@ type RouteParams<T> = T extends `${infer U}/${infer Rest}`
  */
 export const SiteRoutes = {
   Login: "/",
+  ResetPassword: "/reset-password",
   Home: "/home",
   Admin: "/home/admin",
   Game: "/home/game/:game_id",

@@ -3,6 +3,7 @@ import { SiteRoutes } from "../SiteRoutes";
 import { GamePage } from "./pages/GamePage";
 import UserContextLayout from "./contexts/UserContext";
 import { LoginPage } from "./pages/LoginPage.tsx";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { HomePage } from "./pages/HomePage";
 import { PlaceBetPage } from "./pages/PlaceBetPage";
 import { ViewBetsPage } from "./pages/ViewBetsPage";
@@ -22,6 +23,7 @@ function AppRoutes() {
         <Route element={<AppearanceContextLayout />}>
           <Route path={SiteRoutes.Debug} element={<Debug />} />
           <Route path={SiteRoutes.Login} element={<LoginPage />} />
+          <Route path={SiteRoutes.ResetPassword} element={<ResetPasswordPage />} />
           <Route element={<MainLayout />}>
             <Route path={SiteRoutes.Home} element={<HomePage />} />
             <Route path={SiteRoutes.Admin} element={<AdminPage />} />

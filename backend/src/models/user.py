@@ -1,20 +1,32 @@
 import logging
-from src.database import db_manager
+import sqlite3
 import sys
-import src.utils as utils
+
 from flask import current_app, has_app_context
+
+from src.database import db_manager
+import src.utils as utils
 
 sys.path.append("..")
 logger = logging.getLogger(__name__)
 
 class User:
 
-    def __init__(self, user_id: str, name: str, pw_hash: str, color: str = None, is_admin: bool = False):
+    def __init__(
+        self,
+        user_id: str,
+        name: str,
+        pw_hash: str,
+        color: str = None,
+        is_admin: bool = False,
+        email: str | None = None,
+    ):
         self.id = user_id
         self.name = name
         self.pw_hash = pw_hash
         self.color = color
         self.is_admin = is_admin
+        self.email = email
 
     def to_string(self):
         return f"User{self.id, self.name, self.pw_hash}"
@@ -28,13 +40,16 @@ class User:
     def is_active(self):
         return True
 
-    def to_dict(self):
-        return {
+    def to_dict(self, include_private: bool = False):
+        payload = {
             "id": self.id,
             "name": self.name,
             "color": self.color,
             "is_admin": self.is_admin,
         }
+        if include_private:
+            payload["email"] = self.email
+        return payload
 
     def update_color(self, color):
         sql = f"UPDATE {db_manager.TABLE_USERS} SET color = ? WHERE id = ?"
@@ -48,6 +63,17 @@ class User:
         success = db_manager.execute(sql, [pw_hash, self.id])
         if success:
             self.pw_hash = pw_hash
+        return success
+
+    def update_email(self, email: str | None):
+        normalized_email = utils.normalize_email(email)
+        sql = f"UPDATE {db_manager.TABLE_USERS} SET email = ? WHERE id = ?"
+        try:
+            success = db_manager.execute(sql, [normalized_email, self.id])
+        except sqlite3.IntegrityError:
+            return False
+        if success:
+            self.email = normalized_email
         return success
 
     def update_admin_flag(self, is_admin: bool):
@@ -95,9 +121,10 @@ class User:
         if "color" in user_dict:
             color = user_dict["color"]
         is_admin = bool(user_dict.get("is_admin", False))
+        email = user_dict.get("email")
         if user_dict:
             try:
-                user = User(user_dict['id'], user_dict['name'], user_dict['pw_hash'], color, is_admin)
+                user = User(user_dict['id'], user_dict['name'], user_dict['pw_hash'], color, is_admin, email)
                 if user.name in User.configured_admin_usernames():
                     user.is_admin = True
                 return user
@@ -108,12 +135,16 @@ class User:
             return None
 
     @staticmethod
-    def create(name, pw_hash):
-        user_id = utils.generate_id([name, pw_hash])
+    def create(name, pw_hash, email: str | None = None):
+        normalized_email = utils.normalize_email(email)
+        user_id = utils.generate_id([name, pw_hash, normalized_email or ""])
         color = utils.generateRandomHexColor()
         is_admin = 1 if name in User.configured_admin_usernames() else 0
-        sql = f"INSERT INTO {db_manager.TABLE_USERS} (id, name, pw_hash, color, is_admin) VALUES (?,?,?,?,?)"
-        success = db_manager.execute(sql, [user_id, name, pw_hash, color, is_admin])
+        sql = f"INSERT INTO {db_manager.TABLE_USERS} (id, name, pw_hash, color, is_admin, email) VALUES (?,?,?,?,?,?)"
+        try:
+            success = db_manager.execute(sql, [user_id, name, pw_hash, color, is_admin, normalized_email])
+        except sqlite3.IntegrityError:
+            return False, user_id
         return success, user_id
 
     @staticmethod
@@ -146,6 +177,29 @@ class User:
         return User.from_dict(res)
 
     @staticmethod
+    def get_by_email(email):
+        normalized_email = utils.normalize_email(email)
+        if normalized_email is None:
+            return None
+        sql = f"""
+                SELECT * FROM {db_manager.TABLE_USERS} a
+                WHERE a.email = ?
+                """
+        res = db_manager.query_one(sql, [normalized_email])
+        return User.from_dict(res)
+
+    @staticmethod
+    def get_by_login_identifier(identifier):
+        try:
+            if utils.normalize_email(identifier) is not None:
+                user = User.get_by_email(identifier)
+                if user is not None:
+                    return user
+        except ValueError:
+            pass
+        return User.get_by_name(identifier)
+
+    @staticmethod
     def get_by_credentials(name, pw_hash):
         sql = f"""
                 SELECT * FROM {db_manager.TABLE_USERS} a
@@ -157,8 +211,8 @@ class User:
         return User.from_dict(res)
 
     @staticmethod
-    def authenticate(name, password, salt):
-        user = User.get_by_name(name)
+    def authenticate(identifier, password, salt):
+        user = User.get_by_login_identifier(identifier)
         if user is None:
             return None
         if not utils.verify_user_password(password, user.pw_hash, salt):

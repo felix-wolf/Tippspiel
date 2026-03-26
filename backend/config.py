@@ -46,6 +46,14 @@ def load_config(env: str) -> dict:
         "DB_PATH": env_values.get("TIPPSPIEL_DB_PATH", default_db_paths.get(env, default_db_paths["dev"])),
         "FIREBASE_CREDENTIALS_PATH": env_values.get("TIPPSPIEL_FIREBASE_CREDENTIALS_PATH"),
         "TASK_API_TOKEN": env_values.get("TIPPSPIEL_TASK_API_TOKEN"),
+        "RESEND_API_KEY": env_values.get("TIPPSPIEL_RESEND_API_KEY"),
+        "EMAIL_FROM": env_values.get("TIPPSPIEL_EMAIL_FROM"),
+        "EMAIL_REPLY_TO": env_values.get("TIPPSPIEL_EMAIL_REPLY_TO"),
+        "APP_BASE_URL": env_values.get("TIPPSPIEL_APP_BASE_URL"),
+        "PASSWORD_RESET_PATH": env_values.get("TIPPSPIEL_PASSWORD_RESET_PATH", "/reset-password"),
+        "PASSWORD_RESET_TOKEN_TTL_MINUTES": int(
+            env_values.get("TIPPSPIEL_PASSWORD_RESET_TOKEN_TTL_MINUTES", "30")
+        ),
         "ADMIN_USERNAMES": [
             item.strip()
             for item in env_values.get("TIPPSPIEL_ADMIN_USERNAMES", "").split(",")

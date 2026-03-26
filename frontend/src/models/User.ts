@@ -1,6 +1,10 @@
 import { NetworkHelper } from "./NetworkHelper";
 import { Utils } from "../utils";
 
+type PasswordResetResponse = {
+  message: string;
+};
+
 /**
  * A user of the system.
  */
@@ -11,27 +15,42 @@ export class User {
   private readonly _name: string;
   private readonly _color: string | undefined;
   private readonly _isAdmin: boolean;
+  private readonly _email: string | undefined;
 
-  constructor(id: string, name: string, color: string | undefined, isAdmin: boolean = false) {
+  constructor(
+    id: string,
+    name: string,
+    color: string | undefined,
+    isAdmin: boolean = false,
+    email?: string,
+  ) {
     this._id = id;
     this._name = name;
     this._color = color;
     this._isAdmin = isAdmin;
+    this._email = email;
   }
 
-  public static fromJson(d: any): User {
-    return new User(d["id"], d["name"], d["color"], Boolean(d["is_admin"]));
+  public static fromJson(d: Record<string, unknown>): User {
+    return new User(
+      String(d["id"]),
+      String(d["name"]),
+      typeof d["color"] === "string" ? d["color"] : undefined,
+      Boolean(d["is_admin"]),
+      typeof d["email"] === "string" ? d["email"] : undefined,
+    );
   }
 
-  public static create(name: string, password: string): Promise<User> {
+  public static create(name: string, password: string, email?: string): Promise<User> {
     return NetworkHelper.post("/api/register", User.fromJson, {
       name: name,
       password: password,
+      email: email,
     });
   }
 
   public logout(): Promise<void> {
-    return NetworkHelper.execute("/api/logout", (_: any) => {});
+    return NetworkHelper.execute("/api/logout", () => undefined);
   }
 
   public toStoragePayload() {
@@ -40,12 +59,13 @@ export class User {
       name: this.name,
       color: this.color,
       is_admin: this.isAdmin,
+      email: this.email,
     };
   }
 
-  public static login(name: string, password: string): Promise<User> {
+  public static login(identifier: string, password: string): Promise<User> {
     return NetworkHelper.post(`/api/login`, User.fromJson, {
-      name: name,
+      name: identifier,
       password: password,
     });
   }
@@ -58,6 +78,35 @@ export class User {
     return NetworkHelper.post("/api/user", User.fromJson, {
       color: color,
     });
+  }
+
+  public static updateEmail(email: string): Promise<User> {
+    return NetworkHelper.post("/api/user/email", User.fromJson, {
+      email: email,
+    });
+  }
+
+  public static requestPasswordReset(email: string): Promise<PasswordResetResponse> {
+    return NetworkHelper.post(
+      "/api/password-reset/request",
+      (payload: Record<string, unknown>) => ({
+        message: String(payload["message"] ?? ""),
+      }),
+      { email: email },
+    );
+  }
+
+  public static confirmPasswordReset(
+    token: string,
+    password: string,
+  ): Promise<PasswordResetResponse> {
+    return NetworkHelper.post(
+      "/api/password-reset/confirm",
+      (payload: Record<string, unknown>) => ({
+        message: String(payload["message"] ?? ""),
+      }),
+      { token: token, password: password },
+    );
   }
 
   public saveToStorage() {
@@ -91,5 +140,9 @@ export class User {
 
   public get isAdmin(): boolean {
     return this._isAdmin;
+  }
+
+  public get email(): string | undefined {
+    return this._email;
   }
 }

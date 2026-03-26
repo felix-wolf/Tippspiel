@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import random
+import re
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
@@ -38,6 +39,17 @@ def generateRandomHexColor():
     letters = "0123456789ABCDEF"
     color = "#" + "".join([random.choice(letters) for i in range(6)])
     return color
+
+
+def normalize_email(email):
+    if email is None:
+        return None
+    normalized = email.strip().lower()
+    if not normalized:
+        return None
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized):
+        raise ValueError("invalid email")
+    return normalized
 
 
 def validate_int(value):

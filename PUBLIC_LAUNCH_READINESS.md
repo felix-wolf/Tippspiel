@@ -1,6 +1,6 @@
 # Public Launch Readiness
 
-Last updated: 2026-03-11
+Last updated: 2026-03-23
 
 This document lists the work needed before opening the app to a broader audience of biathlon fans.
 
@@ -31,15 +31,15 @@ Goal: public signups, predictable operations, and acceptable legal/security post
 - Current state:
   - Registration is only `name + password`.
   - There is no email verification.
-  - There is no password reset flow.
-  - There is no account recovery path.
+  - Password reset exists via email link if the user has stored a recovery email address.
+  - There is still no verified account recovery path for users without a trusted email on file.
 - Why this blocks public use:
   - Public users forget passwords.
   - Name-only identity is weak and collision-prone.
   - Support becomes manual immediately.
 - Needed steps:
-  - Add email-based identity or equivalent verified account recovery.
-  - Add password reset.
+  - Add verified email-based identity or equivalent verified account recovery.
+  - Make recovery email collection and verification part of the normal account flow.
   - Add uniqueness rules and UX around usernames/display names.
   - Add minimum password policy and registration validation.
 

@@ -72,3 +72,34 @@ def test_load_config_prefers_real_environment_over_files(monkeypatch, tmp_path):
     assert loaded["SALT"] == "shell-salt"
     assert loaded["DB_PATH"] == "/tmp/custom.db"
     assert loaded["ADMIN_USERNAMES"] == ["alice", "bob"]
+
+
+def test_load_config_includes_resend_settings(monkeypatch, tmp_path):
+    (tmp_path / ".env").write_text(
+        "\n".join(
+            [
+                "TIPPSPIEL_SECRET_KEY=base-secret",
+                "TIPPSPIEL_PASSWORD_SALT=base-salt",
+                "TIPPSPIEL_RESEND_API_KEY=re_test",
+                "TIPPSPIEL_EMAIL_FROM=Tippspiel <no-reply@example.com>",
+                "TIPPSPIEL_EMAIL_REPLY_TO=support@example.com",
+                "TIPPSPIEL_APP_BASE_URL=https://tippspiel.example.com",
+                "TIPPSPIEL_PASSWORD_RESET_PATH=/konto/reset",
+                "TIPPSPIEL_PASSWORD_RESET_TOKEN_TTL_MINUTES=45",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(config, "BACKEND_ROOT", tmp_path)
+    monkeypatch.delenv("TIPPSPIEL_SECRET_KEY", raising=False)
+    monkeypatch.delenv("TIPPSPIEL_PASSWORD_SALT", raising=False)
+
+    loaded = config.load_config("dev")
+
+    assert loaded["RESEND_API_KEY"] == "re_test"
+    assert loaded["EMAIL_FROM"] == "Tippspiel <no-reply@example.com>"
+    assert loaded["EMAIL_REPLY_TO"] == "support@example.com"
+    assert loaded["APP_BASE_URL"] == "https://tippspiel.example.com"
+    assert loaded["PASSWORD_RESET_PATH"] == "/konto/reset"
+    assert loaded["PASSWORD_RESET_TOKEN_TTL_MINUTES"] == 45

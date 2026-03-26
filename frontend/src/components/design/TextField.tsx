@@ -8,12 +8,12 @@ import React, {
 import { isNumber } from "chart.js/helpers";
 
 type TextFieldProps = {
-  type?: "text" | "password" | "number";
+  type?: "text" | "password" | "number" | "email";
   placeholder: string;
   onInput: (input: string) => void;
   initialValue?: string;
   icon?: React.ReactElement;
-  autoComplete?: "off" | "on" | "username" | "current-password" | "new-password";
+  autoComplete?: "off" | "on" | "username" | "current-password" | "new-password" | "email";
 };
 
 export type TextFieldHandle = {

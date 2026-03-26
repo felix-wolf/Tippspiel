@@ -4,13 +4,14 @@ from src.utils import hash_password, password_hash_needs_upgrade
 
 def test_user_create_and_get(app):
     with app.app_context():
-        success, user_id = User.create("alice", hash_password("pw", app.config["SALT"]))
+        success, user_id = User.create("alice", hash_password("pw", app.config["SALT"]), email="Alice@Example.com ")
         assert success
 
         fetched = User.get_by_id(user_id)
         assert fetched is not None
         assert fetched.name == "alice"
         assert fetched.color is not None
+        assert fetched.email == "alice@example.com"
 
 
 def test_user_update_color(base_data, app):
@@ -51,3 +52,13 @@ def test_user_update_admin_flag(app):
         updated = User.get_by_id(user_id)
         assert updated is not None
         assert updated.is_admin is True
+
+
+def test_user_get_by_email_normalizes_input(app):
+    with app.app_context():
+        success, user_id = User.create("mail-user", hash_password("pw", app.config["SALT"]), email="mail@example.com")
+        assert success
+
+        fetched = User.get_by_email(" Mail@Example.com ")
+        assert fetched is not None
+        assert fetched.id == user_id

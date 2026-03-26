@@ -20,7 +20,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009", "0010", "0011", "0012"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009", "0010", "0011", "0012", "0013"]
     assert status.pending_versions == []
 
     conn = sqlite3.connect(db_path)
@@ -39,6 +39,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
     assert "SharedEvents" in tables
     assert "Results" in tables
     assert "AdminOperations" in tables
+    assert "PasswordResetTokens" in tables
 
     conn = sqlite3.connect(db_path)
     try:
@@ -82,6 +83,7 @@ def test_migrate_to_latest_initializes_fresh_database(tmp_path):
         conn.close()
 
     assert "is_admin" in user_columns
+    assert "email" in user_columns
 
 
 def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration(tmp_path):
@@ -304,7 +306,7 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
 
     status = migrate_to_latest(str(db_path))
 
-    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009", "0010", "0011", "0012"]
+    assert status.applied_versions == ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009", "0010", "0011", "0012", "0013"]
 
     conn = sqlite3.connect(db_path)
     try:
@@ -335,6 +337,20 @@ def test_migrate_to_latest_bootstraps_existing_schema_and_applies_data_migration
 
     assert "season_id" in event_columns
     assert "shared_event_id" in event_columns
+
+    conn = sqlite3.connect(db_path)
+    try:
+        user_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(Users)").fetchall()
+        }
+        reset_indexes = {
+            row[1] for row in conn.execute("PRAGMA index_list(PasswordResetTokens)").fetchall()
+        }
+    finally:
+        conn.close()
+
+    assert "email" in user_columns
+    assert "idx_password_reset_tokens_token_hash" in reset_indexes
 
 
 def test_create_app_fails_when_migrations_are_pending(tmp_path, monkeypatch):
