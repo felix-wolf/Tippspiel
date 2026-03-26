@@ -42,8 +42,8 @@ export function HomePage() {
         <h1 className="text-2xl font-semibold text-gray-800 text-center sm:text-left">
           Hallo <span className="text-sky-700">{user?.name}</span>!
         </h1>
-        <div className="grid w-full grid-cols-1 gap-3 sm:w-auto sm:grid-cols-2">
-          {user?.isAdmin && (
+          <div className="flex flex-col w-full gap-3 sm:w-auto sm:flex-row sm:justify-end">
+            {user?.isAdmin && (
             <div className="w-full sm:w-40">
               <Button
                 title="Admin"
