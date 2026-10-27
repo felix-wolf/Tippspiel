@@ -109,6 +109,10 @@ export function GamePage() {
             refetchGame(true);
           }}
           game={game}
+          onGameLeft={() => {
+            cache.clearCache();
+            navigate(SiteRoutes.Home, {});
+          }}
           onGameDeleted={() => {
             cache.clearCache();
             navigate(SiteRoutes.Home, {});

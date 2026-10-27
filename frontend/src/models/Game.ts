@@ -82,6 +82,14 @@ export class Game {
     );
   }
 
+  public leave(): Promise<boolean> {
+    return NetworkHelper.post(
+      "/api/game/leave",
+      () => true,
+      { game_id: this._id },
+    );
+  }
+
   public delete(): Promise<boolean> {
     return NetworkHelper.delete(
       "/api/game/delete",

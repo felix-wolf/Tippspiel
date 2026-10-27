@@ -197,7 +197,8 @@ Goal: public signups, predictable operations, and acceptable legal/security post
 
 ### 11. Add moderation and admin tooling
 - Relevant files:
-  - no dedicated admin surface found in the repo
+  - `frontend/src/pages/AdminPage.tsx`
+  - `backend/src/blueprints/game.py`
 - Current state:
   - The product now has a first admin role and admin-only event management path for shared/game events.
   - Admins can now repair event results directly from the event detail page by previewing refreshes, applying them, clearing results, or forcing a rescore.
@@ -205,11 +206,13 @@ Goal: public signups, predictable operations, and acceptable legal/security post
     - shared-event diagnostics
     - canonical source-mapping repairs
     - missing-country cleanup
+  - Creators and admins can soft-delete games after confirming the game name; successful deletions record the actor and game in persistent admin history atomically.
+  - Non-owner members can leave games; bets/results remain for rejoining, while active standings and notifications exclude former members.
+  - Restoring a deleted game still requires database support.
   - There is still no visible admin workflow for:
     - abusive users
     - broken games beyond event/source repair
     - notification cleanup
-    - persistent audit/history
 - Why this matters:
   - Public users create support and moderation needs quickly.
 - Needed steps:
@@ -217,7 +220,7 @@ Goal: public signups, predictable operations, and acceptable legal/security post
     - inspect users/games
     - disable abusive accounts
     - review failed result imports and background-job outcomes
-    - add persistent audit/history for admin actions
+    - extend existing persistent audit/history to future moderation actions
 
 ## Must-Have Before Broad Public Launch
 

@@ -35,6 +35,15 @@ class Game:
             self.players.append(player)
         return success
 
+    def remove_player(self, user_id):
+        success = db_manager.execute(
+            f"DELETE FROM {db_manager.TABLE_GAME_PLAYERS} WHERE game_id = ? AND player_id = ?",
+            [self.id, user_id],
+        )
+        if success:
+            self.players = [player for player in self.players if player.id != user_id]
+        return success
+
     def update_password_hash(self, pw_hash):
         sql = f"UPDATE {db_manager.TABLE_GAMES} SET pw_hash = ? WHERE id = ?"
         success = db_manager.execute(sql, [pw_hash, self.id])

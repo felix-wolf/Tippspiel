@@ -1,6 +1,7 @@
 import { DialogModal } from "../design/Dialog.tsx";
+import { Button } from "../design/Button.tsx";
 import { TextField } from "../design/TextField.tsx";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Game } from "../../models/Game.ts";
 import {
   NotificationHelper,
@@ -19,6 +20,7 @@ type SettingsModalProps = {
   game: Game;
   onGameDeleted: () => void;
   onGameUpdated: () => void;
+  onGameLeft: () => void;
 };
 
 export function SettingsModal({
@@ -28,10 +30,17 @@ export function SettingsModal({
   isCreator,
   onGameDeleted: _onGameDeleted,
   onGameUpdated: _onGameUpdated,
+  onGameLeft,
 }: SettingsModalProps) {
   const user = useCurrentUser();
   const [gameName, setGameName] = useState(game.name);
-  // const [deleteShaking, setDeleteShaking] = useState(false);
+  const [confirmation, setConfirmation] = useState<"delete" | "leave" | null>(null);
+  const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
+  const [error, setError] = useState("");
+  const canDelete = isCreator || user?.isAdmin === true;
+  const canLeave = !isCreator && game.players.some((player) => player.id === user?.id);
+
   const [pushShaking, setPushShaking] = useState(false);
   const [testPushShaking, setTestPushShaking] = useState(false);
   const [reminderShaking, setReminderShaking] = useState(false);
@@ -51,15 +60,32 @@ export function SettingsModal({
 
   const { data: settings, refetch: refetchSettings } = settingsFetchValues;
 
-  // function onDeleteGame() {
-  //   game
-  //     .delete()
-  //     .then(_onGameDeleted)
-  //     .catch(() => {
-  //       setDeleteShaking(true);
-  //       setTimeout(() => setDeleteShaking(false), 300);
-  //     });
-  // }
+  function close() {
+    if (!submitting.current) _onClose();
+  }
+
+  async function confirmAction() {
+    if (!confirmation || submitting.current) return;
+    submitting.current = true;
+    setPending(true);
+    setError("");
+    try {
+      if (confirmation === "delete") {
+        await game.delete();
+        _onGameDeleted();
+      } else {
+        await game.leave();
+        onGameLeft();
+      }
+    } catch {
+      setError(confirmation === "delete"
+        ? "Das Tippspiel konnte nicht gelöscht werden. Bitte versuche es erneut."
+        : "Das Tippspiel konnte nicht verlassen werden. Bitte versuche es erneut.");
+    } finally {
+      submitting.current = false;
+      setPending(false);
+    }
+  }
 
   function onUpdateGameName() {
     game
@@ -76,18 +102,32 @@ export function SettingsModal({
 
   return (
     <DialogModal
-      title={"Einstellungen"}
+      title={confirmation ? (confirmation === "delete" ? "Tippspiel löschen?" : "Tippspiel verlassen?") : "Einstellungen"}
       subtitle="Tippspiel & Benachrichtigungen"
       isOpened={isOpen}
-      onClose={_onClose}
+      onClose={close}
       type="edit"
       onActionClick={() => onUpdateGameName()}
-      actionButtonTitle={isCreator ? "Speichern" : undefined}
+      actionButtonTitle={isCreator && !confirmation ? "Speichern" : undefined}
       actionButtonEnabled={gameName !== game.name}
-      neutralButtonTitle={isCreator ? "Abbrechen" : undefined}
+      neutralButtonTitle={isCreator && !confirmation ? "Abbrechen" : undefined}
       onNeutralClick={_onClose}
       shakingActionButton={actionButtonShaking}
     >
+      {confirmation ? (
+        <section className="space-y-4">
+          <p>Tippspiel: <strong>{game.name}</strong></p>
+          <p>{confirmation === "delete"
+            ? "Das Tippspiel verschwindet für alle Spieler. Die Daten bleiben zur Wiederherstellung gespeichert."
+            : "Du verlässt das Tippspiel und verschwindest aus der aktiven Spielerliste und Wertung. Deine Tipps bleiben gespeichert und sind nach einem erneuten Beitritt wieder verfügbar."}</p>
+          {error && <p role="alert" className="text-red-300">{error}</p>}
+          <div className="flex gap-3">
+            <Button title="Abbrechen" isEnabled={!pending} onClick={() => { setConfirmation(null); setError(""); }} />
+            <Button title={pending ? "Bitte warten…" : confirmation === "delete" ? "Tippspiel löschen" : "Tippspiel verlassen"}
+              type="negative" isEnabled={!pending} onClick={() => { void confirmAction(); }} />
+          </div>
+        </section>
+      ) : (<>
       {/* GRAPH SECTION */}
       <section>
         <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
@@ -214,16 +254,16 @@ export function SettingsModal({
               placeholder={gameName}
               initialValue={gameName}
             />
-            {/* DISABLE DELETE FOR NOW */}
-            {/* <div className="w-full flex items-center justify-center">
-            <DeleteButton
-              shaking={deleteShaking}
-              onFinalClick={() => onDeleteGame()}
-            />
-          </div> */}
           </section>
         </>
       )}
+      {(canDelete || canLeave) && (
+        <section className="border-t border-white/10 pt-4">
+          {canDelete && <Button title="Tippspiel löschen" type="negative" onClick={() => setConfirmation("delete")} />}
+          {canLeave && <Button title="Tippspiel verlassen" onClick={() => setConfirmation("leave")} />}
+        </section>
+      )}
+      </>)}
     </DialogModal>
   );
 }

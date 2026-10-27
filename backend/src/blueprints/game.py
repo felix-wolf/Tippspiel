@@ -11,9 +11,10 @@ from src.blueprints.route_helpers import (
     require_query_arg,
     require_game_owner_or_admin,
     require_game_owner,
+    current_operation_actor,
 )
 from src.blueprints.service_result import ensure_service_result
-from src.blueprints.game_service import import_official_events
+from src.blueprints.game_service import import_official_events, delete_game_with_audit
 
 from flask_login import *
 
@@ -108,13 +109,30 @@ def delete_game():
     )
     if error:
         return error
-    error = require_game_owner(game)
+    error = require_game_owner_or_admin(game)
     if error:
         return error
-    success = game.delete()
-    if success:
-        return {"deleted_id": game_id}
-    return error_response("Das Tippspiel konnte nicht gelöscht werden.", 500)
+    return delete_game_with_audit(game, current_operation_actor()).to_response()
+
+
+@game_blueprint.route("/api/game/leave", methods=["POST"])
+@login_required
+def leave_game():
+    payload, error = parse_json_body(request.get_json(silent=True), required_fields=["game_id"])
+    if error:
+        return error
+    game, error = get_game_or_error(payload["game_id"])
+    if error:
+        return error
+    if game.creator.id == current_user.get_id():
+        return error_response("Als Ersteller kannst du dein Tippspiel nicht verlassen.", 403)
+    error = require_game_member(game)
+    if error:
+        return error
+    if not game.remove_player(current_user.get_id()):
+        return error_response("Das Tippspiel konnte nicht verlassen werden.", 500)
+    return {"left_game_id": game.id}
+
 
 @game_blueprint.route("/api/game/update", methods=['PUT'])
 @login_required

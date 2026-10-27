@@ -51,6 +51,10 @@ class ScoreEvent:
                 b.score
             FROM VIEW_{db_manager.TABLE_EVENTS} e
             LEFT JOIN {db_manager.TABLE_BETS} b ON b.event_id = e.id
+                AND EXISTS (
+                    SELECT 1 FROM {db_manager.TABLE_GAME_PLAYERS} gp
+                    WHERE gp.game_id = e.game_id AND gp.player_id = b.user_id
+                )
             WHERE e.game_id = ?
             ORDER BY e.datetime ASC, e.id ASC
             """

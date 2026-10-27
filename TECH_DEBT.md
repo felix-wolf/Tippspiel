@@ -19,9 +19,11 @@ This document records the main technical debt and areas that need work across th
   - Admins can now preview, re-apply, clear, and rescore results from the regular event UI.
   - A dedicated admin overview now exists for shared-event diagnostics and missing-country cleanup.
   - A dedicated admin overview now also persists recent admin repairs plus result/reminder job runs in one place.
+  - Creators and admins can now soft-delete games with named confirmation and transactional audit history; non-owner members can leave while retaining bets.
+  - Deleted-game recovery still requires database support; no restore interface exists.
   - There is still no broader support workflow for:
     - safer merge/delete flows with impact previews before changing shared metadata used by multiple games
-    - user moderation or game repair beyond event/result metadata
+    - user moderation, deleted-game restoration, or game repair beyond event/result metadata
 - Why it matters:
   - The product model is cleaner and the admin surface now has real operational memory, but support tooling is still narrow once issues go beyond source/result cleanup.
   - As the number of games grows, editing event data game-by-game will become inefficient and error-prone.

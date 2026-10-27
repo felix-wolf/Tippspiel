@@ -32,6 +32,7 @@ class AdminOperation:
         target_type: str | None = None,
         target_id: str | None = None,
         details: dict | list | None = None,
+        conn=None,
     ) -> bool:
         details_json = json.dumps(details, ensure_ascii=True, sort_keys=True) if details is not None else None
         operation_id = utils.generate_id(
@@ -48,7 +49,8 @@ class AdminOperation:
                 datetime.utcnow().isoformat(),
             ]
         )
-        return db_manager.execute(
+        execute = conn.execute if conn is not None else db_manager.execute
+        result = execute(
             f"""
             INSERT INTO {AdminOperation.TABLE_NAME}
             (id, actor_type, actor_user_id, actor_name, action_type, target_type, target_id, status, summary, details)
@@ -67,6 +69,8 @@ class AdminOperation:
                 details_json,
             ],
         )
+
+        return bool(result)
 
     @staticmethod
     def fetch_recent(limit: int = 50):
