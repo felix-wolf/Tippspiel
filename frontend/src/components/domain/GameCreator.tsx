@@ -6,7 +6,7 @@ import { Shakable } from "../design/Shakable";
 
 type GameCreatorProps = {
   onSetName: (name: string) => void;
-  onSetPassword?: (password: string) => void;
+  onSetPassword: (password: string) => void;
   onSetDisciplineId: (disciplineId: DropDownOption | undefined) => void;
   shake?: boolean;
 };
@@ -51,11 +51,11 @@ export function GameCreator({
         />
         <TextField
           onInput={(i) => {
-            _onSetPassword && _onSetPassword(i);
+            _onSetPassword(i);
           }}
-          placeholder={"Passwort (optional)"}
+          placeholder={"Passwort"}
           type={"password"}
-          autoComplete="off"
+          autoComplete="new-password"
         />
         <DropDown
           options={disciplines}

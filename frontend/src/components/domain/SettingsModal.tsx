@@ -34,6 +34,7 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const user = useCurrentUser();
   const [gameName, setGameName] = useState(game.name);
+  const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState<"delete" | "leave" | null>(null);
   const [pending, setPending] = useState(false);
   const submitting = useRef(false);
@@ -87,17 +88,29 @@ export function SettingsModal({
     }
   }
 
-  function onUpdateGameName() {
-    game
-      .saveNewName(gameName)
-      .then(() => {
-        _onGameUpdated()
-        _onClose()
-      })
-      .catch(() => {
-        setActionButtonShaking(true);
-        setTimeout(() => setActionButtonShaking(false), 300);
-      });
+  const hasPasswordInput = !game.hasPassword && password !== "";
+  const canSave = isCreator && !pending && !!gameName.trim()
+    && (!hasPasswordInput || !!password.trim())
+    && (gameName !== game.name || hasPasswordInput);
+
+  async function onSaveSettings() {
+    if (!canSave || submitting.current) return;
+    submitting.current = true;
+    setPending(true);
+    setError("");
+    try {
+      await game.saveSettings(gameName, hasPasswordInput ? password : undefined);
+      setPassword("");
+      _onGameUpdated();
+      _onClose();
+    } catch {
+      setError("Das Tippspiel konnte nicht gespeichert werden. Bitte versuche es erneut oder lade es neu.");
+      setActionButtonShaking(true);
+      setTimeout(() => setActionButtonShaking(false), 300);
+    } finally {
+      submitting.current = false;
+      setPending(false);
+    }
   }
 
   return (
@@ -107,11 +120,11 @@ export function SettingsModal({
       isOpened={isOpen}
       onClose={close}
       type="edit"
-      onActionClick={() => onUpdateGameName()}
+      onActionClick={() => { void onSaveSettings(); }}
       actionButtonTitle={isCreator && !confirmation ? "Speichern" : undefined}
-      actionButtonEnabled={gameName !== game.name}
+      actionButtonEnabled={canSave}
       neutralButtonTitle={isCreator && !confirmation ? "Abbrechen" : undefined}
-      onNeutralClick={_onClose}
+      onNeutralClick={close}
       shakingActionButton={actionButtonShaking}
     >
       {confirmation ? (
@@ -254,13 +267,27 @@ export function SettingsModal({
               placeholder={gameName}
               initialValue={gameName}
             />
+            {!game.hasPassword && (
+              <div className="mt-4 space-y-2">
+                <label className="block space-y-2 text-slate-200">
+                  <span>Passwort festlegen</span>
+                  <TextField type="password" autoComplete="new-password"
+                    placeholder="Passwort für neue Spieler" onInput={setPassword} />
+                </label>
+                <p className="text-xs text-slate-400">
+                  Bestehende Spieler behalten ihren Zugang. Neue Spieler benötigen nach dem Speichern das Passwort.
+                  Ein einmal festgelegtes Passwort kann nicht geändert oder entfernt werden.
+                </p>
+              </div>
+            )}
+            {error && <p role="alert" className="mt-3 text-red-300">{error}</p>}
           </section>
         </>
       )}
       {(canDelete || canLeave) && (
         <section className="border-t border-white/10 pt-4">
-          {canDelete && <Button title="Tippspiel löschen" type="negative" onClick={() => setConfirmation("delete")} />}
-          {canLeave && <Button title="Tippspiel verlassen" onClick={() => setConfirmation("leave")} />}
+          {canDelete && <Button title="Tippspiel löschen" type="negative" isEnabled={!pending} onClick={() => { setError(""); setConfirmation("delete"); }} />}
+          {canLeave && <Button title="Tippspiel verlassen" isEnabled={!pending} onClick={() => { setError(""); setConfirmation("leave"); }} />}
         </section>
       )}
       </>)}

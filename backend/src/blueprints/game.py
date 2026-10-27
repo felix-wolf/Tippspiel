@@ -20,6 +20,12 @@ from flask_login import *
 
 game_blueprint = Blueprint('game', __name__)
 
+def _validate_game_password(password):
+    if not isinstance(password, str) or not password.strip():
+        return error_response("Bitte gib ein Passwort für das Tippspiel ein.", 400)
+    return None
+
+
 @game_blueprint.route('/api/game', methods=["GET", "POST"])
 @login_required
 def handle_game_request():
@@ -43,9 +49,10 @@ def handle_game_request():
         name = payload.get("name")
         pw = payload.get("password")
         discipline = payload.get("discipline")
-        pw_hash = None
-        if pw:
-            pw_hash = hash_game_password(pw)
+        error = _validate_game_password(pw)
+        if error:
+            return error
+        pw_hash = hash_game_password(pw)
         success, game_id = Game.create(user_id=current_user_id, name=name, pw_hash=pw_hash, discipline_name=discipline)
         if success:
             return Game.get_by_id(game_id).to_dict()
@@ -69,7 +76,7 @@ def handle_importable_events():
 def join_game():
     payload, error = parse_json_body(
         request.get_json(silent=True),
-        required_fields=["game_id", "password"],
+        required_fields=["game_id"],
     )
     if error:
         return error
@@ -79,6 +86,10 @@ def join_game():
     game, error = get_game_or_error(game_id)
     if error:
         return error
+    if game.pw_hash is not None:
+        _, error = parse_json_body(payload, required_fields=["password"])
+        if error:
+            return error
     if not game.verify_password(pw, current_app.config["SALT"]):
         return error_response("Das Passwort ist falsch.", 400)
     user = User.get_by_id(user_id)
@@ -154,7 +165,17 @@ def update():
     error = require_game_owner(game)
     if error:
         return error
-    success, updated_game = game.update(name)
+    pw_hash = None
+    if "password" in payload:
+        error = _validate_game_password(payload["password"])
+        if error:
+            return error
+        if game.pw_hash is not None:
+            return error_response("Für dieses Tippspiel wurde bereits ein Passwort festgelegt.", 409)
+        pw_hash = hash_game_password(payload["password"])
+    success, updated_game = game.update(name, pw_hash=pw_hash)
+    if not success and pw_hash is not None:
+        return error_response("Für dieses Tippspiel konnte kein Passwort festgelegt werden. Bitte lade es erneut.", 409)
     if success:
         return updated_game.to_dict()
     return error_response("Das Tippspiel konnte nicht aktualisiert werden.", 500)

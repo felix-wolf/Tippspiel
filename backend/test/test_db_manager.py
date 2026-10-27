@@ -44,3 +44,12 @@ def test_commit_transaction_logs_and_raises_failures(app, caplog):
                 pass
 
     assert "Database transaction commit failed." in caplog.text
+
+
+def test_password_hash_parameters_are_redacted_from_database_errors(app, caplog):
+    caplog.set_level(logging.ERROR, logger=app.logger.name)
+    with pytest.raises(sqlite3.OperationalError):
+        db_manager.execute("INSERT INTO DefinitelyMissing (pw_hash) VALUES (?)", ["sensitive-hash"])
+    record = caplog.records[-1]
+    assert record.params == "<redacted>"
+    assert "sensitive-hash" not in str(record.__dict__)

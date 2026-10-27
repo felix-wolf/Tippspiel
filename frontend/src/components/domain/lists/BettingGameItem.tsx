@@ -11,7 +11,7 @@ export type BettingGameItemGame = {
 
 type BettingGameItemProps = {
   onGameSelect?: (id: string) => void;
-  onCreate?: (name: string, password?: string, disciplineId?: string) => void;
+  onCreate?: (name: string, password: string, disciplineId: string) => Promise<void>;
   onJoin?: (game_id: string, password?: string) => Promise<boolean>;
   item?: BettingGameItemGame;
   type: "real" | "add";

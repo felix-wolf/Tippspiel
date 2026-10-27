@@ -104,7 +104,7 @@ def _log_database_error(message, exc, sql=None, params=None):
     if sql is not None:
         extra["sql"] = sql
     if params is not None:
-        extra["params"] = params
+        extra["params"] = "<redacted>" if sql and "pw_hash" in sql.lower() else params
     _logger().exception("%s: %s", message, exc, extra=extra or None)
 
 

@@ -158,7 +158,7 @@ as a separate cleanup so the full command can become a reliable change gate.
 - Admins can preview, refresh, clear, and rescore event results, and background task endpoints can now be protected by `TIPPSPIEL_TASK_API_TOKEN`, as of 2026-03-11.
 - A dedicated admin overview for shared-event source repair and missing-country cleanup exists as of 2026-03-11.
 - Admin operations now persist recent repairs plus result/reminder job diagnostics in the admin overview, as of 2026-03-16.
-- Generic DB helpers now log and re-raise query/statement/transaction failures instead of silently returning `None`, as of 2026-03-16.
+- Generic DB helpers now log and re-raise query/statement/transaction failures instead of silently returning `None`, as of 2026-03-16. Parameters for statements containing `pw_hash` are redacted from database error records as of 2026-10-27.
 - Backend model/bootstrap deserialization and notification paths now use structured logging instead of `print(...)`, as of 2026-03-16.
 - Blueprint/service error handling now uses a shared `ServiceResult` contract instead of ad-hoc `(payload, error, status)` tuples, as of 2026-03-16.
 - A focused backend simplification review on 2026-03-17 found remaining debt in large blueprint handlers, low-level transaction plumbing, and legacy bootstrap/auth scaffolding.

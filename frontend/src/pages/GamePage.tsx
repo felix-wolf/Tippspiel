@@ -104,6 +104,7 @@ export function GamePage() {
             setSettingsKey(settingsKey + 1);
           }}
           onGameUpdated={() => {
+            cache.clearCache();
             setShowingSettingsModal(false);
             setSettingsKey(settingsKey + 1);
             refetchGame(true);

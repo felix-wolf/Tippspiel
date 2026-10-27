@@ -98,9 +98,24 @@ class Game:
             return True, num_events["num"]
         return False, None
 
-    def update(self, name: str):
-        sql = f"UPDATE {db_manager.TABLE_GAMES} SET name = ? WHERE id = ?"
-        success = db_manager.execute(sql, [name, self.id])
+    def update(self, name: str, pw_hash=None):
+        if pw_hash is None:
+            sql = f"UPDATE {db_manager.TABLE_GAMES} SET name = ? WHERE id = ?"
+            success = db_manager.execute(sql, [name, self.id])
+        else:
+            # A single guarded statement keeps name/password changes atomic and
+            # prevents concurrent setup requests from replacing a password.
+            conn = db_manager.open_connection()
+            try:
+                with conn:
+                    cursor = conn.execute(
+                        f"UPDATE {db_manager.TABLE_GAMES} SET name = ?, pw_hash = ? "
+                        "WHERE id = ? AND visible = 1 AND pw_hash IS NULL",
+                        [name, pw_hash, self.id],
+                    )
+                    success = cursor.rowcount == 1
+            finally:
+                conn.close()
         if success:
             return True, Game.get_by_id(self.id)
         return False, None

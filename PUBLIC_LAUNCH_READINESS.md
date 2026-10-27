@@ -309,7 +309,9 @@ Goal: public signups, predictable operations, and acceptable legal/security post
 
 ### 18. Better game discovery and share flow
 - Current state:
-  - Joining is functional, but there is no clear broader-audience invitation/share UX in the reviewed code.
+  - New games require a password. Existing passwordless games continue accepting joins without one until migrated.
+  - Creators can set an initial password in game settings; existing players retain access and future joins require that password. Password replacement/removal is not supported.
+  - There is no clear broader-audience invitation/share UX in the reviewed code.
 - Needed steps:
   - Add friendlier invite/share flow.
   - Improve game password UX.

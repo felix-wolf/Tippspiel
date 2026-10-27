@@ -56,7 +56,7 @@ export class Game {
   public static create(
     name: string,
     discipline: string,
-    password?: string,
+    password: string,
   ): Promise<Game> {
     return NetworkHelper.post<Game>("/api/game", Game.fromJson, {
       name: name,
@@ -108,13 +108,14 @@ export class Game {
     );
   }
 
-  public saveNewName(newName: string): Promise<Game> {
+  public saveSettings(newName: string, password?: string): Promise<Game> {
     return NetworkHelper.update(
       "/api/game/update",
       Game.fromJson,
       {
         game_id: this._id,
         name: newName,
+        ...(password === undefined ? {} : { password }),
       },
     );
   }

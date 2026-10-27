@@ -47,15 +47,10 @@ export function BettingGameList({
   }, [user, allGames]);
 
   const onCreate = useCallback(
-    (name: string, password?: string, discipline?: string) => {
-      if (discipline)
-        Game.create(name, discipline, password)
-          .then((game) => {
-            useNavigate(SiteRoutes.Game, { game_id: game.id });
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+    (name: string, password: string, discipline: string): Promise<void> => {
+      return Game.create(name, discipline, password).then((game) => {
+        useNavigate(SiteRoutes.Game, { game_id: game.id });
+      });
     },
     [],
   );

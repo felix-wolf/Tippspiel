@@ -137,7 +137,7 @@ def test_event_get_by_id_for_betting_returns_only_current_user_bet(app, client, 
 def test_event_create_and_update_are_admin_only(client, base_data):
     game_id = client.post(
         "/api/game",
-        json={"name": "Ev Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Ev Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     create_resp = client.post(
@@ -179,7 +179,7 @@ def test_event_create_and_update_are_admin_only(client, base_data):
 def test_event_import_is_idempotent_for_existing_official_event(client, app, base_data):
     game_id = client.post(
         "/api/game",
-        json={"name": "Import Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Import Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():
@@ -216,11 +216,11 @@ def test_event_import_is_idempotent_for_existing_official_event(client, app, bas
 def test_official_event_import_is_shared_across_games(client, app, base_data):
     first_game_id = client.post(
         "/api/game",
-        json={"name": "Import Game 1", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Import Game 1", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
     second_game_id = client.post(
         "/api/game",
-        json={"name": "Import Game 2", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Import Game 2", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():
@@ -258,7 +258,7 @@ def test_admin_can_create_update_and_delete_event(client, app, base_data):
     admin_client = _create_admin_client(app)
     game_id = client.post(
         "/api/game",
-        json={"name": "Admin Managed Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Admin Managed Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     create_resp = admin_client.post(
@@ -310,7 +310,7 @@ def test_admin_can_import_official_event_into_foreign_game(client, app, base_dat
     admin_client = _create_admin_client(app)
     game_id = client.post(
         "/api/game",
-        json={"name": "Foreign Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Foreign Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():
@@ -341,11 +341,11 @@ def test_admin_update_of_shared_event_affects_all_linked_game_events(client, app
     admin_client = _create_admin_client(app)
     first_game_id = client.post(
         "/api/game",
-        json={"name": "Shared Edit Game 1", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Shared Edit Game 1", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
     second_game_id = client.post(
         "/api/game",
-        json={"name": "Shared Edit Game 2", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Shared Edit Game 2", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():
@@ -398,7 +398,7 @@ def test_admin_update_of_shared_event_affects_all_linked_game_events(client, app
 def test_event_save_bets_validation(client, base_data):
     game_id = client.post(
         "/api/game",
-        json={"name": "Bet Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Bet Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
     with client.application.app_context():
         event = Event(
@@ -439,7 +439,7 @@ def test_event_save_bets_validation(client, base_data):
 def test_creator_can_add_missing_bet_for_player_after_start(client, app, base_data):
     game_id = client.post(
         "/api/game",
-        json={"name": "Sleepers Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Sleepers Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():
@@ -482,7 +482,7 @@ def test_creator_can_add_missing_bet_for_player_after_start(client, app, base_da
 def test_creator_cannot_edit_added_missing_bet(client, app, base_data):
     game_id = client.post(
         "/api/game",
-        json={"name": "Locked Sleepers Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Locked Sleepers Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():
@@ -533,7 +533,7 @@ def test_creator_cannot_edit_added_missing_bet(client, app, base_data):
 def test_creator_cannot_add_missing_bet_before_start(client, app, base_data):
     game_id = client.post(
         "/api/game",
-        json={"name": "Too Early Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Too Early Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():
@@ -569,7 +569,7 @@ def test_creator_cannot_add_missing_bet_before_start(client, app, base_data):
 def test_creator_can_add_missing_bet_after_results_exist(client, app, base_data):
     game_id = client.post(
         "/api/game",
-        json={"name": "Results Already Uploaded Game", "password": None, "discipline": base_data["discipline"].id},
+        json={"name": "Results Already Uploaded Game", "password": "game-password", "discipline": base_data["discipline"].id},
     ).get_json()["id"]
 
     with app.app_context():

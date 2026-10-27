@@ -33,5 +33,17 @@ describe("game settings permissions", () => {
     expect(markup.includes("Tippspiel löschen")).toBe(canDelete);
     expect(markup.includes("Tippspiel verlassen")).toBe(canLeave);
     expect(markup.includes("Name des Tippspiels")).toBe(isCreator);
+    expect(markup.includes("Passwort festlegen")).toBe(isCreator);
+    if (isCreator) expect(markup).toContain('type="password"');
   });
+  it("does not offer password replacement for a protected game", () => {
+    vi.mocked(useCurrentUser).mockReturnValue({ id: "owner", isAdmin: false } as User);
+    const game = new Game("game", "Protected Game", [], {} as Discipline, undefined, true);
+    const markup = renderToStaticMarkup(<SettingsModal
+      isOpen isCreator game={game} onClose={vi.fn()}
+      onGameDeleted={vi.fn()} onGameLeft={vi.fn()} onGameUpdated={vi.fn()}
+    />);
+    expect(markup).not.toContain("Passwort festlegen");
+  });
+
 });
