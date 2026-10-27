@@ -195,6 +195,11 @@ The official import picker groups races by season and then by competition classi
 expanded and selected independently. Classification metadata is stored once per official
 race in `SharedEvents`, shared by all games using that race.
 
+The admin shared-event viewer uses the same season and competition groups, with
+seasons and competitions collapsed on each page visit. Search and diagnostic filters
+update the group counts without opening them. Race details load only after an explicit
+selection, and existing expansion choices survive filtering and overview refreshes.
+
 Migration `0014` adds nullable `source_level` and `source_event_classification_id` fields.
 Apply migrations before starting the updated backend, then deploy the updated frontend.
 Existing races remain readable with empty classification fields until the backfill runs.

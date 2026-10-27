@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NavPage } from "./NavPage";
 import { useCurrentUser } from "../contexts/UserContext";
 import { SiteRoutes, useNavigateParams } from "../../SiteRoutes";
@@ -12,6 +12,8 @@ import {
 import { Button } from "../components/design/Button";
 import { Event } from "../models/Event";
 import { AdminResultTools } from "../components/domain/AdminResultTools";
+import { AdminSharedEventList } from "../components/domain/lists/AdminSharedEventList";
+import { groupAdminSharedEvents } from "../models/raceGroups";
 
 type AdminTab = "operations" | "shared_events" | "countries";
 type SharedFilter = "all" | "missing_results" | "multi_game" | "missing_source";
@@ -32,6 +34,8 @@ export function AdminPage() {
     warningCount: 0,
   });
   const [selectedSharedEventId, setSelectedSharedEventId] = useState<string | null>(null);
+  const [expandedSharedGroups, setExpandedSharedGroups] = useState<Set<string>>(() => new Set());
+  const detailRequestId = useRef(0);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
   const [selectedSharedEvent, setSelectedSharedEvent] = useState<AdminSharedEventDiagnostic | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -73,8 +77,15 @@ export function AdminPage() {
       setSharedEvents(sharedEventData);
       setCountries(countryData);
       setOperations(operationData);
-      setSelectedSharedEventId((current) => current ?? sharedEventData[0]?.sharedEventId ?? null);
+      setSelectedSharedEventId((current) =>
+        sharedEventData.some((event) => event.sharedEventId === current) ? current : null,
+      );
+      const groupKeys = new Set(groupAdminSharedEvents(sharedEventData).flatMap((season) =>
+        [season.key, ...season.competitions.map((competition) => competition.key)],
+      ));
+      setExpandedSharedGroups((current) => new Set([...current].filter((key) => groupKeys.has(key))));
       setSelectedCountryCode((current) => current ?? countryData[0]?.code ?? null);
+      return sharedEventData;
     } catch (err: any) {
       setError(err?.text ?? "Die Admin-Daten konnten nicht geladen werden.");
     } finally {
@@ -83,10 +94,14 @@ export function AdminPage() {
   }
 
   async function loadSharedEventDetail(sharedEventId: string) {
+    const requestId = ++detailRequestId.current;
     setDetailLoading(true);
     setError(null);
     try {
       const detail = await Admin.fetchSharedEventDetail(sharedEventId);
+      if (requestId !== detailRequestId.current) return;
+      const event = await Event.fetchOne(detail.targetEventId);
+      if (requestId !== detailRequestId.current) return;
       setSelectedSharedEvent(detail);
       setSourceForm({
         sourceProvider: detail.sourceProvider ?? "ibu",
@@ -94,14 +109,14 @@ export function AdminPage() {
         sourceRaceId: detail.sourceRaceId ?? "",
         seasonId: detail.seasonId ?? "",
       });
-      const event = await Event.fetchOne(detail.targetEventId);
       setSelectedEvent(event);
     } catch (err: any) {
+      if (requestId !== detailRequestId.current) return;
       setError(err?.text ?? "Die Shared-Event-Details konnten nicht geladen werden.");
       setSelectedSharedEvent(null);
       setSelectedEvent(null);
     } finally {
-      setDetailLoading(false);
+      if (requestId === detailRequestId.current) setDetailLoading(false);
     }
   }
 
@@ -113,6 +128,8 @@ export function AdminPage() {
     if (selectedSharedEventId && isAdmin) {
       loadSharedEventDetail(selectedSharedEventId).then();
     } else {
+      detailRequestId.current++;
+      setDetailLoading(false);
       setSelectedSharedEvent(null);
       setSelectedEvent(null);
     }
@@ -215,8 +232,8 @@ export function AdminPage() {
   }
 
   async function handleResultOperationRefresh() {
-    await loadOverview();
-    if (selectedSharedEventId) {
+    const refreshed = await loadOverview();
+    if (selectedSharedEventId && refreshed?.some((event) => event.sharedEventId === selectedSharedEventId)) {
       await loadSharedEventDetail(selectedSharedEventId);
     }
   }
@@ -308,37 +325,18 @@ export function AdminPage() {
                   <Button title="Fehlende Source" onClick={() => setSharedFilter("missing_source")} type={sharedFilter === "missing_source" ? "positive" : "neutral"} />
                 </div>
               </div>
-              <div className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1 sm:max-h-96 lg:max-h-[70vh]">
-                {filteredSharedEvents.length === 0 && (
-                  <p className="text-sm text-slate-600">Keine Shared Events für den aktuellen Filter.</p>
-                )}
-                {filteredSharedEvents.map((item) => (
-                  <button
-                    key={item.sharedEventId}
-                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                      item.sharedEventId === selectedSharedEventId
-                        ? "border-sky-500 bg-sky-50"
-                        : "border-slate-200 bg-white hover:border-sky-300"
-                    }`}
-                    onClick={() => setSelectedSharedEventId(item.sharedEventId)}
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-900">{item.name}</p>
-                        <p className="text-sm text-slate-600">{item.location ?? "Ohne Ort"} · {item.datetime}</p>
-                      </div>
-                      <span className="rounded-full bg-slate-900 px-2 py-1 text-xs text-white">
-                        {item.linkedEventCount} Spiele
-                      </span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      <FlagChip label={`${item.withResultsCount}/${item.linkedEventCount} mit Ergebnissen`} type={item.flags.missingResults ? "warn" : "ok"} />
-                      {item.flags.hasMultipleLinkedGames && <FlagChip label="Mehrfach verknüpft" type="neutral" />}
-                      {item.flags.missingSourceMapping && <FlagChip label="Source fehlt" type="warn" />}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <AdminSharedEventList
+                events={filteredSharedEvents}
+                expandedGroups={expandedSharedGroups}
+                onToggleGroup={(key) => setExpandedSharedGroups((current) => {
+                  const next = new Set(current);
+                  if (next.has(key)) next.delete(key);
+                  else next.add(key);
+                  return next;
+                })}
+                selectedSharedEventId={selectedSharedEventId}
+                onSelect={setSelectedSharedEventId}
+              />
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white/70 p-4">
@@ -511,16 +509,6 @@ export function AdminPage() {
       </section>
     </NavPage>
   );
-}
-
-function FlagChip({ label, type }: { label: string; type: "ok" | "warn" | "neutral" }) {
-  const className =
-    type === "ok"
-      ? "bg-emerald-100 text-emerald-800"
-      : type === "warn"
-        ? "bg-amber-100 text-amber-900"
-      : "bg-slate-200 text-slate-700";
-  return <span className={`rounded-full px-2 py-1 ${className}`}>{label}</span>;
 }
 
 function MetricCard({ label, value, tone }: { label: string; value: number; tone: "ok" | "warn" | "bad" }) {

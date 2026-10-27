@@ -144,6 +144,8 @@ as a separate cleanup so the full command can become a reliable change gate.
 
 ## Notes
 
+- Import and admin shared-event lists now share typed season/competition grouping and labels. The admin viewer starts collapsed and defers detail requests until explicit selection; it preserves expansion across filters/refreshes and clears selections removed by a refresh.
+
 - Explicit migrations replaced startup schema mutation on 2026-03-11.
 - Official event identity is enforced at the DB level and `season_id` is persisted as of 2026-03-11.
 - Migration version `0013` already exists in historical databases; the new classification migration uses `0014` to avoid silently skipping its schema changes.
