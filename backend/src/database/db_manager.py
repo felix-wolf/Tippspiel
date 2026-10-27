@@ -35,6 +35,8 @@ CREATE VIEW VIEW_{TABLE_EVENTS} AS
         COALESCE(se.source_event_id, e.source_event_id) AS source_event_id,
         COALESCE(se.source_race_id, e.source_race_id) AS source_race_id,
         COALESCE(se.season_id, e.season_id) AS season_id,
+        se.source_level,
+        se.source_event_classification_id,
         e.shared_event_id,
         g.discipline
     FROM {TABLE_EVENTS} e

@@ -128,6 +128,8 @@ class BiathlonEventImporter:
                     source_event_id=race.event_id,
                     source_race_id=race.race_id,
                     season_id=race.season_id,
+                    source_level=race.level,
+                    source_event_classification_id=race.event_classification_id,
                 )
             )
         return events, None

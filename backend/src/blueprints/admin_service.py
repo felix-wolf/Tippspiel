@@ -46,6 +46,8 @@ def _serialize_shared_event_item(item: dict):
         "source_event_id": item["source_event_id"],
         "source_race_id": item["source_race_id"],
         "season_id": item["season_id"],
+        "source_level": item["source_level"],
+        "source_event_classification_id": item["source_event_classification_id"],
         "linked_event_count": item["linked_event_count"],
         "with_results_count": item["with_results_count"],
         "without_results_count": item["without_results_count"],
@@ -69,6 +71,8 @@ def list_shared_event_diagnostics():
             e.source_event_id,
             e.source_race_id,
             e.season_id,
+            e.source_level,
+            e.source_event_classification_id,
             e.game_id,
             g.name AS game_name,
             EXISTS(
@@ -97,6 +101,8 @@ def list_shared_event_diagnostics():
                 "source_event_id": row["source_event_id"],
                 "source_race_id": row["source_race_id"],
                 "season_id": row["season_id"],
+                "source_level": row["source_level"],
+                "source_event_classification_id": row["source_event_classification_id"],
                 "linked_event_count": 0,
                 "with_results_count": 0,
                 "without_results_count": 0,
@@ -160,6 +166,11 @@ def _build_shared_event_update_payload(current_row: dict, payload: dict):
             "season_id": season_id,
         }
     )
+    if any(next_row.get(key) != current_row.get(key) for key in (
+        "source_provider", "source_event_id", "source_race_id", "season_id",
+    )):
+        next_row["source_level"] = None
+        next_row["source_event_classification_id"] = None
     return next_row, None
 
 
@@ -210,7 +221,8 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
             conn.execute(
                 f"""
                 UPDATE {db_manager.TABLE_SHARED_EVENTS}
-                SET source_provider = ?, source_event_id = ?, source_race_id = ?, season_id = ?
+                SET source_provider = ?, source_event_id = ?, source_race_id = ?, season_id = ?,
+                    source_level = ?, source_event_classification_id = ?
                 WHERE id = ?
                 """,
                 [
@@ -218,6 +230,8 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
                     next_row["source_event_id"],
                     next_row["source_race_id"],
                     next_row["season_id"],
+                    next_row["source_level"],
+                    next_row["source_event_classification_id"],
                     shared_event_id,
                 ],
             )
@@ -225,8 +239,8 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
             conn.execute(
                 f"""
                 INSERT INTO {db_manager.TABLE_SHARED_EVENTS}
-                (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
+                (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, source_level, source_event_classification_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 [
                     next_row["id"],
@@ -239,6 +253,8 @@ def update_shared_event_source(shared_event_id: str, payload: dict):
                     next_row["source_event_id"],
                     next_row["source_race_id"],
                     next_row["season_id"],
+                    next_row["source_level"],
+                    next_row["source_event_classification_id"],
                 ],
             )
             conn.execute(

@@ -1,5 +1,8 @@
 from datetime import datetime
 from xml.etree import ElementTree
+import json
+
+import pytest
 
 from src.ibu_api import IbuApiClient, IbuAthleteRow, IbuResultRow, IbuResultsResponse, race_is_importable
 
@@ -21,6 +24,23 @@ class _FakeSession:
         return _FakeResponse(self.responses[key])
 
 
+@pytest.mark.parametrize("level,classification", [
+    (1, "BTSWRLCP"), (1, "BTSWRLOG"), (2, "BTSIBUCP"), (2, "BTSCEUCH"),
+])
+def test_races_inherit_exact_event_classification(level, classification):
+    responses = {("Events", (("Level", value), ("SeasonId", "2526"))): "[]"
+                 for value in IbuApiClient.SUPPORTED_LEVELS}
+    responses[("Events", (("Level", level), ("SeasonId", "2526")))] = json.dumps([
+        {"EventId": "stop", "EventClassificationId": classification},
+    ])
+    responses[("Competitions", (("EventId", "stop"),))] = json.dumps([
+        {"RaceId": "race", "ShortDescription": "Women Sprint", "StartTime": "2026-01-11T14:45:00Z"},
+    ])
+    race = IbuApiClient(session=_FakeSession(responses)).get_races_for_season("2526")[0]
+    assert race.level == level
+    assert race.event_classification_id == classification
+
+
 def test_get_races_for_season_combines_events_and_competitions():
     session = _FakeSession(
         {
@@ -31,6 +51,8 @@ def test_get_races_for_season_combines_events_and_competitions():
                 <ArrayOfEvent>
                   <Event>
                     <EventId>BT2526SWRLCP03</EventId>
+                    <Level>1</Level>
+                    <EventClassificationId>BTSWRLCP</EventClassificationId>
                     <ShortDescription>Oberhof</ShortDescription>
                     <Nat>GER</Nat>
                   </Event>
@@ -62,6 +84,8 @@ def test_get_races_for_season_combines_events_and_competitions():
 
     assert len(races) == 1
     assert races[0].season_id == "2526"
+    assert races[0].level == 1
+    assert races[0].event_classification_id == "BTSWRLCP"
     assert races[0].event_id == "BT2526SWRLCP03"
     assert races[0].race_id == "BT2526SWRLCP03SWMS"
     assert races[0].location == "Oberhof (GER)"

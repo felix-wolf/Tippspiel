@@ -104,6 +104,8 @@ export class Event {
     sourceEventId?: string,
     sourceRaceId?: string,
     seasonId?: string,
+    private readonly _sourceLevel?: number,
+    private readonly _sourceEventClassificationId?: string,
   ) {
     this._id = id;
     this._name = name;
@@ -196,6 +198,14 @@ export class Event {
     return this._seasonId;
   }
 
+  get sourceLevel(): number | undefined {
+    return this._sourceLevel;
+  }
+
+  get sourceEventClassificationId(): string | undefined {
+    return this._sourceEventClassificationId;
+  }
+
   public processManualResults(results: Prediction[]): Promise<Event> {
     return NetworkHelper.post("/api/results", Event.fromJson, {
       results: results.map((pred) => {
@@ -221,6 +231,8 @@ export class Event {
       source_event_id: this._sourceEventId ?? null,
       source_race_id: this._sourceRaceId ?? null,
       season_id: this._seasonId ?? null,
+      source_level: this._sourceLevel ?? null,
+      source_event_classification_id: this._sourceEventClassificationId ?? null,
       num_bets: this._numBets,
       points_correct_bet: this._pointsCorrectBet,
     };
@@ -299,6 +311,8 @@ export class Event {
       json["source_event_id"],
       json["source_race_id"],
       json["season_id"],
+      json["source_level"] ?? undefined,
+      json["source_event_classification_id"] ?? undefined,
     );
   }
 

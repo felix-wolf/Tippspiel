@@ -1,6 +1,6 @@
 # Technical Debt Register
 
-Last updated: 2026-03-23
+Last updated: 2026-10-27
 
 This document records the main technical debt and areas that need work across the current code base. It is intentionally opinionated and prioritized so it can guide follow-up work.
 
@@ -125,6 +125,12 @@ This document records the main technical debt and areas that need work across th
 
 ## Suggested Work Order
 
+The frontend repository-wide lint command currently reports 129 errors and 36 warnings
+(checked 2026-10-27), including existing explicit `any` types, unused directives, and
+hook dependency findings. New IBU grouping/picker code passes lint, and comparison
+against the original modified files found no new findings. Restore a clean lint baseline
+as a separate cleanup so the full command can become a reliable change gate.
+
 ### Phase 1
 - Simplify backend blueprint/service boundaries for event, game, and result flows.
 
@@ -140,6 +146,8 @@ This document records the main technical debt and areas that need work across th
 
 - Explicit migrations replaced startup schema mutation on 2026-03-11.
 - Official event identity is enforced at the DB level and `season_id` is persisted as of 2026-03-11.
+- Migration version `0013` already exists in historical databases; the new classification migration uses `0014` to avoid silently skipping its schema changes.
+- IBU import selection now groups seasons into exact competition classifications. Migration `0014` stores level/classification only on shared races; a separate repeatable backfill fills existing metadata without network-dependent migrations. Missing season IDs can be recovered using the race date only as a lookup hint, verified against the exact official parent event. Missing source event IDs still need source mapping repair.
 - Recent result polling now processes all eligible events in one run and reports per-event failures as of 2026-03-11.
 - Shared race metadata is normalized into canonical shared events and game owners can no longer edit event info as of 2026-03-11.
 - A first admin role plus admin-only event management workflow exists as of 2026-03-11.

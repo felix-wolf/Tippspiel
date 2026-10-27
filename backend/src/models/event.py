@@ -87,6 +87,7 @@ class Event:
             location: str = None, race_format: str = None,
             source_provider: str = None, source_event_id: str = None, source_race_id: str = None,
             season_id: str = None, shared_event_id: str = None,
+            source_level: int = None, source_event_classification_id: str = None,
             ):
         if bets is None:
             bets = []
@@ -116,6 +117,8 @@ class Event:
         self.source_event_id = source_event_id
         self.source_race_id = source_race_id
         self.season_id = season_id
+        self.source_level = source_level
+        self.source_event_classification_id = source_event_classification_id
         self.shared_event_id = shared_event_id or Event.build_shared_event_id(
             event_id=self.id,
             source_provider=self.source_provider,
@@ -153,6 +156,8 @@ class Event:
             "source_event_id": self.source_event_id,
             "source_race_id": self.source_race_id,
             "season_id": self.season_id,
+            "source_level": self.source_level,
+            "source_event_classification_id": self.source_event_classification_id,
             "shared_event_id": self.shared_event_id,
 
         }
@@ -219,6 +224,8 @@ class Event:
                     source_event_id=e_dict.get("source_event_id"),
                     source_race_id=e_dict.get("source_race_id"),
                     season_id=e_dict.get("season_id"),
+                    source_level=e_dict.get("source_level"),
+                    source_event_classification_id=e_dict.get("source_event_classification_id"),
                     shared_event_id=e_dict.get("shared_event_id"),
                 )
             except KeyError as exc:
@@ -392,8 +399,8 @@ class Event:
     def _save_shared_event(self, conn=None):
         sql = f"""
             INSERT INTO {db_manager.TABLE_SHARED_EVENTS}
-            (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id)
-            VALUES (?,?,?,?,?,?,?,?,?,?)
+            (id, name, location, race_format, event_type_id, datetime, source_provider, source_event_id, source_race_id, season_id, source_level, source_event_classification_id)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 location = excluded.location,
@@ -403,7 +410,9 @@ class Event:
                 source_provider = excluded.source_provider,
                 source_event_id = excluded.source_event_id,
                 source_race_id = excluded.source_race_id,
-                season_id = excluded.season_id
+                season_id = excluded.season_id,
+                source_level = COALESCE(excluded.source_level, SharedEvents.source_level),
+                source_event_classification_id = COALESCE(excluded.source_event_classification_id, SharedEvents.source_event_classification_id)
         """
         params = [
             self.shared_event_id,
@@ -416,6 +425,8 @@ class Event:
             self.source_event_id,
             self.source_race_id,
             self.season_id,
+            self.source_level,
+            self.source_event_classification_id,
         ]
         if conn:
             conn.execute(sql, params)

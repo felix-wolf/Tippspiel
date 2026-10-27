@@ -188,6 +188,36 @@ Frontend tests live in [`frontend/test`](/Users/felixwolf/Documents/Developer/Py
 - [`backend/run_tippspiel_backend`](/Users/felixwolf/Documents/Developer/Python/tippspiel/backend/run_tippspiel_backend) contains cron entries related to periodic backend tasks.
 - `deploy_frontend_remotely.sh` builds the frontend locally and copies `frontend/dist/` to a remote host over SSH.
 
+### IBU season and competition groups
+
+The official import picker groups races by season and then by competition classification
+(World Cup, IBU Cup, Olympics, championships, and other competitions). Each group can be
+expanded and selected independently. Classification metadata is stored once per official
+race in `SharedEvents`, shared by all games using that race.
+
+Migration `0014` adds nullable `source_level` and `source_event_classification_id` fields.
+Apply migrations before starting the updated backend, then deploy the updated frontend.
+Existing races remain readable with empty classification fields until the backfill runs.
+
+Run these commands from `backend/`, with the same environment configuration as the
+service, especially `TIPPSPIEL_DB_PATH`. The CLI does not automatically load
+`/etc/tippspiel/backend.env`; load those variables into the invoking shell or configure
+the appropriate backend `.env.prod` file first.
+
+```bash
+rtk uv run python migrate.py --env prod up
+rtk uv run python backfill_biathlon_event_classifications.py --env prod --dry-run
+rtk uv run python backfill_biathlon_event_classifications.py --env prod
+```
+
+The backfill includes past and future shared IBU races, fetches each required season
+once, and matches exact season/event IDs. If a season is missing, the stored race date
+provides a candidate season; the exact parent event must be returned by the IBU API
+for that season before it is saved. It fills missing fields without overwriting
+existing values. Missing parent IDs or dates, unmatched records, and conflicts are reported for manual
+follow-up; API failures exit unsuccessfully before any writes. Re-running is safe.
+Use `--env dev` for a development database. No network calls happen during migrations.
+
 ## Notes for Contributors
 
 - New user passwords and game join passwords use a safer hash, while legacy SHA-256 hashes are upgraded on successful login/join.

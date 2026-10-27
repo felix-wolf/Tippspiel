@@ -12,6 +12,15 @@ BERLIN_TZ = ZoneInfo("Europe/Berlin")
 
 
 @dataclass(frozen=True)
+class IbuEvent:
+    season_id: str
+    event_id: str
+    location: str | None
+    level: int | None
+    event_classification_id: str | None
+
+
+@dataclass(frozen=True)
 class IbuRace:
     season_id: str
     event_id: str
@@ -22,6 +31,8 @@ class IbuRace:
     gender: str | None = None
     nation_code: str | None = None
     race_format: str | None = None
+    level: int | None = None
+    event_classification_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -108,23 +119,36 @@ class IbuApiClient:
             deduped[race.race_id] = race
         return sorted(deduped.values(), key=lambda race: race.starts_at)
 
-    def get_races_for_season(self, season_id: str):
-        races = []
+    def get_events_for_season(self, season_id: str):
+        events = []
         for level in self.SUPPORTED_LEVELS:
             for event in self._fetch_records("Events", {"SeasonId": season_id, "Level": level}):
                 event_id = self._get_text(event, "EventId", "Id", "EventID")
                 if not event_id:
                     continue
-                location = self._build_event_location(event)
-                for competition in self._fetch_records("Competitions", {"EventId": event_id}):
-                    race = self._build_race_from_competition(
-                        competition=competition,
-                        season_id=season_id,
-                        event_id=event_id,
-                        default_location=location,
-                    )
-                    if race is not None:
-                        races.append(race)
+                events.append(IbuEvent(
+                    season_id=season_id,
+                    event_id=event_id,
+                    location=self._build_event_location(event),
+                    level=self._to_int(self._get_text(event, "Level")) or level,
+                    event_classification_id=self._get_text(event, "EventClassificationId"),
+                ))
+        return events
+
+    def get_races_for_season(self, season_id: str):
+        races = []
+        for event in self.get_events_for_season(season_id):
+            for competition in self._fetch_records("Competitions", {"EventId": event.event_id}):
+                race = self._build_race_from_competition(
+                    competition=competition,
+                    season_id=season_id,
+                    event_id=event.event_id,
+                    default_location=event.location,
+                    level=event.level,
+                    event_classification_id=event.event_classification_id,
+                )
+                if race is not None:
+                    races.append(race)
         return races
 
     def get_results(self, race_id: str):
@@ -157,6 +181,8 @@ class IbuApiClient:
             season_id: str,
             event_id: str,
             default_location: str | None,
+            level: int | None = None,
+            event_classification_id: str | None = None,
             ):
         race_id = self._get_text(competition, "RaceId", "Id", "CompetitionId", "CompetitionID")
         if not race_id:
@@ -196,6 +222,8 @@ class IbuApiClient:
             gender=gender,
             nation_code=nation_code,
             race_format=" ".join(race_format.split()) if race_format else None,
+            level=level,
+            event_classification_id=event_classification_id,
         )
 
     def _build_event_location(self, event):

@@ -28,6 +28,8 @@ export type AdminSharedEventDiagnostic = {
   sourceEventId?: string;
   sourceRaceId?: string;
   seasonId?: string;
+  sourceLevel?: number;
+  sourceEventClassificationId?: string;
   linkedEventCount: number;
   withResultsCount: number;
   withoutResultsCount: number;
@@ -134,6 +136,8 @@ export class Admin {
       sourceEventId: json["source_event_id"] ?? undefined,
       sourceRaceId: json["source_race_id"] ?? undefined,
       seasonId: json["season_id"] ?? undefined,
+      sourceLevel: json["source_level"] ?? undefined,
+      sourceEventClassificationId: json["source_event_classification_id"] ?? undefined,
       linkedEventCount: json["linked_event_count"],
       withResultsCount: json["with_results_count"],
       withoutResultsCount: json["without_results_count"],
