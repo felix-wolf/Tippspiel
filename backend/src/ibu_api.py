@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import json
+import os
 import re
 from xml.etree import ElementTree
 from zoneinfo import ZoneInfo
 
 import requests
+from flask import current_app, has_app_context
 
 
 BERLIN_TZ = ZoneInfo("Europe/Berlin")
@@ -90,6 +92,11 @@ class IbuApiClient:
     def __init__(self, session=None, timeout=15):
         self.session = session or requests.Session()
         self.timeout = timeout
+        self.api_key = (
+            current_app.config.get("IBU_API_KEY")
+            if has_app_context()
+            else os.environ.get("TIPPSPIEL_IBU_API_KEY")
+        )
 
     @staticmethod
     def current_season_id(now=None):
@@ -283,6 +290,7 @@ class IbuApiClient:
         response = self.session.get(
             f"{self.BASE_URL}/{path}",
             params=params,
+            headers={"apikey": self.api_key} if self.api_key else {},
             timeout=self.timeout,
         )
         response.raise_for_status()

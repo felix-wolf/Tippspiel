@@ -46,6 +46,7 @@ def load_config(env: str) -> dict:
         "DB_PATH": env_values.get("TIPPSPIEL_DB_PATH", default_db_paths.get(env, default_db_paths["dev"])),
         "FIREBASE_CREDENTIALS_PATH": env_values.get("TIPPSPIEL_FIREBASE_CREDENTIALS_PATH"),
         "TASK_API_TOKEN": env_values.get("TIPPSPIEL_TASK_API_TOKEN"),
+        "IBU_API_KEY": env_values.get("TIPPSPIEL_IBU_API_KEY"),
         "ADMIN_USERNAMES": [
             item.strip()
             for item in env_values.get("TIPPSPIEL_ADMIN_USERNAMES", "").split(",")

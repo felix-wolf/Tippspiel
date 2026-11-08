@@ -60,7 +60,7 @@ def test_ibu_candidates_keep_classifications_through_import_and_reload(client, b
     db_manager.execute("UPDATE EventTypes SET name = 'women' WHERE id = ?", [base_data["event_type"].id])
     classifications = {1: ["BTSWRLCP", "BTSWRLOG"], 2: ["BTSIBUCP", "BTSCEUCH"]}
 
-    def get(url, params, timeout):
+    def get(url, params, timeout, headers=None):
         if url.endswith("/Events"):
             payload = [{"EventId": code, "Level": params["Level"], "EventClassificationId": code}
                        for code in classifications.get(params["Level"], [])]

@@ -3,8 +3,33 @@ from xml.etree import ElementTree
 import json
 
 import pytest
+import requests
 
 from src.ibu_api import IbuApiClient, IbuAthleteRow, IbuResultRow, IbuResultsResponse, race_is_importable
+
+
+@pytest.mark.parametrize("method,argument", [
+    ("get_events_for_season", "2627"),
+    ("get_results", "race-1"),
+    ("get_athletes", "2627"),
+])
+def test_ibu_requests_send_configured_api_key(app, monkeypatch, method, argument):
+    app.config["IBU_API_KEY"] = "configured-test-key"
+    sent_requests = []
+
+    def send(request, **kwargs):
+        sent_requests.append(request)
+        response = requests.Response()
+        response.status_code = 200 if request.headers.get("apikey") == "configured-test-key" else 401
+        response._content = b"[]"
+        return response
+
+    monkeypatch.setattr(requests.Session, "send", lambda self, request, **kwargs: send(request, **kwargs))
+
+    getattr(IbuApiClient(), method)(argument)
+
+    assert sent_requests
+    assert all(request.headers["apikey"] == "configured-test-key" for request in sent_requests)
 
 
 class _FakeResponse:
@@ -19,7 +44,7 @@ class _FakeSession:
     def __init__(self, responses):
         self.responses = responses
 
-    def get(self, url, params=None, timeout=None):
+    def get(self, url, params=None, timeout=None, headers=None):
         key = (url.rsplit("/", 1)[-1], tuple(sorted((params or {}).items())))
         return _FakeResponse(self.responses[key])
 
