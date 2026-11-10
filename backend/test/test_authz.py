@@ -76,8 +76,13 @@ def test_protected_routes_require_login(app, base_data):
     assert settings_resp.status_code == 401
 
 
-def test_event_create_requires_owner(app, base_data, other_user):
+@pytest.mark.parametrize("role", ["outsider", "member", "other_game_owner"])
+def test_event_create_requires_owner(app, base_data, other_user, role):
     game_id = _create_game(app, base_data["user"].id, base_data["discipline"].id)
+    if role == "member":
+        assert Game.get_by_id(game_id).add_player(User.get_by_id(other_user))
+    elif role == "other_game_owner":
+        _create_game(app, other_user, base_data["discipline"].id, name="Other Game")
     other_client = _client_for(app, other_user)
 
     resp = other_client.post(

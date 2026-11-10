@@ -163,6 +163,7 @@ export function GamePage() {
                 type={"upcoming"}
                 placeholderText={"Es sind noch keine Events eingetragen..."}
                 canImportEvents={isCreator || isAdmin}
+                canCreateEvents={isCreator || isAdmin}
                 canEditEvents={isAdmin}
                 refreshToken={eventsRefreshToken}
                 onEventsChanged={() =>

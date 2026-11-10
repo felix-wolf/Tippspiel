@@ -1,6 +1,6 @@
 # Technical Debt Register
 
-Last updated: 2026-10-27
+Last updated: 2026-11-10
 
 This document records the main technical debt and areas that need work across the current code base. It is intentionally opinionated and prioritized so it can guide follow-up work.
 
@@ -15,7 +15,7 @@ This document records the main technical debt and areas that need work across th
   - `frontend/src/components/domain/AdminResultTools.tsx`
 - What is wrong:
   - Shared race metadata now exists separately from game-specific betting configuration.
-  - Game owners can no longer create, edit, or delete event information.
+  - Game owners can create custom events in their own games and import official events; editing or deleting existing event data remains admin-only.
   - Admins can now preview, re-apply, clear, and rescore results from the regular event UI.
   - A dedicated admin overview now exists for shared-event diagnostics and missing-country cleanup.
   - A dedicated admin overview now also persists recent admin repairs plus result/reminder job runs in one place.

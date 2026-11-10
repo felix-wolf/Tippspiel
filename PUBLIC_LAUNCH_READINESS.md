@@ -123,7 +123,7 @@ Goal: public signups, predictable operations, and acceptable legal/security post
   - The core biathlon path now has one source of truth.
   - Official-source identity is now enforced on canonical shared race records.
   - Multiple betting games can attach to the same underlying official race.
-  - Game owners can attach official races, but canonical event data is no longer owner-editable.
+  - Game owners can attach official races and create custom events in their own games; canonical event data remains admin-editable only.
   - Admins can now manually preview and re-apply official result imports for a selected event/shared race.
   - A dedicated admin overview now exists for shared-event source repairs and missing-country cleanup.
 - Why this matters:
@@ -200,7 +200,7 @@ Goal: public signups, predictable operations, and acceptable legal/security post
   - `frontend/src/pages/AdminPage.tsx`
   - `backend/src/blueprints/game.py`
 - Current state:
-  - The product now has a first admin role and admin-only event management path for shared/game events.
+  - Game creators and admins can create custom events; editing and deleting existing shared/game events is restricted to admins.
   - Admins can now repair event results directly from the event detail page by previewing refreshes, applying them, clearing results, or forcing a rescore.
   - A dedicated admin page now exists for:
     - shared-event diagnostics

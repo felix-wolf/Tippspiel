@@ -134,7 +134,7 @@ def test_event_get_by_id_for_betting_returns_only_current_user_bet(app, client, 
     assert payload["bets"][0]["user_id"] == base_data["second_user"].id
 
 
-def test_event_create_and_update_are_admin_only(client, base_data):
+def test_creator_can_create_but_only_admin_can_update_and_delete(client, base_data):
     game_id = client.post(
         "/api/game",
         json={"name": "Ev Game", "password": "game-password", "discipline": base_data["discipline"].id},
@@ -152,8 +152,10 @@ def test_event_create_and_update_are_admin_only(client, base_data):
             "allow_partial_points": True,
         },
     )
-    assert create_resp.status_code == 403
-    assert create_resp.get_json()["error"] == "Du bist für diese Aktion nicht berechtigt."
+    assert create_resp.status_code == 200
+    created = create_resp.get_json()
+    assert created["game_id"] == game_id
+    assert created["name"] == "Event 1"
 
     update_resp = client.put(
         "/api/event",
@@ -162,7 +164,7 @@ def test_event_create_and_update_are_admin_only(client, base_data):
             "game_id": game_id,
             "type": base_data["event_type"].id,
             "datetime": _dt_string(2),
-            "event_id": "event-1",
+            "event_id": created["id"],
             "num_bets": 1,
             "points_correct_bet": 3,
             "allow_partial_points": False,
@@ -171,7 +173,7 @@ def test_event_create_and_update_are_admin_only(client, base_data):
     assert update_resp.status_code == 403
     assert update_resp.get_json()["error"] == "Du bist für diese Aktion nicht berechtigt."
 
-    delete_resp = client.delete("/api/event/delete", json={"event_id": "event-1"})
+    delete_resp = client.delete("/api/event/delete", json={"event_id": created["id"]})
     assert delete_resp.status_code == 403
     assert delete_resp.get_json()["error"] == "Du bist für diese Aktion nicht berechtigt."
 

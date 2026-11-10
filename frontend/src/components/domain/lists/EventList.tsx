@@ -18,6 +18,7 @@ type EventListProps = {
   placeholderText?: string;
   canImportEvents?: boolean;
   canEditEvents?: boolean;
+  canCreateEvents?: boolean;
   refreshToken?: number;
   onEventsChanged?: () => void;
 };
@@ -28,6 +29,7 @@ export function EventList({
   placeholderText,
   canImportEvents = false,
   canEditEvents = false,
+  canCreateEvents = false,
   refreshToken = 0,
   onEventsChanged,
 }: EventListProps) {
@@ -105,12 +107,13 @@ export function EventList({
 
   return (
     <div className="mb-3">
-      {(canImportEvents || canEditEvents) && (
+      {(canImportEvents || canCreateEvents || canEditEvents) && (
         <EventEditorModal
           isOpen={showingAddEventModal}
           types={game?.discipline.eventTypes ?? []}
           game={game}
           canImportEvents={canImportEvents}
+          canCreateEvents={canCreateEvents}
           canManageEventData={canEditEvents}
           onEventsChanged={refreshEvents}
           onClose={() => setShowingAddEventModal(false)}
@@ -123,6 +126,7 @@ export function EventList({
           isOpen={eventEditId != undefined}
           types={game?.discipline.eventTypes}
           canImportEvents={false}
+          canCreateEvents={false}
           canManageEventData={canEditEvents}
           onEventsChanged={(changeType) => {
             setEventEditId(undefined);
@@ -140,7 +144,7 @@ export function EventList({
           <>
             <Calendar size={20} />
             Anstehende Events
-            {(canImportEvents || canEditEvents) && (
+            {(canImportEvents || canCreateEvents || canEditEvents) && (
               <button className="border border-sky-400 bg-white/70 rounded-xl p-1 shadow-sm cursor-pointer" onClick={() => setShowingAddEventModal(true)}>
                 <Plus />
               </button>

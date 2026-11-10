@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Bet, Prediction } from "../src/models/Bet";
 import { Event } from "../src/models/Event";
+import { NetworkHelper } from "../src/models/NetworkHelper";
 import { EventType } from "../src/models/EventType";
 import { Result } from "../src/models/Result";
 
@@ -491,5 +492,17 @@ describe("Event admin result operations", () => {
         body: JSON.stringify({ resend_notifications: true }),
       }),
     );
+  });
+});
+
+
+describe("custom event creation", () => {
+  it.each([true, false])("sends the selected partial-points setting (%s)", async (allowPartialPoints) => {
+    const post = vi.spyOn(NetworkHelper, "post").mockResolvedValue({} as Event);
+    const type = new EventType("type-1", "Sprint", "Sprint", "biathlon", "athletes");
+    await Event.create("Custom Race", "game-1", type, new Date(2026, 10, 12, 9), 3, 5, allowPartialPoints);
+    expect(post).toHaveBeenCalledWith("/api/event", Event.fromJson, expect.objectContaining({
+      name: "Custom Race", game_id: "game-1", allow_partial_points: allowPartialPoints,
+    }));
   });
 });

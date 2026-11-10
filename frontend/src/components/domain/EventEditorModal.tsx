@@ -18,6 +18,7 @@ type EventCreatorProps = {
   event?: Event;
   game: Game;
   canImportEvents: boolean;
+  canCreateEvents: boolean;
   canManageEventData: boolean;
   onEventsChanged: (changeType: "create" | "update" | "delete" | "import") => void;
   onClose: () => void;
@@ -30,6 +31,7 @@ export function EventEditorModal({
   event,
   game,
   canImportEvents,
+  canCreateEvents,
   canManageEventData,
   onClose: _onClose,
   onEventsChanged: _onEventsChanged,
@@ -56,6 +58,7 @@ export function EventEditorModal({
 
     switch (mode) {
       case "import_selecting":
+        if (!canImportEvents) return;
         Event.saveImportedEvents(selectedEvents)
           .then(() => {
             setSelectedEvents([]);
@@ -87,7 +90,7 @@ export function EventEditorModal({
           .catch(handleFailure);
         return;
       case "manual_create":
-        if (!canManageEventData || !stagedEvent) {
+        if (!canCreateEvents || !stagedEvent) {
           return;
         }
         Event.create(
@@ -97,6 +100,7 @@ export function EventEditorModal({
           stagedEvent.datetime,
           stagedEvent.numBets,
           stagedEvent.pointsCorrectBet,
+          stagedEvent.allowPartialPoints,
           stagedEvent.location,
           stagedEvent.raceFormat,
         )
@@ -110,7 +114,7 @@ export function EventEditorModal({
       default:
         return;
     }
-  }, [canManageEventData, event, game.id, mode, selectedEvents, _onClose, _onEventsChanged]);
+  }, [canImportEvents, canCreateEvents, canManageEventData, event, game.id, mode, selectedEvents, _onClose, _onEventsChanged]);
 
   function switchToManualCreate() {
     setSelectedEvents([]);
@@ -124,8 +128,10 @@ export function EventEditorModal({
 
   const actionConfig = getEventEditorActionConfig(mode, selectedEvents.length);
   const isManualMode = mode === "manual_create" || mode === "manual_edit";
-  const canSwitchToManual = !event && hasAutomaticImport && canManageEventData && !isManualMode;
-  const canSwitchToImport = !event && hasAutomaticImport && canManageEventData && mode === "manual_create";
+  const canSwitchToManual = !event && hasAutomaticImport && canCreateEvents && !isManualMode;
+  const canUseManualMode = mode === "manual_edit" ? canManageEventData : canCreateEvents;
+  const canPerformAction = isManualMode ? canUseManualMode : canImportEvents;
+  const canSwitchToImport = !event && hasAutomaticImport && canCreateEvents && mode === "manual_create";
 
   return (
     <DialogModal
@@ -135,7 +141,7 @@ export function EventEditorModal({
       type={getEventEditorDialogType(mode)}
       onActionClick={actionConfig.title ? onActionClick : undefined}
       actionButtonTitle={actionConfig.title}
-      actionButtonEnabled={actionConfig.enabled}
+      actionButtonEnabled={actionConfig.enabled && canPerformAction}
       neutralButtonTitle="Abbrechen"
       onNeutralClick={() => {
         setSelectedEvents([]);
@@ -157,34 +163,28 @@ export function EventEditorModal({
           <div className="rounded-2xl border border-sky-400/20 bg-slate-800/55 p-4 text-sm text-slate-300 shadow-sm">
             <p className="font-semibold text-sky-100">Automatischer Import ist der Standard</p>
             <p className="mt-1">
-              Als Admin kannst du bei Bedarf auch manuell gepflegte Eventdaten anlegen oder korrigieren.
+              Du kannst auch ein eigenes Event für dieses Tippspiel erstellen.
             </p>
             <button
               className="mt-3 text-sm font-semibold text-sky-200 underline underline-offset-2 cursor-pointer"
               onClick={switchToManualCreate}
               type="button"
             >
-              Event manuell verwalten
+              Eigenes Event erstellen
             </button>
           </div>
         )}
 
-        {isManualMode && canManageEventData && (
+        {isManualMode && canUseManualMode && (
           <div className="flex flex-col gap-3 rounded-2xl border border-white/8 bg-slate-800/55 p-4 shadow-sm">
             {canSwitchToImport && (
-              <>
-                <p className="text-sm font-semibold text-amber-300">Admin-Verwaltung</p>
-                <p className="text-sm text-slate-300">
-                  Hier bearbeitest du die zentralen Eventdaten. Aenderungen wirken sich auf alle verknuepften Spiele aus.
-                </p>
-                <button
+              <button
                   className="w-fit text-sm font-semibold text-sky-200 underline underline-offset-2 cursor-pointer"
                   onClick={switchToImport}
                   type="button"
                 >
                   Zurueck zum automatischen Import
-                </button>
-              </>
+              </button>
             )}
             <ManualEventCreator
               event={event}
@@ -195,12 +195,12 @@ export function EventEditorModal({
           </div>
         )}
 
-        {!canManageEventData && !hasAutomaticImport && (
+        {!canUseManualMode && !hasAutomaticImport && (
           <div className="rounded-2xl border border-amber-300/30 bg-slate-800/55 p-4 text-sm text-slate-300 shadow-sm">
-            <p className="font-semibold text-amber-200">Eventdaten sind jetzt zentral verwaltet</p>
+            <p className="font-semibold text-amber-200">Keine Berechtigung</p>
             <p className="mt-1">
-              Spielbesitzer koennen keine Eventinformationen mehr bearbeiten. Zukuenftige
-              Admin-Funktionen uebernehmen diese Pflege.
+              Nur der Spielersteller oder ein Admin kann eigene Events erstellen.
+              Bestehende Eventdaten können nur Admins bearbeiten.
             </p>
           </div>
         )}

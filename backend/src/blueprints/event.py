@@ -89,9 +89,6 @@ def handle_event_request():
         )
         if error:
             return error_response("Erforderliche Angaben fehlen.", 400)
-        error = require_admin_user()
-        if error:
-            return error
         name = payload.get("name")
         game_id = payload.get("game_id")
         event_type = payload.get("type")
@@ -102,6 +99,9 @@ def handle_event_request():
         location = payload.get("location")
         race_format = payload.get("race_format")
         game, error = get_game_or_error(game_id)
+        if error:
+            return error
+        error = require_game_owner_or_admin(game)
         if error:
             return error
         dt = datetime.strptime(dt, "%d.%m.%Y, %H:%M:%S")
